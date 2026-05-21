@@ -174,13 +174,12 @@ export default function JudgesSection() {
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
                         <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
-                            Judges & Mentors
+                            Judges
                         </span>
                     </h2>
 
                     <p className="text-lg text-zinc-400">
-                        Industry experts and experienced
-                        professionals
+                        Industry experts and experienced professionals
                     </p>
                 </div>
 
@@ -195,10 +194,16 @@ export default function JudgesSection() {
                 </div>
 
                 {/* Mentors Title */}
-                <div className="mb-10 text-center">
-                    <h3 className="text-3xl font-bold text-white">
-                        Mentors
-                    </h3>
+                <div className="mb-16 text-center">
+                    <h2 className="mb-4 text-4xl font-black md:text-5xl">
+                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                            Mentors
+                        </span>
+                    </h2>
+
+                    <p className="text-lg text-zinc-400">
+                        Dedicated experts provide guidance.
+                    </p>
                 </div>
 
                 {/* Mentors */}
