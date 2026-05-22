@@ -1,127 +1,142 @@
-import { Code2, Zap, Users, Trophy } from 'lucide-react';
+import Link from "next/link";
+import { Button } from "../ui/button";
 
-export default function HeroSection() {
-    const stats = [
-        {
-            icon: Users,
-            label: 'Active Teams',
-            value: '150+',
-        },
-        {
-            icon: Trophy,
-            label: 'Prize Pool',
-            value: '₫50M',
-        },
-        {
-            icon: Code2,
-            label: 'Projects',
-            value: '200+',
-        },
-        {
-            icon: Zap,
-            label: 'Universities',
-            value: '5+',
-        },
-    ];
-
+export default function Hero() {
     return (
-        <section className="relative flex min-h-screen items-center overflow-hidden bg-black">
-            {/* Grid Background */}
-            <div className="absolute inset-0 opacity-20">
-                <div className="h-full w-full bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-            </div>
+        <section className="relative overflow-hidden pt-32 pb-28">
+            {/* Background Grid */}
+            <div className="absolute inset-0 seal-grid opacity-40" />
 
             {/* Orange Glow */}
-            <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-orange-500/20 blur-[140px]" />
+            <div className="absolute top-24 left-1/2 -translate-x-1/2 h-[38rem] w-[58rem] rounded-full bg-orange/20 blur-[160px] animate-seal-pulse" />
 
-            <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[140px]" />
+            {/* Floating Particles */}
+            {Array.from({ length: 14 }).map((_, i) => (
+                <span
+                    key={i}
+                    className="absolute rounded-full bg-orange/60 animate-seal-float"
+                    style={{
+                        left: `${(i * 73) % 100}%`,
+                        top: `${20 + ((i * 41) % 60)}%`,
+                        width: `${3 + (i % 3)}px`,
+                        height: `${3 + (i % 3)}px`,
+                        opacity: 0.4,
+                        animationDelay: `${i * 0.3}s`,
+                    }}
+                />
+            ))}
 
-            {/* Content */}
-            <div className="container relative z-10 mx-auto px-4 py-24">
-                <div className="mx-auto max-w-6xl text-center">
-                    {/* Badge */}
-                    <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-5 py-2 backdrop-blur-xl">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-orange-500 shadow-lg shadow-orange-500/50" />
+            <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
+                {/* Top Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-orange/20 bg-white/[0.03] px-4 py-2 backdrop-blur-xl">
+                    <span className="h-2 w-2 rounded-full bg-orange animate-pulse" />
 
-                        <span className="text-sm font-medium text-orange-500">
-                            Registration Open for SEAL Fall 2026
-                        </span>
-                    </div>
+                    <span className="text-[13px] font-medium text-orange">
+                        SEAL Summer 2026
+                    </span>
 
-                    {/* Heading */}
-                    <h1 className="mb-6 text-5xl font-black leading-tight md:text-6xl lg:text-7xl">
-                        <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
-                            Software Engineering
-                        </span>
+                    <span className="text-[13px] text-muted-foreground">
+                        • Registration open until Jul 30
+                    </span>
+                </div>
 
-                        <br />
+                {/* Heading */}
+                <h1 className="mt-8 text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-white sm:text-6xl md:text-7xl lg:text-[88px]">
+                    Software Engineering
+                    <br />
 
-                        <span className="bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
-                            Agile League
-                        </span>
-                    </h1>
+                    <span className="text-gradient-orange">
+                        Agile League.
+                    </span>
+                </h1>
 
-                    {/* Subtitle */}
-                    <p className="mb-4 text-xl text-zinc-300 md:text-2xl">
-                        Annual Academic Hackathon Series at FPT
-                        University HCMC
-                    </p>
+                {/* Description */}
+                <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
+                    The annual academic hackathon series at FPT University Ho Chi Minh
+                    City. Three seasons. One league. Build, ship and prove your craft.
+                </p>
 
-                    {/* Description */}
-                    <p className="mx-auto mb-12 max-w-3xl text-base leading-8 text-zinc-400 md:text-lg">
-                        Compete, innovate, and collaborate with
-                        students from FPT University and partner
-                        universities through real-world software
-                        engineering challenges.
-                    </p>
+                {/* Actions */}
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                    <Button>
+                        <Link
+                            href="/register"
+                            className="btn-orange rounded-full px-7 py-3 text-sm font-semibold transition-all duration-300"
+                        >
+                            Join Competition →
+                        </Link>
+                    </Button>
+                    <a
+                        href="#events"
+                        className="rounded-full border border-white/10 bg-white/[0.02] px-7 py-3 text-sm font-medium text-white/90 transition-all duration-300 hover:bg-white/[0.05]"
+                    >
+                        Explore Events
+                    </a>
 
-                    {/* Buttons */}
-                    <div className="mb-16 flex flex-wrap items-center justify-center gap-4">
-                        <button className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-8 py-4 font-medium text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/30">
-                            Explore Events
-                        </button>
+                </div>
 
-                        <button className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 font-medium text-white backdrop-blur-xl transition-all duration-300 hover:border-orange-500/50 hover:bg-white/10">
-                            Join Competition
-                        </button>
-                    </div>
+                {/* Dashboard Preview */}
+                <div className="relative mx-auto mt-24 max-w-5xl">
+                    {/* Glow */}
+                    <div className="absolute -top-10 left-1/2 h-40 w-[90%] -translate-x-1/2 bg-orange/20 blur-[90px]" />
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                        {stats.map((stat, index) => {
-                            const Icon = stat.icon;
+                    {/* Card */}
+                    <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-2xl seal-glow">
+                        {/* Header */}
+                        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-4 text-xs text-muted-foreground">
+                            <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
 
-                            return (
+                            <span className="ml-3">
+                                seal://dashboard/spring-2026
+                            </span>
+
+                            <span className="ml-auto text-orange">
+                                ● LIVE
+                            </span>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid gap-px bg-white/5 md:grid-cols-3">
+                            {[
+                                {
+                                    key: "TEAMS REGISTERED",
+                                    value: "248",
+                                    desc: "+34 today",
+                                },
+                                {
+                                    key: "ACTIVE MENTORS",
+                                    value: "62",
+                                    desc: "FPTU + Industry",
+                                },
+                                {
+                                    key: "PRIZE POOL",
+                                    value: "₫420M",
+                                    desc: "Across 3 seasons",
+                                },
+                            ].map((item) => (
                                 <div
-                                    key={index}
-                                    className="group relative overflow-hidden rounded-2xl border border-orange-500/20 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50"
+                                    key={item.key}
+                                    className="bg-background/70 p-8 text-left"
                                 >
-                                    {/* Glow */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-                                    {/* Icon */}
-                                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-300 shadow-lg shadow-orange-500/20">
-                                        <Icon className="text-xl text-white" />
+                                    <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                                        {item.key}
                                     </div>
 
-                                    {/* Value */}
-                                    <h3 className="mb-1 text-3xl font-bold text-white">
-                                        {stat.value}
-                                    </h3>
+                                    <div className="mt-3 text-4xl font-bold text-gradient-orange">
+                                        {item.value}
+                                    </div>
 
-                                    {/* Label */}
-                                    <p className="text-sm text-zinc-400">
-                                        {stat.label}
-                                    </p>
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        {item.desc}
+                                    </div>
                                 </div>
-                            );
-                        })}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {/* Bottom Gradient */}
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent" />
         </section>
     );
 }

@@ -1,4 +1,5 @@
 import HeroSection from "@/components/home_section/hero_section";
+import StatsSection from "@/components/home_section/stats_section";
 import SeasonsSection from "@/components/home_section/sesson_section";
 import AboutSection from "@/components/home_section/about_section";
 import FlowSection from "@/components/home_section/flow_section";
@@ -11,13 +12,24 @@ export default function Home() {
   return (
     <div>
       <HeroSection />
-      <SeasonsSection />
-      <AboutSection />
+      <StatsSection />
+      <section id="about">
+        <AboutSection />
+      </section>
+      <section id="events">
+        <SeasonsSection />
+      </section>
       <FlowSection />
-      <CategoriesSection />
-      <RankingSection />
+      <section id="categories">
+        <CategoriesSection />
+      </section>
+      <section id="rankings">
+        <RankingSection />
+      </section>
       <JudgesSection />
-      <FAQSection />
+      <section id="FAQ">
+        <FAQSection />
+      </section>
     </div>
   );
 }
