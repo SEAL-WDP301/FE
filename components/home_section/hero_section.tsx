@@ -66,12 +66,12 @@ export default function Hero() {
                             Join Competition →
                         </Link>
                     </Button>
-                    <a
-                        href="#events"
+                    <Link
+                        href="/events"
                         className="rounded-full border border-white/10 bg-white/[0.02] px-7 py-3 text-sm font-medium text-white/90 transition-all duration-300 hover:bg-white/[0.05]"
                     >
                         Explore Events
-                    </a>
+                    </Link>
 
                 </div>
 
