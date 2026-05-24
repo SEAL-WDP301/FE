@@ -4,6 +4,8 @@ import "./globals.css";
 
 import Header from "../components/layout/public/header"
 import Footer from "../components/layout/public/footer"
+import { SnackbarProvider } from "../components/providers/snackbar-provider";
+import { QueryProvider } from "../components/providers/query-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,10 +27,14 @@ export default function RootLayout({
       lang="en"
       className={inter.variable}
     >
-      <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
-        <Footer />
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <QueryProvider>
+          <SnackbarProvider>
+            <Header />
+            {children}
+            <Footer />
+          </SnackbarProvider>
+        </QueryProvider>
       </body>
     </html>
   );

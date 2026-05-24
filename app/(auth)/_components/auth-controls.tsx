@@ -1,13 +1,22 @@
-import type { ComponentProps, ReactNode } from "react";
+"use client";
+
+import { type ComponentProps, type ReactNode, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 type FieldProps = ComponentProps<"input"> & {
   label: string;
   icon?: ReactNode;
+  rightIcon?: ReactNode;
+  hideToggle?: boolean;
 };
 
-export function AuthField({ label, icon, className, ...props }: FieldProps) {
+export function AuthField({ label, icon, rightIcon, hideToggle, className, type, ...props }: FieldProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password" && !hideToggle;
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-[#b9aaa2] sm:text-sm">
@@ -20,13 +29,29 @@ export function AuthField({ label, icon, className, ...props }: FieldProps) {
           </span>
         ) : null}
         <input
+          type={inputType}
           className={cn(
             "h-11 w-full rounded-[2rem] border border-white/15 bg-white/[0.045] px-4 text-sm text-white outline-none transition placeholder:text-[#8f817a] focus:border-[#ff7629]/70 focus:ring-4 focus:ring-[#ff7629]/15",
             icon && "pl-12",
+            (isPassword || rightIcon) && "pr-12",
             className
           )}
           {...props}
         />
+        {isPassword && !rightIcon && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#aa9b93] hover:text-[#ff7629] transition-colors"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        )}
+        {rightIcon && (
+          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+            {rightIcon}
+          </span>
+        )}
       </span>
     </label>
   );

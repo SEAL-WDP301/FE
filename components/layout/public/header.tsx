@@ -1,7 +1,41 @@
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { axiosClient } from '@/lib/axios';
+import { enqueueSnackbar } from 'notistack';
+import { useEffect } from 'react';
 
 export default function Navigation() {
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const { data: user, isLoading, isError } = useQuery({
+        queryKey: ['userProfile'],
+        queryFn: async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) return null;
+            const res = await axiosClient.get('/users/profile');
+            return res.data?.data;
+        },
+    });
+
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            queryClient.setQueryData(['userProfile'], null);
+        };
+        window.addEventListener('auth-unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+    }, [queryClient]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        queryClient.setQueryData(['userProfile'], null);
+        enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
+        router.push('/');
+    };
 
     const navItems = [
         { label: 'Home', href: '/' },
@@ -57,17 +91,39 @@ export default function Navigation() {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
-                    <Link href={"/login"}>
-                        <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-white'>
-                            Login
-                        </Button>
-                    </Link>
-                    <Link href={"/register"}>
-                        <Button size="sm" className="px-6">
-                            Register
-                        </Button>
-                    </Link>
-
+                    {isLoading ? (
+                        <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />
+                    ) : user && !isError ? (
+                        <div className="flex items-center gap-3">
+                            <div className="hidden flex-col items-end sm:flex">
+                                <span className="text-sm font-semibold text-white">{user.name}</span>
+                                <span className="text-xs text-[#b9aaa2]">{user.email}</span>
+                            </div>
+                            {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt="Avatar" className="size-9 rounded-full border border-orange-500/30 object-cover" />
+                            ) : (
+                                <div className="flex size-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10 text-sm font-bold text-orange-500">
+                                    {user.name?.charAt(0)}
+                                </div>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={handleLogout} className="ml-2 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300">
+                                Logout
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
+                            <Link href={"/login"}>
+                                <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-white'>
+                                    Login
+                                </Button>
+                            </Link>
+                            <Link href={"/register"}>
+                                <Button size="sm" className="px-6">
+                                    Register
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                 </div>
             </nav>
         </header>
