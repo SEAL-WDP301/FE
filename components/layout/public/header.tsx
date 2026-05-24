@@ -9,7 +9,7 @@ export default function Navigation() {
         { label: 'Rankings', href: '#rankings' },
         { label: 'Categories', href: '#categories' },
         { label: 'About', href: '#about' },
-        { label: 'FAQ', href: '#FAQ'}
+        { label: 'FAQ', href: '#FAQ' }
     ];
 
     return (
@@ -57,13 +57,17 @@ export default function Navigation() {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-white'>
-                        Login
-                    </Button>
+                    <Link href={"/login"}>
+                        <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-white'>
+                            Login
+                        </Button>
+                    </Link>
+                    <Link href={"/register"}>
+                        <Button size="sm" className="px-6">
+                            Register
+                        </Button>
+                    </Link>
 
-                    <Button size="sm" className="px-6">
-                        Register
-                    </Button>
                 </div>
             </nav>
         </header>
