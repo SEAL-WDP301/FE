@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -24,7 +25,7 @@ export default function ForgotPasswordPage() {
     } catch (error: any) {
       const errMessage = error.response?.data?.message;
       const displayMessage = Array.isArray(errMessage) ? errMessage[0] : errMessage;
-      
+
       enqueueSnackbar(
         displayMessage || "Đã có lỗi xảy ra. Vui lòng thử lại.",
         { variant: "error" }

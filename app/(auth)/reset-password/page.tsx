@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -41,16 +42,16 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const res = await axiosClient.post("/auth/reset-password", { 
+      const res = await axiosClient.post("/auth/reset-password", {
         token,
-        newPassword: formData.newPassword 
+        newPassword: formData.newPassword
       });
       enqueueSnackbar(res.data?.message || "Đổi mật khẩu thành công!", { variant: "success" });
       router.push("/login");
     } catch (error: any) {
       const errMessage = error.response?.data?.message;
       const displayMessage = Array.isArray(errMessage) ? errMessage[0] : errMessage;
-      
+
       enqueueSnackbar(
         displayMessage || "Mã xác thực đã hết hạn hoặc không hợp lệ.",
         { variant: "error" }
