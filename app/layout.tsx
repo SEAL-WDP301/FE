@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import Header from "../components/layout/public/header"
-import Footer from "../components/layout/public/footer"
 import { SnackbarProvider } from "../components/providers/snackbar-provider";
 import { QueryProvider } from "../components/providers/query-provider";
 
@@ -30,9 +28,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>
           <SnackbarProvider>
-            <Header />
             {children}
-            <Footer />
           </SnackbarProvider>
         </QueryProvider>
       </body>

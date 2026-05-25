@@ -1,12 +1,15 @@
 "use client";
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { enqueueSnackbar } from 'notistack';
 import { useEffect } from 'react';
+
+import Logo from '@/components/ui/logo';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Navigation() {
     const router = useRouter();
@@ -51,24 +54,7 @@ export default function Navigation() {
             <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
 
                 {/* Logo */}
-                <div className="flex items-center gap-2.5">
-                    {/* Circle Logo */}
-                    <Link href={"/"}>
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-orange-400/30 bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20">
-                            <span className="text-xl font-bold text-black">S</span>
-                        </div>
-                    </Link>
-                    {/* Text */}
-                    <div className="leading-tight">
-                        <h1 className="text-x1 font-bold tracking-tight text-white">
-                            SEAL
-                        </h1>
-
-                        <p className="text-[10px] font-medium tracking-[0.3em] text-orange-400">
-                            FPTU · HCMC
-                        </p>
-                    </div>
-                </div>
+                <Logo size='sm' />
 
                 {/* Navigation */}
                 <nav className="hidden items-center rounded-full border border-white/10 bg-white/[0.03] px-2 py-1.5 shadow-[0_0_30px_rgba(255,255,255,0.03)] backdrop-blur-xl lg:flex">
@@ -99,13 +85,19 @@ export default function Navigation() {
                                 <span className="text-sm font-semibold text-white">{user.name}</span>
                                 <span className="text-xs text-[#b9aaa2]">{user.email}</span>
                             </div>
-                            {user.avatarUrl ? (
-                                <img src={user.avatarUrl} alt="Avatar" className="size-9 rounded-full border border-orange-500/30 object-cover" />
-                            ) : (
-                                <div className="flex size-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10 text-sm font-bold text-orange-500">
-                                    {user.name?.charAt(0)}
-                                </div>
-                            )}
+                            <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
+                                {user.avatarUrl ? (
+                                    <AvatarImage
+                                        src={user.avatarUrl}
+                                        alt={user.name}
+                                    />
+                                ) : null}
+
+                                <AvatarFallback>
+                                    {user.name?.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+
                             <Button variant="ghost" size="sm" onClick={handleLogout} className="ml-2 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300">
                                 Logout
                             </Button>
