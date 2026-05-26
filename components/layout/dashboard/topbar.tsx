@@ -74,12 +74,16 @@ export function Topbar() {
 
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem>
-                            Profile
+                        <DropdownMenuItem asChild>
+                            <Link href="/student/profile">
+                                Profile
+                            </Link>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem>
-                            Team Settings
+                            <Link href="/student/settings">
+                                Team Settings
+                            </Link>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem>
