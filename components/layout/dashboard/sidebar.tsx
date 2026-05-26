@@ -3,18 +3,59 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { CalendarDays, MessageSquareText, Settings, UploadCloud, UserRoundCog, UsersRound } from "lucide-react";
+import { CalendarDays, MessageSquareText, Settings, Trophy, UploadCloud, User, UserRoundCog, UsersRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
 
 const menus = [
-    { label: "Overview", href: "/student/dashboard", icon: UserRoundCog },
-    { label: "Members", href: "/student/teams", icon: UsersRound },
-    { label: "Submissions", href: "/student/submissions", icon: UploadCloud },
-    { label: "Mentor", href: "/student/mentor", icon: MessageSquareText },
-    { label: "Schedule", href: "/student/schedule", icon: CalendarDays },
-    { label: "Settings", href: "/student/settings", icon: Settings },
+    {
+        label: "Overview",
+        href: "/student/dashboard",
+        icon: UserRoundCog,
+    },
+
+    {
+        label: "Events",
+        href: "/student/events",
+        icon: Trophy,
+    },
+
+    {
+        label: "Members",
+        href: "/student/teams",
+        icon: UsersRound,
+    },
+
+    {
+        label: "Mentor",
+        href: "/student/mentor",
+        icon: MessageSquareText,
+    },
+
+    {
+        label: "Submissions",
+        href: "/student/submissions",
+        icon: UploadCloud,
+    },
+
+    {
+        label: "Schedule",
+        href: "/student/schedule",
+        icon: CalendarDays,
+    },
+
+    {
+        label: "Profile",
+        href: "/student/profile",
+        icon: User,
+    },
+
+    {
+        label: "Settings",
+        href: "/student/settings",
+        icon: Settings,
+    },
 ];
 
 export function Sidebar() {
@@ -24,7 +65,7 @@ export function Sidebar() {
         <aside className="hidden w-[280px] border-r border-white/10 bg-[#120B08]/95 lg:flex lg:flex-col">
             {/* Logo */}
             <div className="border-b border-white/10 p-6">
-                <Logo />
+
                 <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
                         Team Workspace
