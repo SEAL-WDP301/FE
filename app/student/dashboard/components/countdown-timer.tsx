@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Clock3 } from "lucide-react";
 
 interface CountdownTimerProps {
     targetDate: string;
@@ -16,11 +17,16 @@ export function CountdownTimer({
 
         if (difference <= 0) {
             return {
+                days: "00",
                 hours: "00",
                 minutes: "00",
                 seconds: "00",
             };
         }
+
+        const days = Math.floor(
+            difference / (1000 * 60 * 60 * 24)
+        );
 
         const hours = Math.floor(
             (difference / (1000 * 60 * 60)) % 24
@@ -35,6 +41,7 @@ export function CountdownTimer({
         );
 
         return {
+            days: String(days).padStart(2, "0"),
             hours: String(hours).padStart(2, "0"),
             minutes: String(minutes).padStart(2, "0"),
             seconds: String(seconds).padStart(2, "0"),
@@ -51,30 +58,61 @@ export function CountdownTimer({
         return () => clearInterval(timer);
     }, []);
 
+    const timerItems = [
+        {
+            label: "DAYS",
+            value: timeLeft.days,
+        },
+        {
+            label: "HOURS",
+            value: timeLeft.hours,
+        },
+        {
+            label: "MINS",
+            value: timeLeft.minutes,
+        },
+        {
+            label: "SECS",
+            value: timeLeft.seconds,
+        },
+    ];
+
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/5 px-4 py-3">
-            <div className="flex flex-col leading-none">
-                <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    Round Ends In
-                </span>
+        <div className="rounded-b-3xl border-t border-white/10 bg-gradient-to-b from-orange-500/[0.03] to-transparent p-6">
 
-                <div className="mt-1 flex items-center gap-2 text-lg font-bold text-white">
-                    <span className="text-orange-400">
-                        {timeLeft.hours}
-                    </span>
+            {/* Header */}
+            <div className="mb-5 flex items-center justify-between">
 
-                    <span className="text-muted-foreground">:</span>
+                <div className="flex items-center gap-2 text-lg text-[#b8aaa2]">
+                    <Clock3 className="h-5 w-5 text-orange-500" />
 
-                    <span className="text-orange-400">
-                        {timeLeft.minutes}
-                    </span>
-
-                    <span className="text-muted-foreground">:</span>
-
-                    <span className="text-orange-400">
-                        {timeLeft.seconds}
+                    <span>
+                        Round 2 closes in
                     </span>
                 </div>
+
+                <div className="rounded-full border border-orange-500/40 bg-orange-500/10 px-4 py-1.5 text-sm font-semibold text-orange-400">
+                    Qualified
+                </div>
+            </div>
+
+            {/* Timer */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+
+                {timerItems.map((item) => (
+                    <div
+                        key={item.label}
+                        className="rounded-xl bg-black/40 border border-border px-3 py-2.5 text-center"
+                    >
+                        <div className="text-2xl md:text-3xl font-bold tabular-nums gradient-text text-orange-500">
+                            {item.value}
+                        </div>
+
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {item.label}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
