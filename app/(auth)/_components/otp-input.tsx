@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, KeyboardEvent, ChangeEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface OtpInputProps {
@@ -92,10 +93,12 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
       </div>
       
       <div className="flex justify-end">
-        <button
+        <Button
           type="button"
           onClick={() => setShowOtp(!showOtp)}
-          className="flex items-center gap-2 text-xs font-medium text-[#aa9b93] hover:text-[#ff7629] transition-colors"
+          variant="subtleIcon"
+          size="auto"
+          className="p-0 text-xs font-medium"
         >
           {showOtp ? (
             <>
@@ -108,7 +111,7 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
               Hiện mã OTP
             </>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );

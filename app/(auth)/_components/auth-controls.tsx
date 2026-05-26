@@ -3,6 +3,7 @@
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type FieldProps = ComponentProps<"input"> & {
@@ -39,13 +40,15 @@ export function AuthField({ label, icon, rightIcon, hideToggle, className, type,
           {...props}
         />
         {isPassword && !rightIcon && (
-          <button
+          <Button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#aa9b93] hover:text-[#ff7629] transition-colors"
+            variant="subtleIcon"
+            size="auto"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-0"
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-          </button>
+          </Button>
         )}
         {rightIcon && (
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
@@ -75,33 +78,5 @@ export function AuthTextarea({ label, className, ...props }: TextAreaProps) {
         {...props}
       />
     </label>
-  );
-}
-
-type PrimaryButtonProps = ComponentProps<"button">;
-
-export function PrimaryButton({ className, ...props }: PrimaryButtonProps) {
-  return (
-    <button
-      className={cn(
-        "flex h-11 w-full items-center justify-center gap-2 rounded-[2rem] bg-[linear-gradient(180deg,#ff873f,#ff6f22)] px-6 text-sm font-bold text-black shadow-[0_18px_50px_rgba(255,112,34,0.28)] transition hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-[#ff7629]/30 active:translate-y-px",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-type SecondaryButtonProps = ComponentProps<"button">;
-
-export function SecondaryButton({ className, ...props }: SecondaryButtonProps) {
-  return (
-    <button
-      className={cn(
-        "flex h-11 items-center justify-center gap-2 rounded-[2rem] border border-white/15 bg-white/[0.025] px-6 text-sm font-medium text-white transition hover:border-[#ff7629]/50 hover:bg-white/[0.05] focus:outline-none focus:ring-4 focus:ring-[#ff7629]/20 active:translate-y-px",
-        className
-      )}
-      {...props}
-    />
   );
 }

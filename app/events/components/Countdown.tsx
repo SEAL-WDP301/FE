@@ -11,19 +11,12 @@ export default function Countdown() {
         return date.getTime();
     }, []);
 
-    const [now, setNow] = useState<number | null>(null);
+    const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
-        setNow(Date.now());
         const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);
     }, []);
-
-    if (now === null) {
-        return (
-            <div className="bg-[#1D1714]/40 border border-white/[0.03] rounded-[28px] p-6 h-36 animate-pulse" />
-        );
-    }
 
     const ms = Math.max(0, targetDate - now);
     const d = Math.floor(ms / 86400000);

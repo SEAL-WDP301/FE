@@ -193,23 +193,6 @@
     );
   }
 
-  .orange-button {
-    @apply rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300;
-    background: linear-gradient(180deg, #ff8a3d 0%, #f37021 100%);
-    color: #160b05;
-    box-shadow:
-      0 8px 30px -6px rgba(243, 112, 33, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  }
-
-  .orange-button:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
-  }
-
-  .orange-outline-button {
-    @apply rounded-full border border-primary/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-xl transition-all duration-300 hover:border-primary/50 hover:bg-primary/10;
-  }
 }
 
 /* =========================

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { isAxiosError } from "axios";
+import { Button } from "@/components/ui/button";
 import { AuthCard, AuthHeader } from "../_components/auth-card";
-import { PrimaryButton } from "../_components/auth-controls";
 import { OtpInput } from "../_components/otp-input";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
@@ -31,9 +32,11 @@ export default function VerifyEmailContent() {
 
       enqueueSnackbar(res.data?.message || "Xác thực thành công!", { variant: "success" });
       router.push("/login");
-    } catch (error: any) {
+    } catch (error: unknown) {
       enqueueSnackbar(
-        error.response?.data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn.",
+        isAxiosError<{ message?: string }>(error)
+          ? error.response?.data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn."
+          : "Mã OTP không hợp lệ hoặc đã hết hạn.",
         { variant: "error" }
       );
     } finally {
@@ -55,8 +58,10 @@ export default function VerifyEmailContent() {
           </div>
 
           <div className="pt-2 flex justify-center">
-            <PrimaryButton
-              className="w-full sm:w-auto min-w-[200px]"
+            <Button
+              variant="authPrimary"
+              size="auth"
+              className="w-full min-w-[200px] font-bold sm:w-auto"
               type="submit"
               disabled={loading || otp.length !== 6}
             >
@@ -65,7 +70,7 @@ export default function VerifyEmailContent() {
               ) : (
                 <>Xác nhận <ArrowRight className="size-4" /></>
               )}
-            </PrimaryButton>
+            </Button>
           </div>
         </form>
       </div>

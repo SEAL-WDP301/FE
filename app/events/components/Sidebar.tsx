@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import Countdown from "./Countdown";
 
 export default function Sidebar() {
@@ -35,15 +36,21 @@ export default function Sidebar() {
 
             {/* Cặp nút kêu gọi hành động (Call to Action) */}
             <div className="space-y-3">
-                <Link
-                    href="/register"
-                    className="block text-center bg-[#FF6B2C] hover:bg-[#ff7b42] text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-[#FF6B2C]/10 transition-all text-sm tracking-wider uppercase"
+                <Button
+                    asChild
+                    variant="eventCta"
+                    size="eventCta"
+                    className="w-full font-bold"
                 >
+                  <Link
+                    href="/register"
+                  >
                     Join hackathon →
-                </Link>
-                <button className="w-full py-3.5 rounded-2xl border border-white/[0.06] text-sm font-semibold text-[#A39690] hover:bg-white/[0.02] hover:text-white transition-all">
+                  </Link>
+                </Button>
+                <Button variant="eventOutline" size="eventCta" className="w-full font-semibold">
                     Join Discord & r/Devvit Support
-                </button>
+                </Button>
             </div>
         </aside>
     );

@@ -1,6 +1,7 @@
 import { Bell, Search, ChevronDown, Zap} from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -47,13 +48,12 @@ export function Topbar() {
                 </div>
 
                 {/* Notification */}
-                <button className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                <Button asChild variant="dashboardIcon" size="dashboardIcon" className="relative">
                     <Link href={"student/notifications"}>
                         <Bell className="h-[18px] w-[18px]" />
+                        <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.8)]" />
                     </Link>
-
-                    <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.8)]" />
-                </button>
+                </Button>
 
                 {/* User */}
                 <DropdownMenu>

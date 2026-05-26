@@ -58,20 +58,23 @@ export default function Hero() {
 
                 {/* Actions */}
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-                    <Button>
+                    <Button asChild variant="orange" size="auto" className="rounded-full px-7 py-3">
                         <Link
                             href="/register"
-                            className="btn-orange rounded-full px-7 py-3 text-sm font-semibold transition-all duration-300"
                         >
                             Join Competition →
                         </Link>
                     </Button>
-                    <Link
-                        href="/events"
-                        className="rounded-full border border-white/10 bg-white/[0.02] px-7 py-3 text-sm font-medium text-white/90 transition-all duration-300 hover:bg-white/[0.05]"
+                    <Button
+                        asChild
+                        variant="glass"
+                        size="auto"
+                        className="rounded-full px-7 py-3 text-white/90"
                     >
-                        Explore Events
-                    </Link>
+                        <Link href="/events">
+                            Explore Events
+                        </Link>
+                    </Button>
 
                 </div>
 
