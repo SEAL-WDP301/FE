@@ -27,9 +27,9 @@ function CallbackContent() {
         // Show success snackbar
         enqueueSnackbar(
           <div className="flex items-center gap-3">
-            {user.avatarUrl ? (
+            {user.avatar_url ? (
               <img 
-                src={user.avatarUrl} 
+                src={user.avatar_url} 
                 alt="Avatar" 
                 className="size-8 rounded-full border border-white/20 object-cover" 
               />

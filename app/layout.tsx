@@ -24,6 +24,8 @@ export default function RootLayout({
     <html
       lang="en"
       className={inter.variable}
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>

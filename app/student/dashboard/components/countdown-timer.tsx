@@ -48,15 +48,24 @@ export function CountdownTimer({
         };
     };
 
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+    const [isMounted, setIsMounted] = useState(false);
+    const [timeLeft, setTimeLeft] = useState({
+        days: "00",
+        hours: "00",
+        minutes: "00",
+        seconds: "00",
+    });
 
     useEffect(() => {
+        setIsMounted(true);
+        setTimeLeft(calculateTimeLeft());
+        
         const timer = setInterval(() => {
             setTimeLeft(calculateTimeLeft());
         }, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [targetDate]);
 
     const timerItems = [
         {

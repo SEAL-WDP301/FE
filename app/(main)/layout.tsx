@@ -1,5 +1,6 @@
 import Header from "@/components/layout/public/header";
 import Footer from "@/components/layout/public/footer";
+import { ProfileChecker } from "@/components/layout/public/profile-checker";
 
 export default function MainLayout({
     children,
@@ -11,6 +12,7 @@ export default function MainLayout({
             <Header />
 
             <main>
+                <ProfileChecker />
                 {children}
             </main>
 
