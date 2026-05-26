@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
+import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
@@ -14,7 +15,8 @@ import {
   AuthFooterLink,
   AuthHeader,
 } from "../_components/auth-card";
-import { AuthField, PrimaryButton, SecondaryButton } from "../_components/auth-controls";
+import { Button } from "@/components/ui/button";
+import { AuthField } from "../_components/auth-controls";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,9 +50,11 @@ export default function LoginPage() {
       
       // Redirect to home/dashboard
       router.push("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       enqueueSnackbar(
-        error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.",
+        isAxiosError<{ message?: string }>(error)
+          ? error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại."
+          : "Đăng nhập thất bại. Vui lòng thử lại.",
         { variant: "error" }
       );
     } finally {
@@ -102,28 +106,28 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <PrimaryButton type="submit" disabled={loading}>
+          <Button variant="authPrimary" size="auth" className="w-full font-bold" type="submit" disabled={loading}>
             {loading ? (
               <Loader2 className="size-4 animate-spin mx-auto" />
             ) : (
               <>Login <ArrowRight className="size-4" /></>
             )}
-          </PrimaryButton>
+          </Button>
         </form>
 
         <AuthDivider />
 
         <div className="grid gap-2 sm:grid-cols-2">
           <a href="http://localhost:3000/api/auth/google" className="block w-full">
-            <SecondaryButton type="button" className="w-full">
+            <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
               <span className="text-lg font-semibold">G</span>
               Google
-            </SecondaryButton>
+            </Button>
           </a>
-          <SecondaryButton type="button">
+          <Button variant="authSecondary" size="auth" type="button" className="font-medium">
             <span className="size-4 rounded-full border-[0.4rem] border-white" />
             GitHub
-          </SecondaryButton>
+          </Button>
         </div>
 
         <AuthFooterLink

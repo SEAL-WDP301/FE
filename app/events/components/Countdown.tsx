@@ -3,52 +3,27 @@
 import { useEffect, useState } from "react";
 
 export default function Countdown() {
-    const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; s: number } | null>(null);
-    const [mounted, setMounted] = useState<boolean>(false);
+    const targetDate = useMemo(() => {
+        const date = new Date();
+        date.setDate(date.getDate() + 6); // Đặt mốc thời gian khớp với số 06 DAZE của ảnh mẫu
+        date.setHours(date.getHours() + 23);
+        date.setMinutes(date.getMinutes() + 44);
+        return date.getTime();
+    }, []);
+
+    const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
-        setMounted(true);
-
-        // Tính toán mốc thời gian đích cố định hoàn toàn ở phía Client
-        const target = new Date();
-        target.setDate(target.getDate() + 6); // Khớp với 06 ngày của ảnh mẫu
-        target.setHours(target.getHours() + 23);
-        target.setMinutes(target.getMinutes() + 44);
-        const targetTime = target.getTime();
-
-        const calculateTime = () => {
-            const now = Date.now();
-            const ms = Math.max(0, targetTime - now);
-            const d = Math.floor(ms / 86400000);
-            const h = Math.floor((ms / 3600000) % 24);
-            const s = Math.floor((ms / 1000) % 60);
-            setTimeLeft({ d, h, s });
-        };
-
-        // Chạy lần đầu tiên ngay lập tức ở client
-        calculateTime();
-
-        // Thiết lập bộ đếm giây
-        const interval = setInterval(calculateTime, 1000);
+        const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);
     }, []);
 
-    // Nếu chưa mounted (hoặc đang SSR ở Server), hiển thị Skeleton giữ chỗ trùng khớp hoàn hảo cấu trúc DOM
-    if (!mounted || !timeLeft) {
-        return (
-            <div className="relative bg-[#1D1714]/50 border border-white/[0.04] rounded-[28px] p-6 shadow-xl overflow-hidden h-[154px] flex flex-col justify-between">
-                <div className="text-xs uppercase tracking-[0.2em] text-[#FF6B2C]/40 font-black">
-                    KICKOFF IN
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="h-16 rounded-2xl bg-[#120F0E]/80 border border-white/[0.02] animate-pulse" />
-                    <div className="h-16 rounded-2xl bg-[#120F0E]/80 border border-white/[0.02] animate-pulse" />
-                    <div className="h-16 rounded-2xl bg-[#120F0E]/80 border border-white/[0.02] animate-pulse" />
-                </div>
-            </div>
-        );
-    }
+    const ms = Math.max(0, targetDate - now);
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms / 3600000) % 24);
+    const s = Math.floor((ms / 1000) % 60);
 
+    // Khớp chính xác 100% tên nhãn cách điệu của ảnh mẫu: "DAZE", "HOURS", "SEC"
     const timeUnits = [
         { label: "DAZE", val: timeLeft.d },
         { label: "HOURS", val: timeLeft.h },

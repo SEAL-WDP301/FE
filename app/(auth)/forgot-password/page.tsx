@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -6,8 +7,9 @@ import { ArrowLeft, ArrowRight, Loader2, Mail } from "lucide-react";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 
+import { Button } from "@/components/ui/button";
 import { AuthCard, AuthFooterLink, AuthHeader } from "../_components/auth-card";
-import { AuthField, PrimaryButton, SecondaryButton } from "../_components/auth-controls";
+import { AuthField } from "../_components/auth-controls";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +26,7 @@ export default function ForgotPasswordPage() {
     } catch (error: any) {
       const errMessage = error.response?.data?.message;
       const displayMessage = Array.isArray(errMessage) ? errMessage[0] : errMessage;
-      
+
       enqueueSnackbar(
         displayMessage || "Đã có lỗi xảy ra. Vui lòng thử lại.",
         { variant: "error" }
@@ -54,20 +56,20 @@ export default function ForgotPasswordPage() {
             required
           />
 
-          <PrimaryButton type="submit" disabled={loading}>
+          <Button variant="authPrimary" size="auth" className="w-full font-bold" type="submit" disabled={loading}>
             {loading ? (
               <Loader2 className="size-4 animate-spin mx-auto" />
             ) : (
               <>Gửi link khôi phục <ArrowRight className="size-4" /></>
             )}
-          </PrimaryButton>
+          </Button>
         </form>
 
         <Link href="/login" className="block">
-          <SecondaryButton type="button" className="mx-auto w-full sm:w-auto">
+          <Button variant="authSecondary" size="auth" type="button" className="mx-auto w-full font-medium sm:w-auto">
             <ArrowLeft className="size-4" />
             Quay lại trang Đăng nhập
-          </SecondaryButton>
+          </Button>
         </Link>
 
         <AuthFooterLink

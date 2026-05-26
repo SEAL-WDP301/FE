@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 export default function Banner() {
     const handleBackToHome = () => {
         // Điều hướng bằng JavaScript an toàn cho Next.js Client Component
@@ -56,14 +58,16 @@ export default function Banner() {
                 {/* ROW HEADER TRÊN */}
                 <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
 
-                    {/* NÚT BACK TO HOME (Thiết kế dạng Button dẹt cứng cáp bằng thẻ <button>) */}
-                    <button
+                    {/* NÚT BACK TO HOME */}
+                    <Button
                         onClick={handleBackToHome}
-                        className="group inline-flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/[0.12] px-4 py-2 text-xs font-black uppercase tracking-widest text-[#A39690] hover:text-white transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                        variant="eventBack"
+                        size="eventBack"
+                        className="gap-2.5 font-black uppercase tracking-widest"
                     >
                         <span className="transform group-hover:-translate-x-0.5 transition-transform duration-150 text-sm leading-none">←</span>
                         <span>Back to home</span>
-                    </button>
+                    </Button>
 
                     {/* Cặp Badges bên phải */}
                     <div className="flex flex-wrap items-center gap-3">
@@ -89,7 +93,7 @@ export default function Banner() {
                         SEAL Spring is the kickoff season of the 2026 league.
                     </p>
                     <p className="text-base sm:text-lg text-[#A39690] font-bold leading-relaxed">
-                        Eight tracks, sixty-two mentors, 140Mđ in prizes — and one weekend you'll never forget.
+                        Eight tracks, sixty-two mentors, 140Mđ in prizes - and one weekend you&apos;ll never forget.
                     </p>
                 </div>
 

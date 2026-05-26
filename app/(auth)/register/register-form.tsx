@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
 
+import { Button } from "@/components/ui/button";
 import { AuthCard, AuthFooterLink, AuthHeader } from "../_components/auth-card";
-import { AuthField, PrimaryButton } from "../_components/auth-controls";
+import { AuthField } from "../_components/auth-controls";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 
@@ -43,8 +44,10 @@ export function RegisterForm() {
 
       enqueueSnackbar(res.data?.message || "Đăng ký thành công!", { variant: "success" });
       router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
-    } catch (error: any) {
-      const errMessage = error.response?.data?.message;
+    } catch (error: unknown) {
+      const errMessage = isAxiosError<{ message?: string | string[] }>(error)
+        ? error.response?.data?.message
+        : undefined;
       const displayMessage = Array.isArray(errMessage) ? errMessage[0] : errMessage;
       
       enqueueSnackbar(
@@ -120,8 +123,10 @@ export function RegisterForm() {
           </div>
 
           <div className="pt-4 flex justify-center">
-            <PrimaryButton
-              className="w-full sm:w-auto min-w-[200px]"
+            <Button
+              variant="authPrimary"
+              size="auth"
+              className="w-full min-w-[200px] font-bold sm:w-auto"
               type="submit"
               disabled={loading}
             >
@@ -130,7 +135,7 @@ export function RegisterForm() {
               ) : (
                 <>Đăng ký <ArrowRight className="size-4" /></>
               )}
-            </PrimaryButton>
+            </Button>
           </div>
         </form>
 

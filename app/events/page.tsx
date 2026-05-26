@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import Banner from "./components/Banner";
 import TabsContent from "./components/TabsContent";
 import Sidebar from "./components/Sidebar";
@@ -34,18 +35,15 @@ export default function EventPage() {
           {/* Thanh Tab Navigation - Size chữ đẩy lên text-lg, font-black siêu dày */}
           <div className="flex border-b border-white/[0.06] overflow-x-auto scrollbar-none sticky top-0 bg-[#120F0E]/95 backdrop-blur-md z-20 pb-4 gap-4">
             {tabs.map((tab) => (
-              <button
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                // Tăng padding từ px-5 py-2.5 lên px-7 py-4 để nút trông to sướng mắt
-                className={`px-7 py-4 text-lg font-black rounded-2xl transition-all duration-150 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "bg-[#1A1512] text-[#FF6B2C] border border-[#FF6B2C]/30 shadow-[0_4px_20px_rgba(255,107,44,0.08)]"
-                    : "text-[#8E827C] hover:text-white hover:bg-white/[0.02]"
-                }`}
+                variant={activeTab === tab.id ? "eventTabActive" : "eventTab"}
+                size="eventTab"
+                className="font-black duration-150"
               >
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </div>
 

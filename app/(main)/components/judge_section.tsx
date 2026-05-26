@@ -1,5 +1,6 @@
 import Image from 'next/image';
 
+import { Button } from '@/components/ui/button';
 import { FaLinkedin, FaTwitter, FaGithub } from 'react-icons/fa';
 
 export default function JudgesSection() {
@@ -147,17 +148,17 @@ export default function JudgesSection() {
 
                     {/* Social */}
                     <div className="flex gap-3">
-                        <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 transition-all duration-300 hover:bg-orange-500 hover:text-white">
+                        <Button variant="socialIcon" size="socialIcon">
                             <FaLinkedin />
-                        </button>
+                        </Button>
 
-                        <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 transition-all duration-300 hover:bg-orange-500 hover:text-white">
+                        <Button variant="socialIcon" size="socialIcon">
                             <FaTwitter />
-                        </button>
+                        </Button>
 
-                        <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 transition-all duration-300 hover:bg-orange-500 hover:text-white">
+                        <Button variant="socialIcon" size="socialIcon">
                             <FaGithub />
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

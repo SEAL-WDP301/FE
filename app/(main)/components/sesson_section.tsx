@@ -1,4 +1,5 @@
 import { Calendar, Users, Trophy, ArrowRight, Flower2, Sun, Leaf } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function SealSeasonsSection() {
   const seasons = [
@@ -168,13 +169,15 @@ export default function SealSeasonsSection() {
                   </div>
 
                   {/* Button */}
-                  <button
-                    className={`flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r ${season.gradient} px-6 py-3 font-medium text-white transition-all duration-300 hover:gap-3 hover:shadow-xl`}
+                  <Button
+                    variant="seasonGradient"
+                    size="auto"
+                    className={`w-full bg-gradient-to-r ${season.gradient} px-6 py-3 font-medium duration-300`}
                   >
                     <span>{season.button}</span>
 
                     <ArrowRight />
-                  </button>
+                  </Button>
                 </div>
               </div>
             );

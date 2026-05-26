@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -7,8 +8,9 @@ import { ArrowLeft, ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-re
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 
+import { Button } from "@/components/ui/button";
 import { AuthCard, AuthHeader } from "../_components/auth-card";
-import { AuthField, PrimaryButton, SecondaryButton } from "../_components/auth-controls";
+import { AuthField } from "../_components/auth-controls";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -41,16 +43,16 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const res = await axiosClient.post("/auth/reset-password", { 
+      const res = await axiosClient.post("/auth/reset-password", {
         token,
-        newPassword: formData.newPassword 
+        newPassword: formData.newPassword
       });
       enqueueSnackbar(res.data?.message || "Đổi mật khẩu thành công!", { variant: "success" });
       router.push("/login");
     } catch (error: any) {
       const errMessage = error.response?.data?.message;
       const displayMessage = Array.isArray(errMessage) ? errMessage[0] : errMessage;
-      
+
       enqueueSnackbar(
         displayMessage || "Mã xác thực đã hết hạn hoặc không hợp lệ.",
         { variant: "error" }
@@ -69,10 +71,10 @@ function ResetPasswordForm() {
             subtitle="Không tìm thấy mã khôi phục mật khẩu. Vui lòng quay lại trang Quên mật khẩu để yêu cầu lại."
           />
           <Link href="/forgot-password" className="block">
-            <SecondaryButton type="button" className="mx-auto w-full sm:w-auto">
+            <Button variant="authSecondary" size="auth" type="button" className="mx-auto w-full font-medium sm:w-auto">
               <ArrowLeft className="size-4" />
               Yêu cầu link mới
-            </SecondaryButton>
+            </Button>
           </Link>
         </div>
       </AuthCard>
@@ -122,20 +124,26 @@ function ResetPasswordForm() {
             }
           />
 
-          <PrimaryButton type="submit" disabled={loading || !formData.newPassword || formData.newPassword !== formData.confirmPassword}>
+          <Button
+            variant="authPrimary"
+            size="auth"
+            className="w-full font-bold"
+            type="submit"
+            disabled={loading || !formData.newPassword || formData.newPassword !== formData.confirmPassword}
+          >
             {loading ? (
               <Loader2 className="size-4 animate-spin mx-auto" />
             ) : (
               <>Đổi mật khẩu <ArrowRight className="size-4" /></>
             )}
-          </PrimaryButton>
+          </Button>
         </form>
 
         <Link href="/login" className="block">
-          <SecondaryButton type="button" className="mx-auto w-full sm:w-auto">
+          <Button variant="authSecondary" size="auth" type="button" className="mx-auto w-full font-medium sm:w-auto">
             <ArrowLeft className="size-4" />
             Quay lại trang Đăng nhập
-          </SecondaryButton>
+          </Button>
         </Link>
       </div>
     </AuthCard>
