@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 
-import { Clock, Trophy, Upload } from "lucide-react";
+import { Trophy, Upload } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "./countdown-timer";
 
@@ -42,11 +42,7 @@ export function CurrentEvent() {
             </div>
 
             <div className="space-y-5 p-5">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 text-orange-400" />
-                    Round 2 closes in
-                </div>
-                <CountdownTimer targetDate="2026-06-27T23:59:59" />
+                <CountdownTimer targetDate="2026-05-30T23:59:59" />
 
                 <div className="flex flex-wrap gap-3">
 
