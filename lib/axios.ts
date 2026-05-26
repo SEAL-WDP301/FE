@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 
 
 const baseURL =
@@ -18,8 +18,8 @@ axiosClient.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token');
       if (token) {
-        if (!config.headers) config.headers = {} as any;
-        (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+        config.headers = AxiosHeaders.from(config.headers);
+        config.headers.set('Authorization', `Bearer ${token}`);
       }
     }
     return config;
