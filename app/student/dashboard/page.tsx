@@ -1,44 +1,34 @@
-import { DeadlineCard } from "./components/deadline-card";
-import { MentorFeedbackCard } from "./components/mentor-feedback-card";
-import { MobileDashboardHeader } from "./components/mobile-dashboard-header";
-import { ProgressTimelineCard } from "./components/progress-timeline-card";
-import { RecentActivityPanel } from "./components/recent-activity-panel";
-import { SubmissionStatusCard } from "./components/submission-status-card";
-import { TeamHeroCard } from "./components/team-hero-card";
-import { TeamMembersPreview } from "./components/team-members-preview";
+import { ActiveEventsSection } from "./components/active-events-section";
+import { EventHubHero } from "./components/event-hub-hero";
+import { EventHubSidePanel } from "./components/event-hub-side-panel";
+import { EventTracksSection } from "./components/event-tracks-section";
+import { MyEventsSection } from "./components/my-events-section";
 import {
-    activities,
-    deadline,
-    mentorFeedback,
-    members,
-    progressSteps,
-    submission,
-    team,
-} from "./mock-data";
-
+    activeEvents,
+    announcements,
+    myEvents,
+    quickStats,
+    tracks,
+    upcomingEvents,
+} from "./overview-data";
 
 export default function StudentDashboardPage() {
     return (
-        <div className="mx-auto max-w-[1500px] space-y-5">
-            <MobileDashboardHeader />
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+            <EventHubHero />
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <main className="space-y-5">
-                    <TeamHeroCard team={team} />
-                    <ProgressTimelineCard steps={progressSteps} />
-
-                    <div className="grid gap-5 lg:grid-cols-2">
-                        <SubmissionStatusCard submission={submission} />
-                        <MentorFeedbackCard feedback={mentorFeedback} />
-                    </div>
-
-                    <TeamMembersPreview members={members} />
+            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
+                <main className="min-w-0 space-y-7">
+                    <ActiveEventsSection events={activeEvents} />
+                    <MyEventsSection events={myEvents} />
+                    <EventTracksSection tracks={tracks} />
                 </main>
 
-                <aside className="space-y-5">
-                    <DeadlineCard deadline={deadline} />
-                    <RecentActivityPanel activities={activities} />
-                </aside>
+                <EventHubSidePanel
+                    upcomingEvents={upcomingEvents}
+                    announcements={announcements}
+                    quickStats={quickStats}
+                />
             </div>
         </div>
     );

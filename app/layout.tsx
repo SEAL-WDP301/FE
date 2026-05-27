@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { SnackbarProvider } from "../components/providers/snackbar-provider";
 import { QueryProvider } from "../components/providers/query-provider";
+import { ThemeProvider } from "../components/providers/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,13 +24,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={inter.variable}
+      className={`${inter.variable} dark`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>
-          <SnackbarProvider>
-            {children}
-          </SnackbarProvider>
+          <ThemeProvider>
+            <SnackbarProvider>
+              {children}
+            </SnackbarProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

@@ -20,7 +20,7 @@ export default function RankingSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-black py-24">
+    <section className="relative overflow-hidden bg-background py-24">
       {/* Background Glow */}
       <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[200px]" />
 
@@ -28,44 +28,44 @@ export default function RankingSection() {
         {/* Header */}
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-black md:text-5xl">
-            <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               Live Rankings
             </span>
           </h2>
 
-          <p className="text-lg text-zinc-400">
+          <p className="text-lg text-muted-foreground">
             Current leaderboard standings
           </p>
         </div>
 
         {/* Table */}
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 backdrop-blur-xl">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-xl">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
               {/* Header */}
               <thead className="border-b border-orange-500/20 bg-orange-500/5">
                 <tr>
-                  <th className="px-6 py-5 text-left text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
                     Rank
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
                     Team
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
                     University
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
                     Category
                   </th>
 
-                  <th className="px-6 py-5 text-right text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-right text-sm font-medium text-muted-foreground">
                     Score
                   </th>
 
-                  <th className="px-6 py-5 text-center text-sm font-medium text-zinc-400">
+                  <th className="px-6 py-5 text-center text-sm font-medium text-muted-foreground">
                     Trend
                   </th>
                 </tr>
@@ -97,7 +97,7 @@ export default function RankingSection() {
                           )}
                         </div>
                       ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-800 text-sm font-semibold text-zinc-400">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
                           {team.rank}
                         </div>
                       )}
@@ -105,14 +105,14 @@ export default function RankingSection() {
 
                     {/* Team */}
                     <td className="px-6 py-5">
-                      <div className="font-semibold text-white">
+                      <div className="font-semibold text-foreground">
                         {team.name}
                       </div>
                     </td>
 
                     {/* University */}
                     <td className="px-6 py-5">
-                      <span className="text-sm text-zinc-400">
+                      <span className="text-sm text-muted-foreground">
                         {team.university}
                       </span>
                     </td>
@@ -157,7 +157,7 @@ export default function RankingSection() {
 
           {/* Footer */}
           <div className="border-t border-orange-500/20 bg-orange-500/5 px-6 py-4">
-            <p className="text-center text-sm text-zinc-400">
+            <p className="text-center text-sm text-muted-foreground">
               Rankings update every 6 hours based on
               qualification round submissions
             </p>

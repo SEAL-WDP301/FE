@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ThemeToggle } from '../dashboard/theme-toggle';
 
 export default function Navigation() {
     const router = useRouter();
@@ -50,19 +51,19 @@ export default function Navigation() {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-orange-500/10 bg-black/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
             <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
 
                 {/* Logo */}
                 <Logo size='sm' />
 
                 {/* Navigation */}
-                <nav className="hidden items-center rounded-full border border-white/10 bg-white/[0.03] px-2 py-1.5 shadow-[0_0_30px_rgba(255,255,255,0.03)] backdrop-blur-xl lg:flex">
+                <nav className="hidden items-center rounded-full border border-border bg-card px-2 py-1.5 shadow-[0_0_30px_rgba(255,255,255,0.03)] backdrop-blur-xl lg:flex">
                     {navItems.map((item) => (
                         <Link
                             key={item.label}
                             href={item.href}
-                            className="group relative rounded-full px-5 py-2 text-sm font-medium text-zinc-400 transition-all duration-300 hover:text-white"
+                            className="group relative rounded-full px-5 py-2 text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground"
                         >
                             {/* Hover Background */}
                             <span className="absolute inset-0 rounded-full bg-orange-500/0 transition-all duration-300 group-hover:bg-orange-500/10" />
@@ -78,12 +79,13 @@ export default function Navigation() {
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
                     {isLoading ? (
-                        <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />
+                        <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
                     ) : user && !isError ? (
                         <div className="flex items-center gap-3">
+                            <ThemeToggle />
                             <div className="hidden flex-col items-end sm:flex">
-                                <span className="text-sm font-semibold text-white">{user.name}</span>
-                                <span className="text-xs text-[#b9aaa2]">{user.email}</span>
+                                <span className="text-sm font-semibold text-foreground">{user.name}</span>
+                                <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
                             <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
                                 {user.avatarUrl ? (
@@ -104,8 +106,9 @@ export default function Navigation() {
                         </div>
                     ) : (
                         <>
+                            <ThemeToggle />
                             <Link href={"/login"}>
-                                <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-white'>
+                                <Button variant="ghost" size="sm" className='text-sm text-muted-foreground hover:text-foreground'>
                                     Login
                                 </Button>
                             </Link>

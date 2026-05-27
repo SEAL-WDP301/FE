@@ -28,7 +28,7 @@ export default function Hero() {
 
             <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
                 {/* Top Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-orange/20 bg-white/[0.03] px-4 py-2 backdrop-blur-xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-orange/20 bg-card px-4 py-2 backdrop-blur-xl">
                     <span className="h-2 w-2 rounded-full bg-orange animate-pulse" />
 
                     <span className="text-[13px] font-medium text-orange">
@@ -41,7 +41,7 @@ export default function Hero() {
                 </div>
 
                 {/* Heading */}
-                <h1 className="mt-8 text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-white sm:text-6xl md:text-7xl lg:text-[88px]">
+                <h1 className="mt-8 text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-foreground sm:text-6xl md:text-7xl lg:text-[88px]">
                     Software Engineering
                     <br />
 
@@ -69,7 +69,7 @@ export default function Hero() {
                         asChild
                         variant="glass"
                         size="auto"
-                        className="rounded-full px-7 py-3 text-white/90"
+                        className="rounded-full px-7 py-3"
                     >
                         <Link href="/events">
                             Explore Events
@@ -84,9 +84,9 @@ export default function Hero() {
                     <div className="absolute -top-10 left-1/2 h-40 w-[90%] -translate-x-1/2 bg-orange/20 blur-[90px]" />
 
                     {/* Card */}
-                    <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-2xl seal-glow">
+                    <div className="relative overflow-hidden rounded-[32px] border border-border bg-card backdrop-blur-2xl seal-glow">
                         {/* Header */}
-                        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 border-b border-border px-5 py-4 text-xs text-muted-foreground">
                             <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
                             <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
                             <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
@@ -101,7 +101,7 @@ export default function Hero() {
                         </div>
 
                         {/* Stats */}
-                        <div className="grid gap-px bg-white/5 md:grid-cols-3">
+                        <div className="grid gap-px bg-border md:grid-cols-3">
                             {[
                                 {
                                     key: "TEAMS REGISTERED",

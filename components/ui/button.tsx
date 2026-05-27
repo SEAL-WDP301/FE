@@ -35,7 +35,7 @@ const buttonVariants = cva(
           "text-foreground hover:bg-accent hover:text-accent-foreground",
 
         glass:
-          "border border-white/10 bg-white/5 text-white backdrop-blur-xl hover:bg-white/10",
+          "border border-border bg-card text-foreground backdrop-blur-xl hover:bg-muted",
 
         soft:
           "bg-primary/10 text-primary hover:bg-primary/20",
@@ -68,10 +68,10 @@ const buttonVariants = cva(
           "group rounded-xl border border-white/[0.06] bg-white/[0.02] text-[#A39690] hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-white active:scale-[0.98]",
 
         dashboardIcon:
-          "rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+          "rounded-2xl border border-border bg-card text-foreground hover:bg-muted",
 
         socialIcon:
-          "rounded-xl bg-zinc-800 text-zinc-400 hover:bg-orange-500 hover:text-white",
+          "rounded-xl border border-border bg-card text-muted-foreground hover:border-orange-500 hover:bg-orange-500 hover:text-white",
 
         seasonGradient:
           "rounded-xl text-white hover:gap-3 hover:shadow-xl",

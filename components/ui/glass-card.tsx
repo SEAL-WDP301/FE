@@ -17,7 +17,7 @@ export function GlassCard({
     return (
         <div
             className={cn(
-                "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 transition-all duration-300",
+                "relative overflow-hidden rounded-2xl border border-border bg-card backdrop-blur-xl p-5 transition-all duration-300",
                 "hover:border-orange-500/30",
                 glow && "shadow-[0_0_40px_rgba(243,112,33,0.18)]",
                 className

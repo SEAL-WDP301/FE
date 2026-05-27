@@ -13,7 +13,7 @@ export default function StudentProfilePage() {
                     My Profile
                 </p>
 
-                <h1 className="mt-3 text-5xl font-bold tracking-tight text-white">
+                <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
                     Player Card
                 </h1>
 

@@ -35,7 +35,7 @@ export default function CompetitionFlowSection() {
     ];
 
     return (
-        <section className="relative overflow-hidden bg-black py-24">
+        <section className="relative overflow-hidden bg-background py-24">
             {/* Background Glow */}
             <div className="absolute left-1/2 top-1/2 h-full w-full max-w-5xl -translate-x-1/2 -translate-y-1/2">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-500/10 to-orange-500/5 blur-3xl" />
@@ -45,12 +45,12 @@ export default function CompetitionFlowSection() {
                 {/* Header */}
                 <div className="mb-20 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Competition Flow
                         </span>
                     </h2>
 
-                    <p className="text-lg text-zinc-400">
+                    <p className="text-lg text-muted-foreground">
                         Your journey from registration to
                         victory
                     </p>
@@ -82,18 +82,18 @@ export default function CompetitionFlowSection() {
                                         </div>
 
                                         {/* Step Number */}
-                                        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-orange-500 bg-black text-sm font-bold text-white shadow-lg">
+                                        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-orange-500 bg-background text-sm font-bold text-foreground shadow-lg">
                                             {index + 1}
                                         </div>
                                     </div>
 
                                     {/* Title */}
-                                    <h3 className="mb-2 text-lg font-semibold text-white">
+                                    <h3 className="mb-2 text-lg font-semibold text-foreground">
                                         {step.title}
                                     </h3>
 
                                     {/* Description */}
-                                    <p className="text-sm leading-7 text-zinc-400">
+                                    <p className="text-sm leading-7 text-muted-foreground">
                                         {step.description}
                                     </p>
                                 </div>
