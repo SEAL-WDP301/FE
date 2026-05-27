@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Countdown() {
     const targetDate = useMemo(() => {
@@ -25,9 +25,9 @@ export default function Countdown() {
 
     // Khớp chính xác 100% tên nhãn cách điệu của ảnh mẫu: "DAZE", "HOURS", "SEC"
     const timeUnits = [
-        { label: "DAZE", val: timeLeft.d },
-        { label: "HOURS", val: timeLeft.h },
-        { label: "SEC", val: timeLeft.s }
+        { label: "DAZE", val: d },
+        { label: "HOURS", val: h },
+        { label: "SEC", val: s }
     ];
 
     return (

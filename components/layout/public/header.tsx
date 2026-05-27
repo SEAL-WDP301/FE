@@ -22,7 +22,10 @@ export default function Navigation() {
             const token = localStorage.getItem('access_token');
             if (!token) return null;
             const res = await axiosClient.get('/users/profile');
-            return res.data?.data;
+            const profile = res.data?.data;
+            return profile
+                ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
+                : null;
         },
     });
 
@@ -49,6 +52,8 @@ export default function Navigation() {
         { label: 'About', href: '#about' },
         { label: 'FAQ', href: '#FAQ' }
     ];
+    const rawAvatarUrl = user?.avatarUrl;
+    const avatarUrl = typeof rawAvatarUrl === 'string' ? rawAvatarUrl.trim() : '';
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
@@ -88,10 +93,12 @@ export default function Navigation() {
                                 <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
                             <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
-                                {user.avatarUrl ? (
+                                {avatarUrl ? (
                                     <AvatarImage
-                                        src={user.avatarUrl}
+                                        key={avatarUrl}
+                                        src={avatarUrl}
                                         alt={user.name}
+                                        referrerPolicy="no-referrer"
                                     />
                                 ) : null}
 

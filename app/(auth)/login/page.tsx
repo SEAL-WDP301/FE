@@ -37,17 +37,17 @@ export default function LoginPage() {
 
     try {
       const res = await axiosClient.post("/auth/signin", formData);
-      
+
       // Save token (if any frontend handling is needed, though axios handles bearer auto now)
       if (res.data?.data?.accessToken) {
         localStorage.setItem("access_token", res.data.data.accessToken);
       }
 
       enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
-      
+
       // Update global user state
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      
+
       // Redirect to home/dashboard
       router.push("/");
     } catch (error: unknown) {

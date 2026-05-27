@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,7 +17,10 @@ export function ProfileChecker() {
     queryKey: ["userProfile"],
     queryFn: async () => {
       const res = await axiosClient.get("/users/profile");
-      return res.data?.data;
+      const profile = res.data?.data;
+      return profile
+        ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
+        : null;
     },
     enabled: hasToken && !hasChecked,
     retry: false,
@@ -34,7 +38,7 @@ export function ProfileChecker() {
 
   return (
     <>
-      <ProfileCompletionModal isOpen={showModal} />
+      <ProfileCompletionModal isOpen={showModal} onOpenChange={setShowModal} />
     </>
   );
 }

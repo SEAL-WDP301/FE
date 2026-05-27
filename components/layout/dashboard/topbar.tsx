@@ -84,14 +84,10 @@ export function Topbar() {
                             </Link>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem>
-<<<<<<< HEAD
+                        <DropdownMenuItem asChild>
                             <Link href="/student/settings">
                                 Team Settings
                             </Link>
-=======
-                            My Teams
->>>>>>> notification
                         </DropdownMenuItem>
 
                         <DropdownMenuItem>

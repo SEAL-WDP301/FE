@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -31,7 +32,7 @@ const stakeholderSchema = z.object({
   bio: z.string().optional(),
 });
 
-export function ProfileCompletionModal({ isOpen }: { isOpen: boolean }) {
+export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange?: (open: boolean) => void }) {
   const [activeTab, setActiveTab] = useState("student");
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +59,7 @@ export function ProfileCompletionModal({ isOpen }: { isOpen: boolean }) {
       await axiosClient.put("/users/profile/student", payload);
       enqueueSnackbar("Cập nhật hồ sơ sinh viên thành công", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      window.location.reload();
+      onOpenChange?.(false);
     } catch (error: any) {
       enqueueSnackbar(error.response?.data?.message || "Lỗi khi cập nhật hồ sơ", { variant: "error" });
     } finally {
@@ -72,7 +73,7 @@ export function ProfileCompletionModal({ isOpen }: { isOpen: boolean }) {
       await axiosClient.put("/users/profile/stakeholder", values);
       enqueueSnackbar("Cập nhật hồ sơ đối tác thành công", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      window.location.reload();
+      onOpenChange?.(false);
     } catch (error: any) {
       enqueueSnackbar(error.response?.data?.message || "Lỗi khi cập nhật hồ sơ", { variant: "error" });
     } finally {
@@ -81,7 +82,7 @@ export function ProfileCompletionModal({ isOpen }: { isOpen: boolean }) {
   };
 
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Hoàn thiện hồ sơ</DialogTitle>
@@ -109,10 +110,10 @@ export function ProfileCompletionModal({ isOpen }: { isOpen: boolean }) {
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Chọn trường đại học">
-                              {(val: string | null) => 
-                                val === "fpt" ? "Đại học FPT" : 
-                                val === "external" ? "Trường khác" : 
-                                "Chọn trường đại học"
+                              {(val: string | null) =>
+                                val === "fpt" ? "Đại học FPT" :
+                                  val === "external" ? "Trường khác" :
+                                    "Chọn trường đại học"
                               }
                             </SelectValue>
                           </SelectTrigger>
