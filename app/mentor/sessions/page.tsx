@@ -22,17 +22,17 @@ export default function MentoringSessionsPage() {
                 <main className="space-y-5">
                     <GlassCard className="rounded-[24px] bg-card p-6">
                         <div className="mb-5 flex items-center gap-2">
-                            <CalendarDays className="h-5 w-5 text-orange-400" />
-                            <h2 className="text-lg font-semibold text-white">Weekly Calendar</h2>
+                            <CalendarDays className="h-5 w-5 text-primary" />
+                            <h2 className="text-lg font-semibold text-foreground">Weekly Calendar</h2>
                         </div>
                         <div className="grid gap-3 md:grid-cols-5">
                             {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, index) => (
-                                <div key={day} className="min-h-40 rounded-[20px] border border-white/10 bg-white/[0.035] p-3">
-                                    <p className="font-semibold text-white">{day}</p>
+                                <div key={day} className="min-h-40 rounded-[20px] border border-border bg-muted/40 p-3">
+                                    <p className="font-semibold text-foreground">{day}</p>
                                     {sessions[index] ? (
                                         <div className="mt-4 rounded-2xl border border-orange-500/20 bg-orange-500/10 p-3">
-                                            <p className="text-sm font-semibold text-white">{sessions[index].team}</p>
-                                            <p className="mt-1 text-xs text-orange-200">{sessions[index].time}</p>
+                                            <p className="text-sm font-semibold text-foreground">{sessions[index].team}</p>
+                                            <p className="mt-1 text-xs text-primary">{sessions[index].time}</p>
                                         </div>
                                     ) : null}
                                 </div>
@@ -45,9 +45,9 @@ export default function MentoringSessionsPage() {
                             <GlassCard key={`${session.team}-${session.time}`} className="rounded-[22px] bg-card p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
-                                        <h3 className="font-semibold text-white">{session.team}</h3>
+                                        <h3 className="font-semibold text-foreground">{session.team}</h3>
                                         <p className="mt-1 text-sm text-muted-foreground">{session.topic}</p>
-                                        <p className="mt-2 text-xs text-orange-300">{session.time} · {session.type}</p>
+                                        <p className="mt-2 text-xs text-primary">{session.time} · {session.type}</p>
                                     </div>
                                     <SessionStatusBadge status={session.status} />
                                 </div>
@@ -62,12 +62,12 @@ export default function MentoringSessionsPage() {
 
                 <aside>
                     <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Session Detail Modal</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Session Detail Modal</h2>
                         <div className="mt-5 space-y-4">
                             {["Objectives", "Discussion notes", "Team concerns", "Follow-up tasks"].map((label) => (
                                 <label key={label} className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
-                                    <Textarea className="min-h-20 rounded-2xl border-white/10 bg-white/[0.03]" placeholder={`Add ${label.toLowerCase()}...`} />
+                                    <Textarea className="min-h-20 rounded-2xl border-border bg-muted/40" placeholder={`Add ${label.toLowerCase()}...`} />
                                 </label>
                             ))}
                             <Badge variant="outline">Modern modal preview</Badge>

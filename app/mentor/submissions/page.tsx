@@ -16,7 +16,7 @@ export default function SubmissionsReviewPage() {
             <GlassCard className="rounded-[22px] bg-card p-4">
                 <div className="flex flex-wrap gap-2">
                     {["Event", "Round", "Status", "Submission type"].map((filter) => (
-                        <Button key={filter} variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03]">{filter}</Button>
+                        <Button key={filter} variant="outline" className="rounded-2xl border-border bg-muted/40">{filter}</Button>
                     ))}
                 </div>
             </GlassCard>
@@ -25,11 +25,11 @@ export default function SubmissionsReviewPage() {
                 <main className="grid gap-4 md:grid-cols-2">
                     {submissions.map((submission) => (
                         <GlassCard key={`${submission.team}-${submission.title}`} className="rounded-[22px] bg-card p-5">
-                            <div className="mb-4 h-28 rounded-[20px] border border-white/10 bg-gradient-to-br from-orange-500/15 to-white/[0.03]" />
+                            <div className="mb-4 h-28 rounded-[20px] border border-border bg-gradient-to-br from-orange-500/15 to-muted/40" />
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <p className="text-sm text-orange-300">{submission.team}</p>
-                                    <h2 className="mt-1 font-semibold text-white">{submission.title}</h2>
+                                    <p className="text-sm text-primary">{submission.team}</p>
+                                    <h2 className="mt-1 font-semibold text-foreground">{submission.title}</h2>
                                     <p className="mt-2 text-sm text-muted-foreground">{submission.round} · {submission.time} · {submission.type}</p>
                                 </div>
                                 <Badge variant={submission.status === "Ready" ? "success" : submission.status === "Needs Revision" ? "destructive" : "default"}>
@@ -39,7 +39,7 @@ export default function SubmissionsReviewPage() {
                             <div className="mt-5 flex flex-wrap gap-2">
                                 <Button variant="orange" size="sm" className="rounded-xl"><Eye className="h-4 w-4" />View</Button>
                                 <Button variant="soft" size="sm" className="rounded-xl"><MessageSquarePlus className="h-4 w-4" />Add Review</Button>
-                                <Button variant="ghost" size="sm" className="rounded-xl text-orange-400"><Download className="h-4 w-4" />Download</Button>
+                                <Button variant="ghost" size="sm" className="rounded-xl text-primary"><Download className="h-4 w-4" />Download</Button>
                             </div>
                         </GlassCard>
                     ))}
@@ -47,12 +47,12 @@ export default function SubmissionsReviewPage() {
 
                 <aside>
                     <GlassCard glow className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Review Panel</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Review Panel</h2>
                         <div className="mt-5 space-y-4">
-                            <Textarea placeholder="Mentor comments..." className="min-h-24 rounded-2xl border-white/10 bg-white/[0.03]" />
-                            <Textarea placeholder="Improvement suggestions..." className="min-h-24 rounded-2xl border-white/10 bg-white/[0.03]" />
+                            <Textarea placeholder="Mentor comments..." className="min-h-24 rounded-2xl border-border bg-muted/40" />
+                            <Textarea placeholder="Improvement suggestions..." className="min-h-24 rounded-2xl border-border bg-muted/40" />
                             <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
-                                <p className="text-sm font-semibold text-white">Readiness indicator</p>
+                                <p className="text-sm font-semibold text-foreground">Readiness indicator</p>
                                 <p className="mt-1 text-xs text-muted-foreground">Ready after architecture clarification.</p>
                             </div>
                             <Button variant="orange" className="w-full rounded-2xl">Submit Review</Button>

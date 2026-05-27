@@ -14,6 +14,7 @@ import {
     Video,
 } from "lucide-react";
 
+import { ThemeToggle } from "@/components/layout/dashboard/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Logo from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -33,17 +34,21 @@ export function MentorSidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="hidden w-[290px] border-r border-white/10 bg-[#120B08]/95 lg:flex lg:flex-col">
-            <div className="border-b border-white/10 p-6">
-                <Logo />
+        <aside className="hidden w-[290px] border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex lg:flex-col">
+            <div className="border-b border-border p-6">
+                <div className="flex items-center gap-2">
+                    <Logo />
+                    <ThemeToggle />
+                </div>
+
                 <div className="mt-5 rounded-3xl border border-orange-500/15 bg-orange-500/10 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-foreground">
                         Mentor Portal
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-white">
+                    <p className="mt-2 font-semibold text-foreground">
                         SEAL Spring 2026
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         12 assigned teams
                     </p>
                 </div>
@@ -61,14 +66,14 @@ export function MentorSidebar() {
                             className={cn(
                                 "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all",
                                 active
-                                    ? "bg-orange-500/15 text-orange-400 shadow-[0_0_30px_rgba(243,112,33,0.15)] ring-1 ring-orange-500/20"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                                    ? "bg-orange-500/15 text-primary shadow-[0_0_30px_rgba(243,112,33,0.15)] ring-1 ring-orange-500/20"
+                                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                             )}
                         >
                             <Icon className="h-5 w-5" />
                             <span className="flex-1">{item.label}</span>
                             {item.badge ? (
-                                <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-black">
+                                <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
                                     {item.badge}
                                 </span>
                             ) : null}
@@ -77,16 +82,16 @@ export function MentorSidebar() {
                 })}
             </nav>
 
-            <div className="border-t border-white/10 p-4">
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="border-t border-border p-4">
+                <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 p-3">
                     <Avatar className="h-10 w-10 border border-orange-500/25">
                         <AvatarFallback>HN</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">Huy Nguyen</p>
+                        <p className="truncate text-sm font-semibold text-foreground">Huy Nguyen</p>
                         <p className="truncate text-xs text-muted-foreground">Senior Mentor</p>
                     </div>
-                    <Bell className="h-4 w-4 text-orange-400" />
+                    <Bell className="h-4 w-4 text-primary" />
                 </div>
             </div>
         </aside>

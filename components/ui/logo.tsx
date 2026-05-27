@@ -47,7 +47,7 @@ export default function Logo({
       {showText && (
         <div className="leading-tight">
           <h1
-            className={`${current.title} font-bold tracking-tight text-white`}
+            className={`${current.title} font-bold tracking-tight text-foreground`}
           >
             SEAL
           </h1>

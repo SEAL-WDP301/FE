@@ -22,19 +22,19 @@ export default function TeamProgressPage() {
                     ["Active Teams", "11"],
                 ].map(([label, value]) => (
                     <GlassCard key={label} className="rounded-[22px] bg-card p-5">
-                        <TrendingUp className="h-5 w-5 text-orange-400" />
+                        <TrendingUp className="h-5 w-5 text-primary" />
                         <p className="mt-4 text-sm text-muted-foreground">{label}</p>
-                        <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+                        <p className="mt-2 text-3xl font-semibold text-foreground">{value}</p>
                     </GlassCard>
                 ))}
             </section>
 
             <GlassCard className="rounded-[24px] bg-card p-6">
-                <h2 className="text-lg font-semibold text-white">Progress Management Table</h2>
+                <h2 className="text-lg font-semibold text-foreground">Progress Management Table</h2>
                 <div className="mt-5">
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-white/10 hover:bg-transparent">
+                            <TableRow className="border-border hover:bg-transparent">
                                 {["Team", "Project", "Current milestone", "Completion", "Last update", "Risk", "Mentor status", "Actions"].map((head) => (
                                     <TableHead key={head} className="text-muted-foreground">{head}</TableHead>
                                 ))}
@@ -42,19 +42,19 @@ export default function TeamProgressPage() {
                         </TableHeader>
                         <TableBody>
                             {teams.map((team) => (
-                                <TableRow key={team.name} className="border-white/10 hover:bg-white/[0.03]">
-                                    <TableCell className="font-semibold text-white">{team.name}</TableCell>
+                                <TableRow key={team.name} className="border-border hover:bg-muted/40">
+                                    <TableCell className="font-semibold text-foreground">{team.name}</TableCell>
                                     <TableCell className="text-muted-foreground">{team.project}</TableCell>
                                     <TableCell className="text-muted-foreground">{team.milestone}</TableCell>
                                     <TableCell className="min-w-36">
                                         <ProgressBar value={team.progress} />
-                                        <span className="mt-1 block text-xs text-orange-300">{team.progress}%</span>
+                                        <span className="mt-1 block text-xs text-primary">{team.progress}%</span>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">{team.lastActivity}</TableCell>
                                     <TableCell><RiskBadge risk={team.risk} /></TableCell>
                                     <TableCell><TeamStatusBadge status={team.status} /></TableCell>
                                     <TableCell>
-                                        <Button variant="ghost" size="sm" className="rounded-xl text-orange-400">
+                                        <Button variant="ghost" size="sm" className="rounded-xl text-primary">
                                             <Eye className="h-4 w-4" />
                                             View
                                         </Button>

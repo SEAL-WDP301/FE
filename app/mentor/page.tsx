@@ -19,7 +19,7 @@ export default function MentorDashboardPage() {
                 subtitle="Monitor your assigned teams and mentoring activities."
                 actions={
                     <>
-                        <Button variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03]">
+                        <Button variant="outline" className="rounded-2xl border-border bg-muted/40">
                             <Search className="h-4 w-4" />
                             Search Teams
                         </Button>
@@ -42,14 +42,14 @@ export default function MentorDashboardPage() {
                                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                                         {stat.label}
                                     </p>
-                                    <p className="mt-3 text-4xl font-semibold text-white">
+                                    <p className="mt-3 text-4xl font-semibold text-foreground">
                                         {stat.value}
                                     </p>
-                                    <p className="mt-2 text-sm text-orange-300">
+                                    <p className="mt-2 text-sm text-primary">
                                         {stat.trend}
                                     </p>
                                 </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-primary">
                                     <Icon className="h-5 w-5" />
                                 </div>
                             </div>
@@ -61,12 +61,12 @@ export default function MentorDashboardPage() {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
                 <main className="space-y-5">
                     <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Today&apos;s Sessions</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Today&apos;s Sessions</h2>
                         <div className="mt-5 space-y-4">
                             {sessions.slice(0, 3).map((session) => (
-                                <div key={`${session.team}-${session.time}`} className="flex flex-col gap-3 rounded-[20px] border border-white/10 bg-white/[0.035] p-4 md:flex-row md:items-center md:justify-between">
+                                <div key={`${session.team}-${session.time}`} className="flex flex-col gap-3 rounded-[20px] border border-border bg-muted/40 p-4 md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <p className="font-semibold text-white">{session.team}</p>
+                                        <p className="font-semibold text-foreground">{session.team}</p>
                                         <p className="mt-1 text-sm text-muted-foreground">{session.topic} · {session.time} · {session.type}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -79,13 +79,13 @@ export default function MentorDashboardPage() {
                     </GlassCard>
 
                     <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Team Progress Overview</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Team Progress Overview</h2>
                         <div className="mt-5 grid gap-4 md:grid-cols-2">
                             {teams.map((team) => (
-                                <div key={team.name} className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+                                <div key={team.name} className="rounded-[20px] border border-border bg-muted/40 p-4">
                                     <div className="mb-3 flex items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-semibold text-white">{team.name}</p>
+                                            <p className="font-semibold text-foreground">{team.name}</p>
                                             <p className="text-xs text-muted-foreground">{team.milestone}</p>
                                         </div>
                                         <RiskBadge risk={team.risk} />
@@ -93,7 +93,7 @@ export default function MentorDashboardPage() {
                                     <ProgressBar value={team.progress} />
                                     <div className="mt-3 flex items-center justify-between text-sm">
                                         <TeamStatusBadge status={team.status} />
-                                        <span className="font-semibold text-orange-300">{team.progress}%</span>
+                                        <span className="font-semibold text-primary">{team.progress}%</span>
                                     </div>
                                 </div>
                             ))}
@@ -103,12 +103,12 @@ export default function MentorDashboardPage() {
 
                 <aside className="space-y-5">
                     <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Teams Requiring Attention</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Teams Requiring Attention</h2>
                         <div className="mt-5 space-y-3">
                             {attentionItems.map((item) => (
                                 <div key={item.team} className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="font-semibold text-white">{item.team}</p>
+                                        <p className="font-semibold text-foreground">{item.team}</p>
                                         <Badge variant={item.level === "High" ? "destructive" : "warning"}>{item.level}</Badge>
                                     </div>
                                     <p className="mt-2 text-sm text-muted-foreground">{item.reason}</p>
@@ -118,7 +118,7 @@ export default function MentorDashboardPage() {
                     </GlassCard>
 
                     <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-white">Recent Activities</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Recent Activities</h2>
                         <div className="mt-5 space-y-4">
                             {activities.map((activity) => (
                                 <div key={activity} className="flex gap-3 text-sm">

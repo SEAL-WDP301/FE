@@ -19,11 +19,11 @@ export default function MentorTeamsPage() {
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="relative xl:max-w-md xl:flex-1">
                         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Search team, event, leader..." className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11" />
+                        <Input placeholder="Search team, event, leader..." className="h-11 rounded-2xl border-border bg-muted/40 pl-11" />
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {["Event", "Round", "Status", "Risk Level"].map((filter) => (
-                            <Button key={filter} variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03]">
+                            <Button key={filter} variant="outline" className="rounded-2xl border-border bg-muted/40">
                                 <Filter className="h-4 w-4" />
                                 {filter}
                             </Button>
@@ -41,7 +41,7 @@ export default function MentorTeamsPage() {
                                     <AvatarFallback>{team.avatar}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-white">{team.name}</h2>
+                                    <h2 className="text-lg font-semibold text-foreground">{team.name}</h2>
                                     <p className="text-sm text-muted-foreground">{team.project}</p>
                                 </div>
                             </div>
@@ -49,16 +49,16 @@ export default function MentorTeamsPage() {
                         </div>
 
                         <div className="mt-5 space-y-2 text-sm text-muted-foreground">
-                            <p>Event: <span className="text-white">{team.event}</span></p>
-                            <p>Leader: <span className="text-white">{team.leader}</span></p>
-                            <p>Members: <span className="text-white">{team.members}</span></p>
-                            <p>Last activity: <span className="text-white">{team.lastActivity}</span></p>
+                            <p>Event: <span className="text-foreground">{team.event}</span></p>
+                            <p>Leader: <span className="text-foreground">{team.leader}</span></p>
+                            <p>Members: <span className="text-foreground">{team.members}</span></p>
+                            <p>Last activity: <span className="text-foreground">{team.lastActivity}</span></p>
                         </div>
 
                         <div className="mt-5">
                             <div className="mb-2 flex justify-between text-sm">
                                 <TeamStatusBadge status={team.status} />
-                                <span className="font-semibold text-orange-300">{team.progress}%</span>
+                                <span className="font-semibold text-primary">{team.progress}%</span>
                             </div>
                             <ProgressBar value={team.progress} />
                         </div>
@@ -69,7 +69,7 @@ export default function MentorTeamsPage() {
                                 <MessageSquarePlus className="h-4 w-4" />
                                 Add Feedback
                             </Button>
-                            <Button variant="ghost" size="sm" className="rounded-xl text-orange-400 hover:bg-orange-500/10">
+                            <Button variant="ghost" size="sm" className="rounded-xl text-primary hover:bg-orange-500/10">
                                 <Video className="h-4 w-4" />
                                 Schedule
                             </Button>

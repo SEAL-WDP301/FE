@@ -26,12 +26,12 @@ export default function AnnouncementsPage() {
                 {announcements.map((announcement) => (
                     <GlassCard key={announcement.title} className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
                         <div className="flex gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500/10 text-primary">
                                 <Megaphone className="h-5 w-5" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <h2 className="text-lg font-semibold text-white">{announcement.title}</h2>
+                                    <h2 className="text-lg font-semibold text-foreground">{announcement.title}</h2>
                                     <Badge variant={priorityVariant(announcement.priority)}>{announcement.priority}</Badge>
                                 </div>
                                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{announcement.content}</p>
