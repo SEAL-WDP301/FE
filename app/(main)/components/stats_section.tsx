@@ -7,7 +7,7 @@ export default function Stats() {
     ];
 
     return (
-        <section className="relative overflow-hidden border-y border-white/5 bg-white/[0.02]">
+        <section className="relative overflow-hidden border-y border-border bg-muted/20">
             {/* Background Glow */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange/5 to-transparent" />
 

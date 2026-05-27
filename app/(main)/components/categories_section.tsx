@@ -47,7 +47,7 @@ export default function CategoriesSection() {
     ];
 
     return (
-        <section className="relative overflow-hidden bg-black py-24">
+        <section className="relative overflow-hidden bg-background py-24">
             {/* Background Glow */}
             <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[200px]" />
 
@@ -55,12 +55,12 @@ export default function CategoriesSection() {
                 {/* Header */}
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Competition Categories
                         </span>
                     </h2>
 
-                    <p className="text-lg text-zinc-400">
+                    <p className="text-lg text-muted-foreground">
                         Choose your track and start building
                     </p>
                 </div>
@@ -73,7 +73,7 @@ export default function CategoriesSection() {
                         return (
                             <div
                                 key={index}
-                                className="group relative overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
+                                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
                             >
                                 {/* Gradient Overlay */}
                                 <div
@@ -92,18 +92,18 @@ export default function CategoriesSection() {
                                     </div>
 
                                     {/* Title */}
-                                    <h3 className="mb-3 text-2xl font-bold text-white">
+                                    <h3 className="mb-3 text-2xl font-bold text-foreground">
                                         {category.title}
                                     </h3>
 
                                     {/* Description */}
-                                    <p className="mb-6 text-sm leading-7 text-zinc-400">
+                                    <p className="mb-6 text-sm leading-7 text-muted-foreground">
                                         {category.description}
                                     </p>
 
                                     {/* Footer */}
                                     <div className="flex items-center justify-between border-t border-orange-500/20 pt-4">
-                                        <span className="text-sm text-zinc-500">
+                                        <span className="text-sm text-muted-foreground">
                                             Active Teams
                                         </span>
 

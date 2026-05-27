@@ -38,7 +38,7 @@ export default function FAQSection() {
     ];
 
     return (
-        <section className="relative overflow-hidden bg-black py-24">
+        <section className="relative overflow-hidden bg-background py-24">
             {/* Background Glow */}
             <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[150px]" />
 
@@ -46,12 +46,12 @@ export default function FAQSection() {
                 {/* Header */}
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Frequently Asked Questions
                         </span>
                     </h2>
 
-                    <p className="text-lg text-zinc-400">
+                    <p className="text-lg text-muted-foreground">
                         Find answers to common questions
                     </p>
                 </div>
@@ -67,12 +67,12 @@ export default function FAQSection() {
                             <Accordion.Item
                                 key={index}
                                 value={`faq-${index}`}
-                                className="group overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 backdrop-blur-xl transition-all duration-300 hover:border-orange-500/40"
+                                className="group overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-xl transition-all duration-300 hover:border-orange-500/40"
                             >
                                 {/* Trigger */}
                                 <Accordion.Header>
                                     <Accordion.Trigger className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors duration-300 hover:bg-orange-500/5">
-                                        <span className="pr-5 text-lg font-semibold text-white">
+                                        <span className="pr-5 text-lg font-semibold text-foreground">
                                             {faq.question}
                                         </span>
 
@@ -83,7 +83,7 @@ export default function FAQSection() {
                                 {/* Content */}
                                 <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                                     <div className="border-t border-orange-500/10 px-6 pb-6 pt-5">
-                                        <p className="leading-8 text-zinc-400">
+                                        <p className="leading-8 text-muted-foreground">
                                             {faq.answer}
                                         </p>
                                     </div>

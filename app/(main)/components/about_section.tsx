@@ -45,7 +45,7 @@ export default function AboutSealSection() {
     ];
 
     return (
-        <section className="relative overflow-hidden bg-black py-24">
+        <section className="relative overflow-hidden bg-background py-24">
             {/* Background Glow */}
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[140px]" />
 
@@ -62,13 +62,13 @@ export default function AboutSealSection() {
 
                         {/* Title */}
                         <h2 className="mb-6 text-4xl font-black leading-tight md:text-5xl">
-                            <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                                 Software Engineering Excellence
                             </span>
                         </h2>
 
                         {/* Description */}
-                        <p className="mb-10 text-lg leading-8 text-zinc-400">
+                        <p className="mb-10 text-lg leading-8 text-muted-foreground">
                             SEAL (Software Engineering Agile League)
                             is an annual academic hackathon series
                             that brings together talented students
@@ -86,7 +86,7 @@ export default function AboutSealSection() {
                                 return (
                                     <div
                                         key={index}
-                                        className="group flex gap-4 rounded-2xl border border-orange-500/10 bg-zinc-900/40 p-5 backdrop-blur-xl transition-all duration-300 hover:border-orange-500/30 hover:bg-zinc-900/60"
+                                        className="group flex gap-4 rounded-2xl border border-border bg-card p-5 backdrop-blur-xl transition-all duration-300 hover:border-orange-500/30 hover:bg-muted/60"
                                     >
                                         {/* Icon */}
                                         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-110">
@@ -95,11 +95,11 @@ export default function AboutSealSection() {
 
                                         {/* Content */}
                                         <div>
-                                            <h3 className="mb-2 text-lg font-semibold text-white">
+                                            <h3 className="mb-2 text-lg font-semibold text-foreground">
                                                 {feature.title}
                                             </h3>
 
-                                            <p className="text-sm leading-7 text-zinc-400">
+                                            <p className="text-sm leading-7 text-muted-foreground">
                                                 {feature.description}
                                             </p>
                                         </div>
@@ -111,7 +111,7 @@ export default function AboutSealSection() {
 
                     {/* RIGHT */}
                     <div className="relative">
-                        <div className="relative overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 p-8 backdrop-blur-xl">
+                        <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 backdrop-blur-xl">
                             {/* Overlay */}
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent" />
 
@@ -120,7 +120,7 @@ export default function AboutSealSection() {
 
                             <div className="relative z-10">
                                 {/* Title */}
-                                <h3 className="mb-10 text-3xl font-bold text-white">
+                                <h3 className="mb-10 text-3xl font-bold text-foreground">
                                     Annual SEAL Cycle
                                 </h3>
 
@@ -141,16 +141,16 @@ export default function AboutSealSection() {
                                             {/* Content */}
                                             <div className="flex-1">
                                                 <div className="mb-1 flex items-center justify-between">
-                                                    <h4 className="text-xl font-semibold text-white">
+                                                    <h4 className="text-xl font-semibold text-foreground">
                                                         SEAL {item.season}
                                                     </h4>
 
-                                                    <span className="text-sm text-zinc-500">
+                                                    <span className="text-sm text-muted-foreground">
                                                         {item.month}
                                                     </span>
                                                 </div>
 
-                                                <p className="text-sm text-zinc-400">
+                                                <p className="text-sm text-muted-foreground">
                                                     {item.status}
                                                 </p>
                                             </div>

@@ -4,7 +4,7 @@ import { Mail } from 'lucide-react'
 
 export default function Footer() {
     return (
-        <footer className="relative mt-24 border-t border-orange-500/20 bg-[#0a0a0a]">
+        <footer className="relative mt-24 border-t border-border bg-background">
             {/* Glow */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
@@ -24,13 +24,13 @@ export default function Footer() {
                                     SEAL
                                 </h2>
 
-                                <p className="text-xs text-zinc-400">
+                                <p className="text-xs text-muted-foreground">
                                     FPT University
                                 </p>
                             </div>
                         </div>
 
-                        <p className="mb-6 text-sm leading-7 text-zinc-400">
+                        <p className="mb-6 text-sm leading-7 text-muted-foreground">
                             Annual academic hackathon series bringing
                             together talented students to tackle
                             real-world challenges.
@@ -39,35 +39,35 @@ export default function Footer() {
                         <div className="flex gap-3">
                             <Link
                                 href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/20 bg-zinc-900/50 text-zinc-400 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
                             >
                                 <FaFacebook size={16} />
                             </Link>
 
                             <Link
                                 href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/20 bg-zinc-900/50 text-zinc-400 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
                             >
                                 <FaTwitter size={16} />
                             </Link>
 
                             <Link
                                 href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/20 bg-zinc-900/50 text-zinc-400 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
                             >
                                 <FaGithub size={16} />
                             </Link>
 
                             <Link
                                 href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/20 bg-zinc-900/50 text-zinc-400 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
                             >
                                 <FaLinkedin size={16} />
                             </Link>
 
                             <Link
                                 href="#"
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/20 bg-zinc-900/50 text-zinc-400 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-500 hover:text-white"
                             >
                                 <FaYoutube size={16} />
                             </Link>
@@ -83,28 +83,28 @@ export default function Footer() {
                         <div className="flex flex-col gap-3">
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 About SEAL
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Past Seasons
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Rules & Guidelines
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Hall of Fame
                             </Link>
@@ -120,28 +120,28 @@ export default function Footer() {
                         <div className="flex flex-col gap-3">
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Documentation
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 FAQ
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Support
                             </Link>
 
                             <Link
                                 href="#"
-                                className="text-sm text-zinc-400 transition-all hover:translate-x-1 hover:text-orange-500"
+                                className="text-sm text-muted-foreground transition-all hover:translate-x-1 hover:text-orange-500"
                             >
                                 Privacy Policy
                             </Link>
@@ -155,13 +155,13 @@ export default function Footer() {
                         </h3>
 
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-400">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Mail className="text-orange-500" />
 
                                 <span>seal@fpt.edu.vn</span>
                             </div>
 
-                            <p className="text-sm leading-7 text-zinc-400">
+                            <p className="text-sm leading-7 text-muted-foreground">
                                 Software Engineering Department
                                 <br />
                                 FPT University HCMC
@@ -176,12 +176,12 @@ export default function Footer() {
 
                 {/* Bottom */}
                 <div className="flex flex-col items-center justify-between gap-4 border-t border-orange-500/20 pt-8 md:flex-row">
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-muted-foreground">
                         © 2026 SEAL - Software Engineering Agile
                         League. All rights reserved.
                     </p>
 
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-muted-foreground">
                         Organized by{' '}
                         <span className="text-orange-500">
                             SE Department

@@ -4,35 +4,39 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Logo from "@/components/ui/logo";
 import Link from "next/link";
+import { ThemeToggle } from "./theme-toggle";
+
+
 
 export function Topbar() {
     return (
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-background/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
             <div className="flex min-h-20 items-center gap-4 px-4 py-3 lg:px-8">
 
-                <div className="hidden min-w-0 md:block">
-                    <h1 className="truncate text-xl font-semibold tracking-tight text-white">
-                        Good evening, Tam 👋
-                    </h1>
-                    <p className="mt-1 truncate text-sm text-muted-foreground">
-                        Here is your team progress for SEAL Hackathon
-                    </p>
+                <div className="lg:hidden">
+                    <Logo size="sm" showText={false} />
                 </div>
+
+
+
 
                 {/* Search */}
                 <div className="relative ml-auto flex-1 max-w-xl">
                     <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
                     <Input
-                        placeholder="Search team workspace..."
-                        className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-sm focus-visible:ring-orange-500/30"
+                        placeholder="Search events, tracks, teams..."
+                        className="h-11 rounded-2xl border-border bg-card pl-11 pr-16 text-sm focus-visible:ring-orange-500/30"
                     />
 
-                    <kbd className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-muted-foreground md:flex">
+                    <kbd className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-border bg-muted px-2 py-1 text-[10px] text-muted-foreground md:flex">
                         ⌘K
                     </kbd>
                 </div>
+
+                <ThemeToggle />
 
                 {/* Notification */}
                 <Button asChild variant="dashboardIcon" size="dashboardIcon" className="relative">
@@ -44,7 +48,7 @@ export function Topbar() {
 
                 {/* User */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-1.5 transition-colors hover:bg-white/[0.06] outline-none">
+                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 transition-colors hover:bg-muted outline-none">
                         <Avatar className="h-9 w-9 border border-orange-500/30">
                             <AvatarFallback className="bg-orange-500/15 text-sm font-bold text-orange-400">
                                 MK
@@ -52,12 +56,12 @@ export function Topbar() {
                         </Avatar>
 
                         <div className="hidden text-left leading-tight md:block">
-                            <p className="text-sm font-semibold text-white">
+                            <p className="text-sm font-semibold text-foreground">
                                 Tam
                             </p>
 
                             <p className="text-[11px] text-muted-foreground">
-                                Team Leader
+                                Student
                             </p>
                         </div>
 
@@ -66,7 +70,7 @@ export function Topbar() {
 
                     <DropdownMenuContent
                         align="end"
-                        className="w-56 border border-white/10 bg-[#140D09]/95 backdrop-blur-xl"
+                        className="w-56 border border-border bg-popover/95 backdrop-blur-xl"
                     >
                         <DropdownMenuLabel>
                             My Account
@@ -81,9 +85,13 @@ export function Topbar() {
                         </DropdownMenuItem>
 
                         <DropdownMenuItem>
+<<<<<<< HEAD
                             <Link href="/student/settings">
                                 Team Settings
                             </Link>
+=======
+                            My Teams
+>>>>>>> notification
                         </DropdownMenuItem>
 
                         <DropdownMenuItem>

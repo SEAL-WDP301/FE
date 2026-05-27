@@ -45,7 +45,7 @@ export default function SealSeasonsSection() {
   ];
 
    return (
-    <section className="relative overflow-hidden bg-black py-24">
+    <section className="relative overflow-hidden bg-background py-24">
       {/* Background Glow */}
       <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[140px]" />
 
@@ -55,12 +55,12 @@ export default function SealSeasonsSection() {
         {/* Header */}
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-black md:text-5xl">
-            <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               SEAL Seasons
             </span>
           </h2>
 
-          <p className="text-lg text-zinc-400">
+          <p className="text-lg text-muted-foreground">
             Three major hackathons throughout the
             academic year
           </p>
@@ -74,7 +74,7 @@ export default function SealSeasonsSection() {
             return (
               <div
                 key={index}
-                className={`group relative overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 p-8 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl ${season.borderGlow}`}
+                className={`group relative overflow-hidden rounded-3xl border border-border bg-card p-8 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl ${season.borderGlow}`}
               >
                 {/* Overlay */}
                 <div
@@ -93,12 +93,12 @@ export default function SealSeasonsSection() {
                   </div>
 
                   {/* Name */}
-                  <h3 className="mb-3 text-2xl font-bold text-white">
+                  <h3 className="mb-3 text-2xl font-bold text-foreground">
                     {season.name}
                   </h3>
 
                   {/* Status */}
-                  <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-white/5 px-3 py-1 backdrop-blur-xl">
+                  <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 backdrop-blur-xl">
                     <span
                       className={`h-2 w-2 rounded-full bg-current ${season.statusColor} ${
                         season.status ===
@@ -116,7 +116,7 @@ export default function SealSeasonsSection() {
                   </div>
 
                   {/* Description */}
-                  <p className="mb-6 text-sm leading-7 text-zinc-400">
+                  <p className="mb-6 text-sm leading-7 text-muted-foreground">
                     {season.description}
                   </p>
 
@@ -124,20 +124,20 @@ export default function SealSeasonsSection() {
                   <div className="mb-6 space-y-4">
                     {/* Timeline */}
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-zinc-400">
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar />
 
                         <span>Timeline</span>
                       </div>
 
-                      <span className="text-white">
+                      <span className="text-foreground">
                         {season.timeline}
                       </span>
                     </div>
 
                     {/* Teams */}
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-zinc-400">
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Users />
 
                         <span>Teams</span>
@@ -154,7 +154,7 @@ export default function SealSeasonsSection() {
 
                     {/* Prize */}
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-zinc-400">
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Trophy />
 
                         <span>Prize Pool</span>

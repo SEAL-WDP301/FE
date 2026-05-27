@@ -102,7 +102,7 @@ export default function JudgesSection() {
         person: Person;
     }) => {
         return (
-            <div className="group relative overflow-hidden rounded-3xl border border-orange-500/20 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10">
+            <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10">
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
@@ -121,12 +121,12 @@ export default function JudgesSection() {
                     </div>
 
                     {/* Name */}
-                    <h3 className="mb-1 text-xl font-bold text-white">
+                    <h3 className="mb-1 text-xl font-bold text-foreground">
                         {person.name}
                     </h3>
 
                     {/* Role */}
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-muted-foreground">
                         {person.role}
                     </p>
 
@@ -137,7 +137,7 @@ export default function JudgesSection() {
 
                     {/* Expertise */}
                     <div className="mb-5 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-zinc-500">
+                        <span className="text-xs text-muted-foreground">
                             Expertise:
                         </span>
 
@@ -166,7 +166,7 @@ export default function JudgesSection() {
     };
 
     return (
-        <section className="relative overflow-hidden bg-black py-24">
+        <section className="relative overflow-hidden bg-background py-24">
             {/* Background Glow */}
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[150px]" />
 
@@ -174,12 +174,12 @@ export default function JudgesSection() {
                 {/* Header */}
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Judges
                         </span>
                     </h2>
 
-                    <p className="text-lg text-zinc-400">
+                    <p className="text-lg text-muted-foreground">
                         Industry experts and experienced professionals
                     </p>
                 </div>
@@ -197,12 +197,12 @@ export default function JudgesSection() {
                 {/* Mentors Title */}
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                             Mentors
                         </span>
                     </h2>
 
-                    <p className="text-lg text-zinc-400">
+                    <p className="text-lg text-muted-foreground">
                         Dedicated experts provide guidance.
                     </p>
                 </div>
