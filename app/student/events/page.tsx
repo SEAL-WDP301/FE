@@ -38,11 +38,11 @@ export default function StudentEventsPage() {
                     My Events
                 </p>
 
-                <h1 className="mt-3 text-5xl font-bold tracking-tight text-white">
+                <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
                     Hackathon History
                 </h1>
 
-                <p className="mt-3 max-w-2xl text-muted-foreground">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Every SEAL event you have participated in.
                 </p>
             </div>

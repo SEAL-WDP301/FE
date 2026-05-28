@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 
 export function SettingsHeader() {
     return (
-        <header className="border-b border-white/10 pb-6">
+        <header className="pb-6">
             <div className="mx-auto flex max-w-[1500px] flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
+                    <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                         Team Workspace
                     </p>
-                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white">
+                    <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
                         Team Settings
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
                         Manage your team workspace and preferences
                     </p>
-                </div>
+                </div><div>
+            </div>
 
                 <div className="flex flex-wrap gap-3">
                     <Button variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03] px-5">

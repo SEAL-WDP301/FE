@@ -4,23 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import Logo from "@/components/ui/logo";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
-
-
 
 export function Topbar() {
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
             <div className="flex min-h-20 items-center gap-4 px-4 py-3 lg:px-8">
-
-                <div className="lg:hidden">
-                    <Logo size="sm" showText={false} />
-                </div>
-
-
-
 
                 {/* Search */}
                 <div className="relative ml-auto flex-1 max-w-xl">

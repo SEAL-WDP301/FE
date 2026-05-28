@@ -10,14 +10,14 @@ export default function StudentProfilePage() {
             {/* Header */}
             <div>
                 <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
-                    My Profile
+                    Profile
                 </p>
 
                 <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
-                    Player Card
+                    My Profile
                 </h1>
 
-                <p className="mt-3 max-w-2xl text-muted-foreground">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Your SEAL identity, history, and credentials.
                 </p>
             </div>
