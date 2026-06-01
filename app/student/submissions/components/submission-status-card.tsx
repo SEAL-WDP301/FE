@@ -21,7 +21,7 @@ export function SubmissionStatusCard({ status }: SubmissionStatusCardProps) {
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Submission Status
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -38,7 +38,7 @@ export function SubmissionStatusCard({ status }: SubmissionStatusCardProps) {
                     return (
                         <div
                             key={row.label}
-                            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+                            className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.035] p-3"
                         >
                             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400">
                                 <Icon className="h-4 w-4" />
@@ -47,7 +47,7 @@ export function SubmissionStatusCard({ status }: SubmissionStatusCardProps) {
                                 <p className="text-xs text-muted-foreground">
                                     {row.label}
                                 </p>
-                                <p className="text-sm font-semibold text-white">
+                                <p className="text-sm font-semibold text-foreground">
                                     {row.value}
                                 </p>
                             </div>

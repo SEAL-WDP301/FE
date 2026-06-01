@@ -82,7 +82,7 @@ export default function Banner() {
                 </div>
 
                 {/* TIÊU ĐỀ KHỔNG LỒ 2 DÒNG */}
-                <h1 className="text-5xl sm:text-7xl lg:text-[76px] xl:text-[84px] font-black text-white tracking-tighter leading-[1.05] flex flex-col gap-2">
+                <h1 className="text-5xl sm:text-7xl lg:text-[76px] xl:text-[84px] font-black text-foreground tracking-tighter leading-[1.05] flex flex-col gap-2">
                     <span>Build the future,</span>
                     <span className="text-[#FF6B2C]">in 48 hours.</span>
                 </h1>

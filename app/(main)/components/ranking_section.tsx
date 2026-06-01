@@ -91,9 +91,9 @@ export default function RankingSection() {
                           )} shadow-lg`}
                         >
                           {team.rank === 1 ? (
-                            <Trophy className="text-white" />
+                            <Trophy className="text-foreground" />
                           ) : (
-                            <Medal className="text-white" />
+                            <Medal className="text-foreground" />
                           )}
                         </div>
                       ) : (

@@ -89,7 +89,7 @@ export default function SealSeasonsSection() {
                   <div
                     className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${season.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110`}
                   >
-                    <Icon className="text-3xl text-white" />
+                    <Icon className="text-3xl text-foreground" />
                   </div>
 
                   {/* Name */}

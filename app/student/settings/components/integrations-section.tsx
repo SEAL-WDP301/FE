@@ -18,7 +18,7 @@ export function IntegrationsSection({ integrations }: IntegrationsSectionProps) 
                     <PlugZap className="h-4 w-4" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-white">Integrations</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Integrations</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Connected services for code, files, chat, and prototypes.
                     </p>
@@ -30,14 +30,14 @@ export function IntegrationsSection({ integrations }: IntegrationsSectionProps) 
                     const connected = integration.status === "Connected";
 
                     return (
-                        <div key={integration.name} className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+                        <div key={integration.name} className="rounded-[20px] border border-border bg-white/[0.035] p-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/10 text-sm font-black text-orange-300">
                                         {integration.icon}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-white">{integration.name}</p>
+                                        <p className="font-semibold text-foreground">{integration.name}</p>
                                         <p className="text-xs text-muted-foreground">{integration.lastSynced}</p>
                                     </div>
                                 </div>
@@ -49,7 +49,7 @@ export function IntegrationsSection({ integrations }: IntegrationsSectionProps) 
                             <Button
                                 variant={connected ? "outline" : "orange"}
                                 size="sm"
-                                className="mt-4 rounded-xl border-white/10 bg-white/[0.03]"
+                                className="mt-4 rounded-xl border-border bg-muted"
                             >
                                 {connected ? "Disconnect" : "Connect"}
                             </Button>

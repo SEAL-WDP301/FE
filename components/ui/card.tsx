@@ -20,7 +20,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-card/60 text-sm text-card-foreground backdrop-blur-xl transition-all duration-300",
+        "group/card relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-card/60 text-sm text-card-foreground backdrop-blur-xl transition-all duration-300",
         "py-5",
         "data-[size=sm]:gap-3 data-[size=sm]:py-4",
         "hover:border-orange-500/30",
@@ -64,7 +64,7 @@ function CardTitle({
     <div
       data-slot="card-title"
       className={cn(
-        "text-base font-semibold tracking-tight text-white",
+        "text-base font-semibold tracking-tight text-foreground",
         "group-data-[size=sm]/card:text-sm",
         className,
       )}
@@ -130,7 +130,7 @@ function CardFooter({
     <div
       data-slot="card-footer"
       className={cn(
-        "mt-auto flex items-center rounded-b-2xl border-t border-white/10 bg-white/[0.02] px-5 py-4",
+        "mt-auto flex items-center rounded-b-2xl border-t border-border bg-white/[0.02] px-5 py-4",
         "group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-3",
         className,
       )}

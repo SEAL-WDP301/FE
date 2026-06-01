@@ -3,11 +3,13 @@ import Link from "next/link";
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
+  href?: string;
 }
 
 export default function Logo({
   size = "md",
   showText = true,
+  href = "/",
 }: LogoProps) {
   const sizes = {
     sm: {
@@ -33,7 +35,7 @@ export default function Logo({
   const current = sizes[size];
 
   return (
-    <Link href="/" className="flex items-center gap-2.5">
+    <Link href={href} className="flex items-center gap-2.5">
       {/* Circle Logo */}
       <div
         className={`flex ${current.wrapper} items-center justify-center rounded-full border border-orange-400/30 bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20`}

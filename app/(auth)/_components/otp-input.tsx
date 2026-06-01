@@ -83,7 +83,7 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
               onKeyDown={(e) => handleKeyDown(e, i)}
               onPaste={handlePaste}
               className={cn(
-                "h-14 w-12 sm:h-16 sm:w-14 rounded-xl border border-white/15 bg-white/[0.045] text-center text-xl sm:text-2xl font-bold text-white outline-none transition-all placeholder:text-[#8f817a]",
+                "h-14 w-12 sm:h-16 sm:w-14 rounded-xl border border-white/15 bg-white/[0.045] text-center text-xl sm:text-2xl font-bold text-foreground outline-none transition-all placeholder:text-[#8f817a]",
                 "focus:border-[#ff7629]/70 focus:ring-4 focus:ring-[#ff7629]/15 focus:bg-white/[0.08]",
                 char && "border-[#ff7629]/50 shadow-[0_0_15px_rgba(255,112,34,0.15)]"
               )}

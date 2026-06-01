@@ -13,7 +13,7 @@ export function UploadAreaCard({ file }: UploadAreaCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Upload Deliverables
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -25,25 +25,25 @@ export function UploadAreaCard({ file }: UploadAreaCardProps) {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-500/25 bg-orange-500/10 text-orange-400">
                     <UploadCloud className="h-7 w-7" />
                 </div>
-                <p className="mt-4 text-base font-semibold text-white">
+                <p className="mt-4 text-base font-semibold text-foreground">
                     Drag & drop your files here
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                     PDF, ZIP, PPTX up to 100MB
                 </p>
-                <Button variant="outline" className="mt-5 rounded-2xl border-white/10 bg-white/[0.03]">
+                <Button variant="outline" className="mt-5 rounded-2xl border-border bg-muted">
                     Choose File
                 </Button>
             </div>
 
-            <div className="mt-5 rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+            <div className="mt-5 rounded-[20px] border border-border bg-white/[0.035] p-4">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">
                             <FileText className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="font-semibold text-white">
+                            <p className="font-semibold text-foreground">
                                 {file.name}
                             </p>
                             <p className="text-sm text-muted-foreground">

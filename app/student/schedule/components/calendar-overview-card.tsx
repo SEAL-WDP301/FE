@@ -17,7 +17,7 @@ export function CalendarOverviewCard({ days }: CalendarOverviewCardProps) {
         <GlassCard glow className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold text-white">
+                    <h2 className="text-xl font-semibold text-foreground">
                         May 2026
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -40,14 +40,14 @@ export function CalendarOverviewCard({ days }: CalendarOverviewCardProps) {
                     <div
                         key={`${day.day}-${index}`}
                         className={cn(
-                            "group min-h-24 rounded-[18px] border border-white/10 bg-white/[0.025] p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/30 hover:bg-orange-500/5",
+                            "group min-h-24 rounded-[18px] border border-border bg-white/[0.025] p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/30 hover:bg-orange-500/5",
                             day.muted && "opacity-35",
                             day.today && "border-orange-500/35 bg-orange-500/10 shadow-[0_0_30px_rgba(243,112,33,0.12)]",
                             day.urgent && "border-red-500/30 bg-red-500/10"
                         )}
                     >
                         <div className="flex items-center justify-between gap-2">
-                            <span className={cn("text-sm font-semibold", day.today || day.urgent ? "text-white" : "text-muted-foreground")}>
+                            <span className={cn("text-sm font-semibold", day.today || day.urgent ? "text-foreground" : "text-muted-foreground")}>
                                 {day.day}
                             </span>
                             {day.today ? <CalendarDays className="h-4 w-4 text-orange-300" /> : null}

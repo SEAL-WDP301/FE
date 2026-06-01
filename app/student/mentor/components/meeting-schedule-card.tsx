@@ -15,7 +15,7 @@ export function MeetingScheduleCard({ meetings }: MeetingScheduleCardProps) {
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Meeting Schedule
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -31,11 +31,11 @@ export function MeetingScheduleCard({ meetings }: MeetingScheduleCardProps) {
                 {meetings.map((meeting) => (
                     <div
                         key={`${meeting.title}-${meeting.time}`}
-                        className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                        className="rounded-[20px] border border-border bg-white/[0.035] p-4"
                     >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                                <p className="font-semibold text-white">
+                                <p className="font-semibold text-foreground">
                                     {meeting.title}
                                 </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
@@ -56,7 +56,7 @@ export function MeetingScheduleCard({ meetings }: MeetingScheduleCardProps) {
                                 <Video className="h-4 w-4" />
                                 Join Meeting
                             </Button>
-                            <Button variant="outline" size="sm" className="rounded-xl border-white/10 bg-white/[0.03]">
+                            <Button variant="outline" size="sm" className="rounded-xl border-border bg-muted">
                                 <RotateCcw className="h-4 w-4" />
                                 Reschedule
                             </Button>

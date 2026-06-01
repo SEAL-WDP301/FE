@@ -28,7 +28,7 @@ const awards = [
 export function AwardsSection() {
     return (
         <GlassCard>
-            <h3 className="mb-4 text-sm font-semibold text-white">
+            <h3 className="mb-4 text-sm font-semibold text-foreground">
                 Awards & Achievements
             </h3>
 
@@ -46,7 +46,7 @@ export function AwardsSection() {
                             </div>
 
                             <div>
-                                <h4 className="text-sm font-semibold text-white">
+                                <h4 className="text-sm font-semibold text-foreground">
                                     {award.name}
                                 </h4>
 

@@ -13,7 +13,7 @@ export function ProfileCard() {
                 <div className="relative mx-auto w-fit">
                     <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-2xl" />
                     <Avatar className="relative mx-auto h-28 w-28 border border-orange-500/30 ring-4 ring-primary/25">
-                        <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-foreground">
                             MK
                         </AvatarFallback>
                     </Avatar>

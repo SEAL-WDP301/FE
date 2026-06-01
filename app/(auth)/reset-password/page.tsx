@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
     <Suspense fallback={
       <AuthCard>
         <div className="flex h-40 items-center justify-center">
-          <Loader2 className="size-8 animate-spin text-[#ff7629]" />
+          <Loader2 className="size-8 animate-spin text-primary" />
         </div>
       </AuthCard>
     }>

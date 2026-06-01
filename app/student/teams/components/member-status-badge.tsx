@@ -5,7 +5,7 @@ import type { MemberStatus } from "../mock-data";
 const statusStyles: Record<MemberStatus, string> = {
     Active: "border-orange-500/25 bg-orange-500/10 text-orange-300",
     Pending: "border-yellow-500/25 bg-yellow-500/10 text-yellow-300",
-    Offline: "border-white/10 bg-white/[0.035] text-muted-foreground",
+    Offline: "border-border bg-white/[0.035] text-muted-foreground",
 };
 
 type MemberStatusBadgeProps = {

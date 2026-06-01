@@ -90,7 +90,7 @@ export default function AboutSealSection() {
                                     >
                                         {/* Icon */}
                                         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-110">
-                                            <Icon className="text-xl text-white" />
+                                            <Icon className="text-xl text-foreground" />
                                         </div>
 
                                         {/* Content */}
@@ -133,7 +133,7 @@ export default function AboutSealSection() {
                                         >
                                             {/* Number */}
                                             <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/25">
-                                                <span className="text-lg font-bold text-white">
+                                                <span className="text-lg font-bold text-foreground">
                                                     {index + 1}
                                                 </span>
                                             </div>

@@ -11,7 +11,7 @@ export function SettingsToggle({ enabled }: SettingsToggleProps) {
                 "flex h-6 w-11 items-center rounded-full border p-0.5 transition-colors",
                 enabled
                     ? "border-orange-500/30 bg-orange-500/25"
-                    : "border-white/10 bg-white/[0.04]"
+                    : "border-border bg-white/[0.04]"
             )}
         >
             <span

@@ -12,12 +12,12 @@ export function SecuritySection() {
                 <div className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-orange-500" />
 
-                    <h3 className="text-sm font-semibold text-white">
+                    <h3 className="text-sm font-semibold text-foreground">
                         Password & Security
                     </h3>
                 </div>
 
-                <Button variant="outline" size="sm" className="rounded-lg border-border bg-white/[0.03]">
+                <Button variant="outline" size="sm" className="rounded-lg border-border bg-muted">
                     Update Password
                 </Button>
             </div>

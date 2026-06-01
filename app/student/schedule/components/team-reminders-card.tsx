@@ -24,7 +24,7 @@ export function TeamRemindersCard({ reminders }: TeamRemindersCardProps) {
                     <UserRound className="h-4 w-4" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Team Reminders
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -37,14 +37,14 @@ export function TeamRemindersCard({ reminders }: TeamRemindersCardProps) {
                 {reminders.map((reminder) => (
                     <div
                         key={reminder.title}
-                        className="flex items-center justify-between gap-3 rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                        className="flex items-center justify-between gap-3 rounded-[20px] border border-border bg-white/[0.035] p-4"
                     >
                         <div className="flex items-center gap-3">
                             <div className={reminder.done ? "text-orange-400" : "text-muted-foreground"}>
                                 {reminder.done ? <Check className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
                             </div>
                             <div>
-                                <p className={reminder.done ? "text-sm font-semibold text-white/70 line-through" : "text-sm font-semibold text-white"}>
+                                <p className={reminder.done ? "text-sm font-semibold text-foreground/70 line-through" : "text-sm font-semibold text-foreground"}>
                                     {reminder.title}
                                 </p>
                                 <Badge variant={getPriorityVariant(reminder.priority)} className="mt-2">

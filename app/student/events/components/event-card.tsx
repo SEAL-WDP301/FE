@@ -21,12 +21,12 @@ export function EventCard({
     const Icon = meta.icon;
 
     return (
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#140b07] backdrop-blur-xl transition-all duration-300 hover:border-orange-500/30">
-            <div className="relative h-36 overflow-hidden border-b border-white/5">
+        <div className="overflow-hidden rounded-3xl border border-border bg-[#140b07] backdrop-blur-xl transition-all duration-300 hover:border-orange-500/30">
+            <div className="relative h-36 overflow-hidden border-b border-border">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-transparent" />
 
                 <div className="absolute left-5 right-5 top-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+                    <div className="flex items-center gap-1 rounded-full border border-border bg-black/40 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
                         <Calendar className="h-3 w-3 text-orange-400" />
                         {event.season} {event.year}
                     </div>
@@ -47,7 +47,7 @@ export function EventCard({
                         {event.category}
                     </p>
 
-                    <h3 className="mt-2 text-lg font-bold text-white">
+                    <h3 className="mt-2 text-lg font-bold text-foreground">
                         {event.name}
                     </h3>
                 </div>
@@ -70,7 +70,7 @@ export function EventCard({
                             Team
                         </p>
 
-                        <p className="mt-1 truncate font-medium text-white">
+                        <p className="mt-1 truncate font-medium text-foreground">
                             {event.team}
                         </p>
                     </div>
@@ -80,7 +80,7 @@ export function EventCard({
                             Submission
                         </p>
 
-                        <p className="mt-1 truncate font-medium text-white">
+                        <p className="mt-1 truncate font-medium text-foreground">
                             {event.submission}
                         </p>
                     </div>
