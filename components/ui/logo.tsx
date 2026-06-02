@@ -1,15 +1,16 @@
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
-  href?: string;
+  collapsed?: boolean;
 }
 
 export default function Logo({
   size = "md",
   showText = true,
-  href = "/",
+  collapsed = false,
 }: LogoProps) {
   const sizes = {
     sm: {
@@ -35,27 +36,27 @@ export default function Logo({
   const current = sizes[size];
 
   return (
-    <Link href={href} className="flex items-center gap-2.5">
+    <Link href="/" className={cn("flex items-center", collapsed ? "justify-center" : "gap-2.5")}>
       {/* Circle Logo */}
       <div
-        className={`flex ${current.wrapper} items-center justify-center rounded-full border border-orange-400/30 bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20`}
+        className={cn(`flex ${current.wrapper} items-center justify-center rounded-full border border-orange-400/30 bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20`)}
       >
-        <span className={`${current.text} font-bold text-black`}>
+        <span className={cn(`${current.text} font-bold text-black`)}>
           S
         </span>
       </div>
 
       {/* Text */}
-      {showText && (
-        <div className="leading-tight">
+      {showText && !collapsed && (
+        <div className="leading-tight transition-all duration-300">
           <h1
-            className={`${current.title} font-bold tracking-tight text-foreground`}
+            className={cn(`${current.title} font-bold tracking-tight text-white`)}
           >
             SEAL
           </h1>
 
           <p
-            className={`${current.subtitle} font-medium tracking-[0.3em] text-orange-400`}
+            className={cn(`${current.subtitle} font-medium tracking-[0.3em] text-orange-400`)}
           >
             FPTU · HCMC
           </p>

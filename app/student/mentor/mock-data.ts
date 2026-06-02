@@ -1,14 +1,6 @@
 export type FeedbackState = "resolved" | "unresolved";
 export type QuestionStatus = "Answered" | "Waiting" | "Urgent";
 
-export type Meeting = {
-    title: string;
-    date: string;
-    time: string;
-    type: "Online" | "Offline" | "Google Meet";
-    note: string;
-};
-
 export type FeedbackItem = {
     category: "UI/UX" | "Backend" | "Presentation" | "Architecture" | "Research";
     related: string;
@@ -62,23 +54,6 @@ export const reviewSummary = {
     completion: 68,
     upcomingSession: "Tomorrow • 8:00 PM",
 };
-
-export const meetings: Meeting[] = [
-    {
-        title: "Architecture Review Session",
-        date: "Tomorrow",
-        time: "8:00 PM",
-        type: "Google Meet",
-        note: "Focus on RBAC, database boundaries, and deployment flow.",
-    },
-    {
-        title: "Pitch Narrative Check",
-        date: "Fri, 24 May",
-        time: "7:30 PM",
-        type: "Online",
-        note: "Review story, problem framing, and demo sequence.",
-    },
-];
 
 export const feedbackItems: FeedbackItem[] = [
     {

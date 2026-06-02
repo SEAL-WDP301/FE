@@ -8,7 +8,7 @@ export function MentorHeader() {
         <header className="border-b border-border pb-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
+                    <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                         Team Workspace
                     </p>
                     <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">

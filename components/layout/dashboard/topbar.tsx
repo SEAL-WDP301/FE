@@ -4,23 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import Logo from "@/components/ui/logo";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 
-
+const notifications = [
+    {
+        id: 1,
+        title: "New team invitation",
+        description: "NebulaForge invited you to join the team.",
+    },
+    {
+        id: 2,
+        title: "Submission approved",
+        description: "Your Round 2 submission has been approved.",
+    },
+];
 
 export function Topbar() {
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
             <div className="flex min-h-20 items-center gap-4 px-4 py-3 lg:px-8">
-
-                <div className="lg:hidden">
-                    <Logo size="sm" showText={false} />
-                </div>
-
-
-
 
                 {/* Search */}
                 <div className="relative ml-auto flex-1 max-w-xl">
@@ -39,12 +42,65 @@ export function Topbar() {
                 <ThemeToggle />
 
                 {/* Notification */}
-                <Button asChild variant="dashboardIcon" size="dashboardIcon" className="relative">
-                    <Link href={"/student/notifications"}>
-                        <Bell className="h-[18px] w-[18px]" />
-                        <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.8)]" />
-                    </Link>
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="dashboardIcon"
+                            size="dashboardIcon"
+                            className="relative"
+                        >
+                            <Bell className="h-[18px] w-[18px]" />
+
+                            {notifications.length > 0 && (
+                                <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.8)]" />
+                            )}
+                        </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                        align="end"
+                        className="w-[360px] rounded-2xl border-border bg-card/95 p-2 backdrop-blur-xl"
+                    >
+                        <DropdownMenuLabel className="px-3 py-2 text-sm font-semibold">
+                            Notifications
+                        </DropdownMenuLabel>
+
+                        <DropdownMenuSeparator />
+
+                        {notifications.length > 0 ? (
+                            notifications.map((item) => (
+                                <DropdownMenuItem
+                                    key={item.id}
+                                    asChild
+                                    className="cursor-pointer rounded-xl p-0 focus:bg-transparent"
+                                >
+                                    <Link
+                                        href={"/student/notifications"}
+                                        className="w-full rounded-xl px-3 py-3 transition-colors hover:bg-white/5"
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-sm font-medium text-foreground">
+                                                {item.title}
+                                            </p>
+
+                                            <p className="line-clamp-2 text-xs text-muted-foreground">
+                                                {item.description}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <Bell className="mb-2 h-10 w-10 text-muted-foreground/40" />
+
+                                <p className="text-sm text-muted-foreground">
+                                    No announcement yet.
+                                </p>
+                            </div>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* User */}
                 <DropdownMenu>

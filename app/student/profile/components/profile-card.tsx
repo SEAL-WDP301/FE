@@ -1,5 +1,5 @@
 import { Camera, GraduationCap, Trophy } from "lucide-react";
-import { FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { FaGithub, FaFacebookF } from "react-icons/fa";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,7 @@ export function ProfileCard() {
                         aria-label="LinkedIn profile"
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:-translate-y-0.5 hover:border-orange-500/40 hover:text-orange-400"
                     >
-                        <FaLinkedinIn className="h-4 w-4" />
+                        <FaFacebookF className="h-4 w-4" />
                     </button>
                 </div>
             </CardContent>

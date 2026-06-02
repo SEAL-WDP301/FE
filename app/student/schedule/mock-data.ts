@@ -56,12 +56,6 @@ export type DeadlineSummary = {
     progress: number;
 };
 
-export const scheduleMeta: ScheduleMeta = {
-    currentDate: "Tuesday, 26 May 2026",
-    timezone: "Asia/Ho_Chi_Minh · GMT+7",
-    currentRound: "Semi Final",
-};
-
 export const calendarDays: CalendarDay[] = [
     { day: 28, muted: true },
     { day: 29, muted: true },
@@ -126,29 +120,6 @@ export const dailyTimeline: TimelineItem[] = [
         title: "Submission Deadline",
         description: "Upload final GitHub URL, proposal, and demo video.",
         status: "Urgent",
-    },
-];
-
-export const deadline: DeadlineSummary = {
-    title: "Round 1 Submission",
-    countdown: "2 Days Left",
-    progress: 75,
-};
-
-export const mentorMeetings: MentorMeeting[] = [
-    {
-        title: "Architecture Review Session",
-        mentor: "Mr. Huy Nguyen",
-        initials: "HN",
-        datetime: "Today · 8:00 PM",
-        type: "Google Meet",
-    },
-    {
-        title: "Pitch Dry Run",
-        mentor: "Mr. Huy Nguyen",
-        initials: "HN",
-        datetime: "Friday · 7:30 PM",
-        type: "Discord",
     },
 ];
 

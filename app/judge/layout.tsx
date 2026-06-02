@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 
-import { MentorSidebar } from "./_components/mentor-sidebar";
+import { JudgeSidebar } from "../../components/layout/dashboard/judge-sidebar";
 import { Topbar } from "@/components/layout/dashboard/topbar";
 
 interface MentorLayoutProps {
@@ -14,7 +14,7 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     return (
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
-                <MentorSidebar
+                <JudgeSidebar
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
                 />

@@ -1,6 +1,5 @@
 import { FeedbackStatusPanel } from "./components/feedback-status-panel";
 import { FeedbackThreadCard } from "./components/feedback-thread-card";
-import { MeetingScheduleCard } from "./components/meeting-schedule-card";
 import { MentorActivityTimeline } from "./components/mentor-activity-timeline";
 import { MentorHeader } from "./components/mentor-header";
 import { MentorHeroCard } from "./components/mentor-hero-card";
@@ -11,7 +10,6 @@ import {
     chatFeedbackMessages,
     feedbackItems,
     feedbackStats,
-    meetings,
     mentorActivities,
     questions,
     resources,
@@ -25,8 +23,6 @@ export default function MentorWorkspacePage() {
 
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <main className="space-y-5">
-                    <MeetingScheduleCard meetings={meetings} />
-                    <TeamMentorChatCard messages={chatFeedbackMessages} />
                     <FeedbackThreadCard items={feedbackItems} />
                     <TeamQuestionsCard questions={questions} />
                     <SharedResourcesCard resources={resources} />

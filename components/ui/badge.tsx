@@ -20,8 +20,26 @@ const badgeVariants = cva(
         destructive:
           "border-red-500/30 bg-red-500/10 text-red-400",
 
+        ai:
+          "border-cyan-500/30 bg-cyan-500/10 text-cyan-400",
+
+        cloud:
+          "border-orange-500/30 bg-orange-500/10 text-orange-400",
+
+        cyber:
+          "border-red-500/30 bg-red-500/10 text-red-400",
+
+        edtech:
+          "border-purple-500/30 bg-purple-500/10 text-purple-400",
+
+        web3:
+          "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+
         outline:
-          "border-border bg-muted text-muted-foreground",
+          "border-white/10 bg-white/[0.03] text-muted-foreground",
+
+        highlight:
+          "border-orange-500/40 bg-orange-500/10 text-orange-400"
       },
     },
 
