@@ -38,7 +38,7 @@ export default function StudentEventsPage() {
                     My Events
                 </p>
 
-                <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
+                <h1 className="mt-3 text-5xl font-bold tracking-tight text-foreground">
                     Hackathon History
                 </h1>
 
@@ -80,7 +80,7 @@ export default function StudentEventsPage() {
                 ].map((item) => (
                     <GlassCard
                         key={item.label}
-                        className="border border-white/10"
+                        className="border border-border"
                     >
                         <div className="flex items-start justify-between">
                             <div>

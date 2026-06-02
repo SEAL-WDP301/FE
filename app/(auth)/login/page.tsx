@@ -49,7 +49,7 @@ export default function LoginPage() {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
       // Redirect to home/dashboard
-      router.push("/");
+      router.push("/home");
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)
@@ -94,14 +94,14 @@ export default function LoginPage() {
             required
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#b9aaa2] sm:text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground sm:text-sm">
             <label className="flex items-center gap-3">
-              <span className="grid size-5 place-items-center rounded-md border border-white/20 bg-white/[0.03] text-[#ff7629]">
+              <span className="grid size-5 place-items-center rounded-md border border-border bg-muted text-primary">
                 <Check className="size-4" />
               </span>
               Remember me
             </label>
-            <Link href="/forgot-password" className="hover:text-[#ff7629]">
+            <Link href="/forgot-password" className="hover:text-primary">
               Forgot password?
             </Link>
           </div>

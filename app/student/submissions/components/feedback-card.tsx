@@ -16,7 +16,7 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Mentor / Judge Feedback
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -35,7 +35,7 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
                     </AvatarFallback>
                 </Avatar>
                 <div>
-                    <p className="font-semibold text-white">
+                    <p className="font-semibold text-foreground">
                         {feedback.reviewerName}
                     </p>
                     <Badge variant="outline" className="mt-1">
@@ -44,7 +44,7 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
                 </div>
             </div>
 
-            <blockquote className="mt-5 rounded-[20px] border border-orange-500/15 bg-orange-500/5 p-5 text-sm leading-6 text-white/90">
+            <blockquote className="mt-5 rounded-[20px] border border-orange-500/15 bg-orange-500/5 p-5 text-sm leading-6 text-foreground/90">
                 “{feedback.comment}”
             </blockquote>
 

@@ -18,7 +18,7 @@ export function WorkspacePreferencesSection({ preferences }: WorkspacePreference
                     <Settings2 className="h-4 w-4" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-white">Workspace Preferences</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Workspace Preferences</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Regional, calendar, and activity defaults.
                     </p>
@@ -27,12 +27,12 @@ export function WorkspacePreferencesSection({ preferences }: WorkspacePreference
 
             <div className="grid gap-3">
                 {preferences.map((preference) => (
-                    <div key={preference.label} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+                    <div key={preference.label} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-white/[0.035] p-3">
                         <div>
-                            <p className="text-sm font-medium text-white">{preference.label}</p>
+                            <p className="text-sm font-medium text-foreground">{preference.label}</p>
                             <p className="text-xs text-muted-foreground">{preference.value}</p>
                         </div>
-                        <Button variant="ghost" size="icon-sm" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-white">
+                        <Button variant="ghost" size="icon-sm" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground">
                             <ChevronDown className="h-4 w-4" />
                         </Button>
                     </div>

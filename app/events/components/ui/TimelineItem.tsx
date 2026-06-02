@@ -14,7 +14,7 @@ export default function TimelineItem({ date, title, desc }: TimelineItemProps) {
 
             {/* Nội dung bên phải */}
             <div className="space-y-1">
-                <div className="font-bold text-white text-lg group-hover:text-[#FF6B2C] transition-colors">
+                <div className="font-bold text-foreground text-lg group-hover:text-[#FF6B2C] transition-colors">
                     {title}
                 </div>
                 <div className="text-sm text-[#A39690] leading-relaxed font-medium">

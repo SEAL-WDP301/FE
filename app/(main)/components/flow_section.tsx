@@ -78,7 +78,7 @@ export default function CompetitionFlowSection() {
 
                                         {/* Icon Box */}
                                         <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-2xl shadow-orange-500/25 transition-transform duration-300 group-hover:scale-110">
-                                            <Icon className="text-4xl text-white" />
+                                            <Icon className="text-4xl text-foreground" />
                                         </div>
 
                                         {/* Step Number */}

@@ -19,7 +19,7 @@ export function NotificationSettingsSection({ items }: NotificationSettingsSecti
                     <Bell className="h-4 w-4" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-white">Notifications</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Keep the team aligned without noisy updates.
                     </p>
@@ -28,8 +28,8 @@ export function NotificationSettingsSection({ items }: NotificationSettingsSecti
 
             <div className="space-y-3">
                 {items.map((item) => (
-                    <div key={item.label} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
-                        <span className="text-sm font-medium text-white">{item.label}</span>
+                    <div key={item.label} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-white/[0.035] p-3">
+                        <span className="text-sm font-medium text-foreground">{item.label}</span>
                         <SettingsToggle enabled={item.enabled} />
                     </div>
                 ))}

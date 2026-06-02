@@ -14,6 +14,8 @@ import {
     Video,
 } from "lucide-react";
 
+import { ThemeToggle } from "@/components/layout/dashboard/theme-toggle";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Logo from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 

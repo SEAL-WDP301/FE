@@ -22,7 +22,7 @@ export function TeamQuestionsCard({ questions }: TeamQuestionsCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Team Questions
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -33,7 +33,7 @@ export function TeamQuestionsCard({ questions }: TeamQuestionsCardProps) {
             <div className="mb-5 flex gap-3">
                 <Input
                     placeholder="Ask your mentor something..."
-                    className="h-11 rounded-2xl border-white/10 bg-white/[0.03]"
+                    className="h-11 rounded-2xl border-border bg-muted"
                 />
                 <Button variant="orange" className="h-11 rounded-2xl px-4">
                     <Send className="h-4 w-4" />
@@ -44,7 +44,7 @@ export function TeamQuestionsCard({ questions }: TeamQuestionsCardProps) {
                 {questions.map((question) => (
                     <div
                         key={question.question}
-                        className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                        className="rounded-[20px] border border-border bg-white/[0.035] p-4"
                     >
                         <div className="flex gap-3">
                             <Avatar className="h-10 w-10 border border-orange-500/25">
@@ -54,17 +54,17 @@ export function TeamQuestionsCard({ questions }: TeamQuestionsCardProps) {
                             </Avatar>
                             <div className="flex-1">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <p className="font-semibold text-white">
+                                    <p className="font-semibold text-foreground">
                                         {question.member}
                                     </p>
                                     <Badge variant={getBadgeVariant(question.status)}>
                                         {question.status}
                                     </Badge>
                                 </div>
-                                <p className="mt-2 text-sm leading-6 text-white/90">
+                                <p className="mt-2 text-sm leading-6 text-foreground/90">
                                     {question.question}
                                 </p>
-                                <div className="mt-3 flex gap-2 rounded-2xl border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-muted-foreground">
+                                <div className="mt-3 flex gap-2 rounded-2xl border border-border bg-white/[0.035] p-3 text-sm leading-6 text-muted-foreground">
                                     {question.status === "Waiting" ? (
                                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
                                     ) : (

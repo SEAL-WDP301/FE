@@ -18,19 +18,19 @@ export default function Sidebar() {
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-white/[0.04]">
                     <span className="text-[#A39690]">Format</span>
-                    <span className="text-white font-semibold">Hybrid (Online + FPTU HCMC)</span>
+                    <span className="text-foreground font-semibold">Hybrid (Online + FPTU HCMC)</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-white/[0.04]">
                     <span className="text-[#A39690]">Registered Teams</span>
-                    <span className="text-white font-mono font-bold">2,644 participants</span>
+                    <span className="text-foreground font-mono font-bold">2,644 participants</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-white/[0.04]">
                     <span className="text-[#A39690]">Hackathon Judges</span>
-                    <span className="text-white font-semibold">Reddit Official Panel</span>
+                    <span className="text-foreground font-semibold">Reddit Official Panel</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-[#A39690]">Language</span>
-                    <span className="text-white font-semibold">English / Vietnamese</span>
+                    <span className="text-foreground font-semibold">English / Vietnamese</span>
                 </div>
             </div>
 

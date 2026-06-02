@@ -43,7 +43,7 @@ export const STATUS_META: Record<EventStatus, StatusMeta> = {
     },
 
     Completed: {
-        color: "bg-white/5 text-zinc-400 border-white/10",
+        color: "bg-muted text-zinc-400 border-border",
         icon: CheckCircle2,
     },
 

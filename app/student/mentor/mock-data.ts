@@ -29,6 +29,17 @@ export type MentorActivity = {
     time: string;
 };
 
+export type ChatFeedbackMessage = {
+    id: string;
+    author: string;
+    initials: string;
+    role: "Team" | "Mentor";
+    type: "Chat" | "Feedback";
+    timestamp: string;
+    message: string;
+    status?: "Needs action" | "Reviewed";
+};
+
 export const mentor = {
     name: "Mr. Huy Nguyen",
     initials: "HN",
@@ -68,6 +79,41 @@ export const feedbackItems: FeedbackItem[] = [
         text: "The demo flow is clear. Add one slide explaining why the technical choices support scale.",
         reply: "Added a scalability slide with queue, cache, and audit logging notes.",
         state: "resolved",
+    },
+];
+
+export const chatFeedbackMessages: ChatFeedbackMessage[] = [
+    {
+        id: "mentor-feedback-auth",
+        author: "Mr. Huy Nguyen",
+        initials: "HN",
+        role: "Mentor",
+        type: "Feedback",
+        timestamp: "Today, 9:15 PM",
+        message:
+            "RBAC direction is good. Please add a short permission matrix for student, mentor, judge, and organizer before the next demo.",
+        status: "Needs action",
+    },
+    {
+        id: "team-auth-follow-up",
+        author: "Team Nova",
+        initials: "TN",
+        role: "Team",
+        type: "Chat",
+        timestamp: "Today, 9:28 PM",
+        message:
+            "We are updating the matrix now. Should mentor permissions be scoped by event round or by assigned team only?",
+    },
+    {
+        id: "mentor-round-scope",
+        author: "Mr. Huy Nguyen",
+        initials: "HN",
+        role: "Mentor",
+        type: "Feedback",
+        timestamp: "Today, 9:36 PM",
+        message:
+            "Scope by assigned team first, then include event round in the query filter so historical reviews stay auditable.",
+        status: "Reviewed",
     },
 ];
 

@@ -35,7 +35,7 @@ export function MemberCard({ member }: MemberCardProps) {
                     </div>
 
                     <div>
-                        <p className="text-lg font-semibold text-white">
+                        <p className="text-lg font-semibold text-foreground">
                             {member.name}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export function MemberCard({ member }: MemberCardProps) {
                     {member.skills.map((skill) => (
                         <span
                             key={skill}
-                            className="rounded-full border border-orange-500/15 bg-orange-500/5 px-3 py-1 text-xs font-medium text-white/85"
+                            className="rounded-full border border-orange-500/15 bg-orange-500/5 px-3 py-1 text-xs font-medium text-foreground/85"
                         >
                             {skill}
                         </span>
@@ -102,11 +102,11 @@ export function MemberCard({ member }: MemberCardProps) {
                     ["Uploads", member.uploads],
                     ["Activity", member.activity],
                 ].map(([label, value]) => (
-                    <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+                    <div key={label} className="rounded-2xl border border-border bg-white/[0.035] p-3">
                         <p className="text-[11px] text-muted-foreground">
                             {label}
                         </p>
-                        <p className="mt-1 text-sm font-semibold text-white">
+                        <p className="mt-1 text-sm font-semibold text-foreground">
                             {value}
                         </p>
                     </div>

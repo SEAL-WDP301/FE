@@ -12,7 +12,7 @@ export function SubmissionRequirementsCard({ requirements }: SubmissionRequireme
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Submission Requirements
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -27,12 +27,12 @@ export function SubmissionRequirementsCard({ requirements }: SubmissionRequireme
                     return (
                         <div
                             key={requirement.label}
-                            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+                            className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.035] p-3"
                         >
                             <div className={completed ? "text-orange-400" : "text-muted-foreground"}>
                                 {completed ? <Check className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
                             </div>
-                            <p className={completed ? "text-sm font-medium text-white" : "text-sm text-muted-foreground"}>
+                            <p className={completed ? "text-sm font-medium text-foreground" : "text-sm text-muted-foreground"}>
                                 {requirement.label}
                             </p>
                         </div>

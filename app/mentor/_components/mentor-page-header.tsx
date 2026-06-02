@@ -8,13 +8,13 @@ type MentorPageHeaderProps = {
 
 export function MentorPageHeader({ title, subtitle, actions }: MentorPageHeaderProps) {
     return (
-        <header className="pb-6">
+        <header className="border-b border-border pb-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-foreground">
                         Mentor Module
                     </p>
-                    <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
+                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
                         {title}
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">

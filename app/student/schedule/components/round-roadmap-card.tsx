@@ -13,7 +13,7 @@ export function RoundRoadmapCard({ steps }: RoundRoadmapCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Round Roadmap
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -41,14 +41,14 @@ export function RoundRoadmapCard({ steps }: RoundRoadmapCardProps) {
                                         "z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border",
                                         completed && "border-orange-500 bg-orange-500 text-black",
                                         current && "border-orange-400 bg-orange-500/10 text-orange-400 shadow-[0_0_0_6px_rgba(243,112,33,0.12),0_0_28px_rgba(243,112,33,0.38)]",
-                                        locked && "border-white/10 bg-white/[0.03] text-muted-foreground"
+                                        locked && "border-border bg-muted text-muted-foreground"
                                     )}
                                 >
                                     {completed ? <Check className="h-4 w-4" /> : null}
                                     {current ? <Zap className="h-4 w-4" /> : null}
                                     {locked ? <Lock className="h-4 w-4" /> : null}
                                 </div>
-                                <p className={cn("text-sm font-semibold md:mt-3", locked ? "text-muted-foreground" : "text-white")}>
+                                <p className={cn("text-sm font-semibold md:mt-3", locked ? "text-muted-foreground" : "text-foreground")}>
                                     {step.label}
                                 </p>
                             </div>

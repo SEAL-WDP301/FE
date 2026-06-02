@@ -25,7 +25,7 @@ export function EventFilters({ filters, active, onChange }: EventFiltersProps) {
                         "rounded-full border px-4 py-2 text-xs font-semibold transition-all",
                         active === filter
                             ? "border-orange-500 bg-orange-500 text-black"
-                            : "border-white/10 bg-white/[0.03] text-zinc-400 hover:border-orange-500/30 hover:text-white"
+                            : "border-border bg-muted text-zinc-400 hover:border-orange-500/30 hover:text-foreground"
                     )}
                 >
                     {filter === "Champion" && (

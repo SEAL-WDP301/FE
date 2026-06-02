@@ -20,7 +20,7 @@ const teams = [
 export function TeamHistory() {
     return (
         <GlassCard>
-            <h3 className="text-sm font-semibold text-white">
+            <h3 className="text-sm font-semibold text-foreground">
                 Team history
             </h3>
 
@@ -30,7 +30,7 @@ export function TeamHistory() {
                         key={team.name}
                         className="flex items-center justify-between rounded-lg border border-border bg-white/[0.02] px-3 py-2"
                     >
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-foreground">
                             {team.name}
                         </span>
 

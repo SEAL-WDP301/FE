@@ -31,16 +31,16 @@ function CallbackContent() {
               <img 
                 src={user.avatar_url} 
                 alt="Avatar" 
-                className="size-8 rounded-full border border-white/20 object-cover" 
+                className="size-8 rounded-full border border-border object-cover" 
               />
             ) : (
-              <div className="flex size-8 items-center justify-center rounded-full bg-[#ff7629]/20 text-[#ff7629] font-bold">
+              <div className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-primary font-bold">
                 {user.name.charAt(0)}
               </div>
             )}
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-white">Đăng nhập thành công!</span>
-              <span className="text-xs text-[#b9aaa2]">Chào mừng {user.name}</span>
+              <span className="text-sm font-semibold text-foreground">Đăng nhập thành công!</span>
+              <span className="text-xs text-muted-foreground">Chào mừng {user.name}</span>
             </div>
           </div>,
           { variant: "default", preventDuplicate: true }
@@ -50,7 +50,7 @@ function CallbackContent() {
 
         // Redirect to Home
         setTimeout(() => {
-          router.push("/");
+          router.push("/home");
         }, 1000);
       })
       .catch(err => {
@@ -66,9 +66,9 @@ function CallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center space-y-4 bg-[#0B0908] text-white">
-      <Loader2 className="size-10 animate-spin text-[#ff7629]" />
-      <p className="text-sm font-medium tracking-wide text-[#b9aaa2]">
+    <div className="flex h-screen w-full flex-col items-center justify-center space-y-4 bg-background text-foreground">
+      <Loader2 className="size-10 animate-spin text-primary" />
+      <p className="text-sm font-medium tracking-wide text-muted-foreground">
         Authenticating...
       </p>
     </div>
@@ -79,9 +79,9 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen w-full flex-col items-center justify-center space-y-4 bg-[#0B0908] text-white">
-          <Loader2 className="size-10 animate-spin text-[#ff7629]" />
-          <p className="text-sm font-medium tracking-wide text-[#b9aaa2]">
+        <div className="flex h-screen w-full flex-col items-center justify-center space-y-4 bg-background text-foreground">
+          <Loader2 className="size-10 animate-spin text-primary" />
+          <p className="text-sm font-medium tracking-wide text-muted-foreground">
             Loading...
           </p>
         </div>

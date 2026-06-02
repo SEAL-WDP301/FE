@@ -36,7 +36,7 @@ export function PersonalInformation() {
     return (
         <GlassCard>
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">
+                <h3 className="text-sm font-semibold text-foreground">
                     Personal Information
                 </h3>
 

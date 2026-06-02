@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";

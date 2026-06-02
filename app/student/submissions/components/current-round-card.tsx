@@ -24,7 +24,7 @@ export function CurrentRoundCard({ round }: CurrentRoundCardProps) {
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-500/25 bg-orange-500/10 text-orange-400">
                         <FileCheck2 className="h-6 w-6" />
                     </div>
-                    <h2 className="text-3xl font-semibold tracking-tight text-white">
+                    <h2 className="text-3xl font-semibold tracking-tight text-foreground">
                         {round.name}
                     </h2>
                     <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -43,7 +43,7 @@ export function CurrentRoundCard({ round }: CurrentRoundCardProps) {
                     </Button>
                     <Button
                         variant="outline"
-                        className="rounded-2xl border-white/10 bg-white/[0.03] px-5"
+                        className="rounded-2xl border-border bg-muted px-5"
                     >
                         Save Draft
                     </Button>
@@ -54,9 +54,9 @@ export function CurrentRoundCard({ round }: CurrentRoundCardProps) {
                 {round.requiredFiles.map((file) => (
                     <div
                         key={file}
-                        className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                        className="rounded-[20px] border border-border bg-white/[0.035] p-4"
                     >
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-foreground">
                             {file}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -66,9 +66,9 @@ export function CurrentRoundCard({ round }: CurrentRoundCardProps) {
                 ))}
             </div>
 
-            <div className="relative mt-6 rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+            <div className="relative mt-6 rounded-[20px] border border-border bg-white/[0.035] p-4">
                 <div className="mb-3 flex items-center justify-between gap-4">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-foreground">
                         {round.completedRequirements} / {round.totalRequirements} requirements completed
                     </p>
                     <p className="text-sm text-orange-300">

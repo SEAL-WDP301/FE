@@ -14,7 +14,7 @@ export function EventProgress({
                 <span>Final</span>
             </div>
 
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                     className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400"
                     style={{ width: `${progress}%` }}

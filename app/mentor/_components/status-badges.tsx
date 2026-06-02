@@ -3,30 +3,30 @@ import { cn } from "@/lib/utils";
 import type { FeedbackPriority, RiskLevel, SessionStatus, TeamStatus } from "../mock-data";
 
 const riskStyles: Record<RiskLevel, string> = {
-    Low: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    Medium: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
-    High: "border-red-500/30 bg-red-500/10 text-red-300",
+    Low: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    Medium: "border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+    High: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
 };
 
 const teamStatusStyles: Record<TeamStatus, string> = {
-    "On Track": "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    "Need Support": "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
-    "At Risk": "border-red-500/30 bg-red-500/10 text-red-300",
-    Inactive: "border-white/10 bg-white/[0.035] text-muted-foreground",
+    "On Track": "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    "Need Support": "border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+    "At Risk": "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+    Inactive: "border-border bg-muted/40 text-muted-foreground",
 };
 
 const sessionStyles: Record<SessionStatus, string> = {
-    Scheduled: "border-orange-500/30 bg-orange-500/10 text-orange-300",
-    Completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    Missed: "border-red-500/30 bg-red-500/10 text-red-300",
-    Cancelled: "border-white/10 bg-white/[0.035] text-muted-foreground",
+    Scheduled: "border-orange-500/30 bg-orange-500/10 text-primary",
+    Completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    Missed: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+    Cancelled: "border-border bg-muted/40 text-muted-foreground",
 };
 
 const priorityStyles: Record<FeedbackPriority, string> = {
-    Low: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-    Medium: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
-    High: "border-orange-500/30 bg-orange-500/10 text-orange-300",
-    Critical: "border-red-500/30 bg-red-500/10 text-red-300",
+    Low: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    Medium: "border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+    High: "border-orange-500/30 bg-orange-500/10 text-primary",
+    Critical: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
 };
 
 function BadgeBase({ children, className }: { children: React.ReactNode; className: string }) {

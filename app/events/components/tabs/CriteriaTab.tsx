@@ -36,7 +36,7 @@ export default function CriteriaTab() {
                 <div className="absolute -inset-x-20 -top-20 h-44 bg-[#FF6B2C]/10 blur-[100px] pointer-events-none" />
                 <div className="relative">
                     <div className="text-[11px] uppercase tracking-[0.22em] text-[#FF6B2C] font-black">Evaluation</div>
-                    <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+                    <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">
                         Judging Criteria
                     </h2>
                     <p className="mt-4 text-base text-[#A39690] font-bold leading-relaxed max-w-4xl">
@@ -53,7 +53,7 @@ export default function CriteriaTab() {
                             0{idx + 1}
                         </div>
                         <div>
-                            <h4 className="font-black text-xl text-white tracking-wide">{item.title}</h4>
+                            <h4 className="font-black text-xl text-foreground tracking-wide">{item.title}</h4>
                             <p className="text-sm sm:text-base text-[#A39690] mt-1.5 leading-relaxed font-bold">{item.desc}</p>
                         </div>
                     </div>
@@ -64,7 +64,7 @@ export default function CriteriaTab() {
             <section className="grid md:grid-cols-2 gap-6">
                 {/* Khối Competition Rounds */}
                 <div className="bg-[#1A1512] border border-white/8 rounded-[32px] p-8">
-                    <h3 className="text-xl font-black text-white mb-6 tracking-wide">Competition rounds</h3>
+                    <h3 className="text-xl font-black text-foreground mb-6 tracking-wide">Competition rounds</h3>
                     <ol className="space-y-4 font-bold text-base">
                         {["Application & Idea Pitch", "48-hour Hackathon", "Track Semifinals", "Grand Final Demo Day"].map((r, i) => (
                             <li key={r} className="flex gap-4 items-center">
@@ -77,7 +77,7 @@ export default function CriteriaTab() {
 
                 {/* Khối Categories */}
                 <div className="bg-[#1A1512] border border-white/8 rounded-[32px] p-8">
-                    <h3 className="text-xl font-black text-white mb-6 tracking-wide">Categories</h3>
+                    <h3 className="text-xl font-black text-foreground mb-6 tracking-wide">Categories</h3>
                     <div className="flex flex-wrap gap-2.5">
                         {["AI · ML", "Web · SaaS", "FinTech", "GreenTech", "Mobile", "Game · XR", "DevTools", "Open"].map(c => (
                             <span
@@ -93,7 +93,7 @@ export default function CriteriaTab() {
 
             {/* 4. Rules (Cập nhật đồng bộ viền mảnh không dùng seal-glass) */}
             <section className="bg-[#1A1512] border border-white/8 rounded-[32px] p-8">
-                <h2 className="text-2xl font-black text-white tracking-tight mb-5">Rules</h2>
+                <h2 className="text-2xl font-black text-foreground tracking-tight mb-5">Rules</h2>
                 <ul className="space-y-3.5 text-base text-[#A39690] font-bold">
                     {[
                         "Teams of 3–5 students. At least one FPTU student required.",
@@ -112,7 +112,7 @@ export default function CriteriaTab() {
 
             {/* 5. Khối Judges & Mentors với Avatar bo góc vuông rounded-2xl và phân dòng chi tiết */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-8 flex items-center gap-3">
+                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-8 flex items-center gap-3">
                     <span className="h-6 w-1.5 bg-[#FF6B2C] rounded-full" /> Judges & Mentors
                 </h2>
 
@@ -123,14 +123,14 @@ export default function CriteriaTab() {
                             className="bg-[#120F0E] border border-white/[0.02] rounded-[24px] p-5 flex items-center gap-5 hover:border-[#FF6B2C]/20 transition-all duration-200 shadow-md"
                         >
                             {/* Avatar hình chữ nhật đứng, bo góc lớn rounded-2xl rực màu cam chuẩn mẫu */}
-                            <div className="h-14 w-14 rounded-2xl bg-[#E25A20] font-black text-base text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#E25A20]/10">
+                            <div className="h-14 w-14 rounded-2xl bg-[#E25A20] font-black text-base text-foreground flex items-center justify-center shrink-0 shadow-lg shadow-[#E25A20]/10">
                                 {initials}
                             </div>
 
                             {/* Thông tin chi tiết được căn chỉnh và phân lớp chuẩn xác */}
                             <div className="min-w-0 space-y-1">
                                 {/* Tên chính: text-base, font-black, màu trắng sáng */}
-                                <div className="font-black text-base text-white tracking-wide truncate leading-tight">
+                                <div className="font-black text-base text-foreground tracking-wide truncate leading-tight">
                                     {name}
                                 </div>
                                 {/* Chức vụ: màu cam đặc trưng, viết hoa, font-black dầy dặn */}
