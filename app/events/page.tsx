@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Banner from "./components/Banner";
 import TabsContent from "./components/TabsContent";
 import Sidebar from "./components/Sidebar";
+import Header from "@/components/layout/public/header";
 
 export default function EventPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "prizes" | "criteria" | "submit">("overview");
@@ -19,8 +20,13 @@ export default function EventPage() {
   return (
     // Đổi toàn bộ màu nền sang Đen gỗ ấm đặc trưng: bg-[#120F0E] 
     // Thay đổi toàn bộ font chữ mặc định thành font-bold/font-black dầy cộm
-    <div className="relative min-h-screen text-[#F4F2F1] bg-[#120F0E] py-16 px-6 sm:px-12 lg:px-16 font-sans antialiased tracking-tight">
-      
+    <div
+      className="relative min-h-screen bg-background text-foreground py-16 px-6 sm:px-12 lg:px-16 transition-colors"
+    >
+      <div className="mx-auto max-w-[1400px] w-full px-4 sm:px-6 lg:px-8 sticky top-0">
+        <Header />
+      </div>
+
       {/* Khối Banner phía trên - Cho rộng tối đa max-w-[1400px] */}
       <div className="mx-auto max-w-[1400px]">
         <Banner />
@@ -33,7 +39,9 @@ export default function EventPage() {
         <main className="space-y-10 w-full">
 
           {/* Thanh Tab Navigation - Size chữ đẩy lên text-lg, font-black siêu dày */}
-          <div className="flex border-b border-white/[0.06] overflow-x-auto scrollbar-none sticky top-0 bg-[#120F0E]/95 backdrop-blur-md z-20 pb-4 gap-4">
+          <div
+            className="sticky top-0 z-20 flex gap-4 overflow-x-auto border-b border-border bg-background/95 pb-4 backdrop-blur-md scrollbar-none"
+          >
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
