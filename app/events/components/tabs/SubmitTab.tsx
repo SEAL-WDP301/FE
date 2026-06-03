@@ -51,7 +51,7 @@ export default function SubmitTab() {
                 <div className="absolute -inset-x-20 -top-20 h-44 bg-[#FF6B2C]/10 blur-[100px] pointer-events-none" />
                 <div className="relative">
                     <div className="text-[11px] uppercase tracking-[0.22em] text-[#FF6B2C] font-black">Submission guidelines</div>
-                    <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+                    <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">
                         How to Submit
                     </h2>
                     <p className="mt-4 text-base text-[#A39690] font-bold leading-relaxed max-w-4xl">
@@ -75,13 +75,13 @@ export default function SubmitTab() {
                         {/* Chi tiết yêu cầu */}
                         <div className="flex-1 space-y-2">
                             <div className="flex flex-wrap items-center gap-3">
-                                <h4 className="font-black text-xl text-white tracking-wide">{req.label}</h4>
+                                <h4 className="font-black text-xl text-foreground tracking-wide">{req.label}</h4>
                                 {req.required ? (
                                     <span className="px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-[#FF6B2C]/10 text-[#FF6B2C] border border-[#FF6B2C]/20 rounded-md">
                                         Required
                                     </span>
                                 ) : (
-                                    <span className="px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-white/[0.03] text-[#A39690] border border-white/[0.06] rounded-md">
+                                    <span className="px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-muted text-[#A39690] border border-white/[0.06] rounded-md">
                                         Optional
                                     </span>
                                 )}

@@ -15,7 +15,7 @@ export function SubmissionHistoryCard({ history }: SubmissionHistoryCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Submission History
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -36,13 +36,13 @@ export function SubmissionHistoryCard({ history }: SubmissionHistoryCardProps) {
                             </AvatarFallback>
                         </Avatar>
 
-                        <div className="flex-1 rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+                        <div className="flex-1 rounded-[20px] border border-border bg-white/[0.035] p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Badge>
                                         {item.version}
                                     </Badge>
-                                    <p className="text-sm font-semibold text-white">
+                                    <p className="text-sm font-semibold text-foreground">
                                         {item.user} {item.action}
                                     </p>
                                 </div>

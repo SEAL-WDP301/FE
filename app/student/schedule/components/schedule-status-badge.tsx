@@ -6,7 +6,7 @@ const statusStyles: Record<ScheduleStatus, string> = {
     Upcoming: "border-sky-500/25 bg-sky-500/10 text-sky-300",
     Ongoing: "border-orange-500/30 bg-orange-500/10 text-orange-300",
     Completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    Missed: "border-white/10 bg-white/[0.035] text-muted-foreground",
+    Missed: "border-border bg-white/[0.035] text-muted-foreground",
     Urgent: "border-red-500/30 bg-red-500/10 text-red-300",
 };
 

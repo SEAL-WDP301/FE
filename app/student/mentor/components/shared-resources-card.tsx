@@ -15,7 +15,7 @@ export function SharedResourcesCard({ resources }: SharedResourcesCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Shared Resources
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -30,14 +30,14 @@ export function SharedResourcesCard({ resources }: SharedResourcesCardProps) {
                     return (
                         <div
                             key={resource.title}
-                            className="flex items-center justify-between gap-4 rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                            className="flex items-center justify-between gap-4 rounded-[20px] border border-border bg-white/[0.035] p-4"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">
                                     <Icon className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-white">
+                                    <p className="font-semibold text-foreground">
                                         {resource.title}
                                     </p>
                                     <p className="text-xs text-muted-foreground">

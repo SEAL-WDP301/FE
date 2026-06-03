@@ -4,7 +4,7 @@ function TimelineItem({ date, title, desc }: { date: string; title: string; desc
         <div className="bg-[#120F0E] border border-white/[0.02] rounded-[24px] p-6 flex flex-col sm:flex-row sm:items-center gap-6 transition-all hover:border-[#FF6B2C]/20">
             <div className="font-mono text-sm font-black text-[#FF6B2C] sm:w-52 shrink-0">{date}</div>
             <div className="flex-1">
-                <div className="font-black text-xl text-white">{title}</div>
+                <div className="font-black text-xl text-foreground">{title}</div>
                 <div className="text-sm font-bold text-[#A39690] mt-1">{desc}</div>
             </div>
         </div>
@@ -50,7 +50,7 @@ export default function OverviewTab() {
 
             {/* 1. About This Hackathon */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-5 flex items-center gap-3">
+                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-5 flex items-center gap-3">
                     <span className="h-6 w-1.5 bg-[#FF6B2C] rounded-full" /> About This Hackathon
                 </h2>
                 <p className="text-[#A39690] text-base sm:text-lg lg:text-xl leading-relaxed font-bold">
@@ -60,18 +60,18 @@ export default function OverviewTab() {
                 <div className="mt-8 pt-8 border-t border-white/[0.04] grid grid-cols-1 sm:grid-cols-2 gap-6 text-base">
                     <div className="bg-[#120F0E] p-5 rounded-2xl border border-white/[0.02]">
                         <span className="text-xs text-[#FF6B2C] font-black uppercase tracking-wider block mb-1">Target Participants</span>
-                        <span className="text-white font-extrabold text-base sm:text-lg leading-snug block">Students & tech enthusiasts, open registration</span>
+                        <span className="text-foreground font-extrabold text-base sm:text-lg leading-snug block">Students & tech enthusiasts, open registration</span>
                     </div>
                     <div className="bg-[#120F0E] p-5 rounded-2xl border border-white/[0.02]">
                         <span className="text-xs text-[#FF6B2C] font-black uppercase tracking-wider block mb-1">Platform Requirement</span>
-                        <span className="text-white font-extrabold text-base sm:text-lg leading-snug block">Must be built on the Reddit Developer Platform (Devvit)</span>
+                        <span className="text-foreground font-extrabold text-base sm:text-lg leading-snug block">Must be built on the Reddit Developer Platform (Devvit)</span>
                     </div>
                 </div>
             </section>
 
             {/* 2. What to Build */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h3 className="text-3xl font-black text-white tracking-tight mb-4">What to Build</h3>
+                <h3 className="text-3xl font-black text-foreground tracking-tight mb-4">What to Build</h3>
                 <p className="text-[#A39690] text-base sm:text-lg font-bold leading-relaxed mb-6">
                     Build automation tools or community interaction utilities that ease the workload for moderators, optimize the Reddit user experience, curb toxic content, or create engaging interactive mini-games.
                 </p>
@@ -83,12 +83,12 @@ export default function OverviewTab() {
 
             {/* 3. Resources & Dev Tools */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-6">Resources & Developer Kit</h2>
+                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-6">Resources & Developer Kit</h2>
                 <div className="grid gap-4 sm:grid-cols-3">
                     {resources.map((res) => (
                         <div key={res.title} className="bg-[#120F0E] border border-white/[0.02] rounded-2xl p-5 hover:border-[#FF6B2C]/30 transition-all">
                             <span className="text-sm font-black text-[#FF6B2C] block uppercase tracking-wider">Resource</span>
-                            <a href={res.link} target="_blank" rel="noreferrer" className="text-lg font-black text-white mt-2 block hover:underline">
+                            <a href={res.link} target="_blank" rel="noreferrer" className="text-lg font-black text-foreground mt-2 block hover:underline">
                                 {res.title}
                             </a>
                             <p className="text-xs text-[#A39690] mt-2 font-bold leading-relaxed">{res.desc}</p>
@@ -99,7 +99,7 @@ export default function OverviewTab() {
 
             {/* 4. Timeline */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-6">Timeline & Schedule</h2>
+                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-6">Timeline & Schedule</h2>
                 <div className="space-y-4">
                     {timelineData.map(([date, title, desc], i) => (
                         <TimelineItem key={i} date={date} title={title} desc={desc} />
@@ -109,11 +109,11 @@ export default function OverviewTab() {
 
             {/* 5. Frequently Asked Questions */}
             <section className="bg-[#1A1512] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-xl">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-6">Frequently Asked Questions</h2>
+                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-6">Frequently Asked Questions</h2>
                 <div className="space-y-5">
                     {faqs.map((faq, i) => (
                         <div key={i} className="bg-[#120F0E] border border-white/[0.02] p-6 rounded-2xl">
-                            <h4 className="font-black text-lg text-white flex gap-2">
+                            <h4 className="font-black text-lg text-foreground flex gap-2">
                                 <span className="text-[#FF6B2C]">Q:</span> {faq.q}
                             </h4>
                             <p className="mt-2.5 text-sm sm:text-base text-[#A39690] font-bold leading-relaxed pl-6 border-l border-[#FF6B2C]/20">

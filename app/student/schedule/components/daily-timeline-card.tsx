@@ -17,7 +17,7 @@ export function DailyTimelineCard({ items }: DailyTimelineCardProps) {
                     <Clock3 className="h-4 w-4" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Today&apos;s Timeline
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -36,9 +36,9 @@ export function DailyTimelineCard({ items }: DailyTimelineCardProps) {
                             {item.time}
                         </div>
                         <span className="mt-2 h-3 w-3 shrink-0 rounded-full bg-orange-500 shadow-[0_0_16px_rgba(243,112,33,0.7)]" />
-                        <div className="flex-1 rounded-[20px] border border-white/10 bg-white/[0.035] p-4">
+                        <div className="flex-1 rounded-[20px] border border-border bg-white/[0.035] p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                                <p className="font-semibold text-white">
+                                <p className="font-semibold text-foreground">
                                     {item.title}
                                 </p>
                                 <ScheduleStatusBadge status={item.status} />

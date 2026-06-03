@@ -15,7 +15,7 @@ export function MentorMeetingsCard({ meetings }: MentorMeetingsCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Mentor Meetings
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -27,7 +27,7 @@ export function MentorMeetingsCard({ meetings }: MentorMeetingsCardProps) {
                 {meetings.map((meeting) => (
                     <div
                         key={`${meeting.title}-${meeting.datetime}`}
-                        className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4 transition-all duration-300 hover:border-orange-500/25"
+                        className="rounded-[20px] border border-border bg-white/[0.035] p-4 transition-all duration-300 hover:border-orange-500/25"
                     >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div className="flex items-center gap-3">
@@ -37,7 +37,7 @@ export function MentorMeetingsCard({ meetings }: MentorMeetingsCardProps) {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-semibold text-white">
+                                    <p className="font-semibold text-foreground">
                                         {meeting.title}
                                     </p>
                                     <p className="mt-1 text-sm text-muted-foreground">
@@ -58,7 +58,7 @@ export function MentorMeetingsCard({ meetings }: MentorMeetingsCardProps) {
                                     <FileText className="h-4 w-4" />
                                     Notes
                                 </Button>
-                                <Button variant="ghost" size="sm" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-white">
+                                <Button variant="ghost" size="sm" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground">
                                     <RotateCcw className="h-4 w-4" />
                                     Reschedule
                                 </Button>

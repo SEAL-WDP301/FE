@@ -15,7 +15,7 @@ export function LinkInputsCard({ fields }: LinkInputsCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Project Links
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -31,7 +31,7 @@ export function LinkInputsCard({ fields }: LinkInputsCardProps) {
                     return (
                         <label
                             key={field.label}
-                            className="rounded-[20px] border border-white/10 bg-white/[0.035] p-4"
+                            className="rounded-[20px] border border-border bg-white/[0.035] p-4"
                         >
                             <span className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                                 {field.label}
@@ -46,7 +46,7 @@ export function LinkInputsCard({ fields }: LinkInputsCardProps) {
                                 <Input
                                     defaultValue={field.value}
                                     placeholder={field.placeholder}
-                                    className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11"
+                                    className="h-11 rounded-2xl border-border bg-muted pl-11"
                                 />
                             </div>
                         </label>

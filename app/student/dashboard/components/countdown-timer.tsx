@@ -87,7 +87,7 @@ export function CountdownTimer({
     ];
 
     return (
-        <div className="rounded-b-3xl border-t border-white/10 bg-gradient-to-b from-orange-500/[0.03] to-transparent p-6">
+        <div className="rounded-b-3xl border-t border-border bg-gradient-to-b from-orange-500/[0.03] to-transparent p-6">
 
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">

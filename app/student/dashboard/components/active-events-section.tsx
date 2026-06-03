@@ -30,7 +30,7 @@ export function ActiveEventsSection({ events }: ActiveEventsSectionProps) {
                             <div className="absolute inset-0 seal-grid opacity-20" />
                             <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
                                 <EventPhaseBadge label={event.phase} />
-                                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-xl">
+                                <span className="rounded-full border border-border bg-black/20 px-3 py-1 text-xs font-medium text-foreground/80 backdrop-blur-xl">
                                     SEAL
                                 </span>
                             </div>

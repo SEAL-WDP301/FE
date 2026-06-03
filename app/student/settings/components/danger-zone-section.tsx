@@ -38,7 +38,7 @@ export function DangerZoneSection() {
             </div>
 
             <div className="mt-5 rounded-[20px] border border-red-500/20 bg-background/50 p-4">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-foreground">
                     Confirmation modal preview
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">

@@ -14,7 +14,7 @@ export function DeadlineTrackerCard({ deadline }: DeadlineTrackerCardProps) {
         <GlassCard glow className="rounded-[24px] border-orange-500/20 bg-card p-6 hover:-translate-y-1">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Deadline Tracker
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -26,7 +26,7 @@ export function DeadlineTrackerCard({ deadline }: DeadlineTrackerCardProps) {
                 </div>
             </div>
 
-            <p className="text-2xl font-semibold tracking-tight text-white">
+            <p className="text-2xl font-semibold tracking-tight text-foreground">
                 {deadline.title}
             </p>
             <p className="mt-2 text-sm font-semibold text-orange-300">
@@ -51,7 +51,7 @@ export function DeadlineTrackerCard({ deadline }: DeadlineTrackerCardProps) {
                     <UploadCloud className="h-4 w-4" />
                     Upload Submission
                 </Button>
-                <Button variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03]">
+                <Button variant="outline" className="rounded-2xl border-border bg-muted">
                     View Requirements
                     <ArrowRight className="h-4 w-4" />
                 </Button>

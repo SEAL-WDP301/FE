@@ -12,7 +12,7 @@ export function AuthCard({ children, className }: AuthCardProps) {
   return (
     <section
       className={cn(
-        "mx-auto w-full max-w-sm rounded-[3.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(92,49,23,0.9),rgba(27,15,10,0.96))] px-5 py-6 shadow-[0_0_80px_rgba(255,112,34,0.14),inset_0_1px_0_rgba(255,255,255,0.07)] backdrop-blur sm:max-w-md sm:px-8 sm:py-8 md:max-w-lg md:px-10 md:py-10",
+        "mx-auto w-full max-w-sm rounded-[3.25rem] border border-border bg-card px-5 py-6 shadow-2xl backdrop-blur sm:max-w-md sm:px-8 sm:py-8 md:max-w-lg md:px-10 md:py-10",
         className
       )}
     >
@@ -29,13 +29,13 @@ type AuthHeaderProps = {
 export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
   return (
     <header>
-      <p className="text-xs font-medium uppercase tracking-[0.45em] text-[#ff7629] sm:text-sm">
+      <p className="text-xs font-medium uppercase tracking-[0.45em] text-primary sm:text-sm">
         SEAL · ACCESS
       </p>
-      <h1 className="mt-2 text-2xl font-bold tracking-normal text-white sm:text-3xl md:text-4xl">
+      <h1 className="mt-2 text-2xl font-bold tracking-normal text-foreground sm:text-3xl md:text-4xl">
         {title}
       </h1>
-      <p className="mt-2 text-xs leading-5 text-[#b9aaa2] sm:text-sm md:text-base">
+      <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-sm md:text-base">
         {subtitle}
       </p>
     </header>
@@ -50,9 +50,9 @@ type AuthFooterLinkProps = {
 
 export function AuthFooterLink({ label, href, action }: AuthFooterLinkProps) {
   return (
-    <p className="text-center text-xs text-[#b9aaa2] sm:text-sm">
+    <p className="text-center text-xs text-muted-foreground sm:text-sm">
       {label}{" "}
-      <Link href={href} className="font-semibold text-[#ff7629]">
+      <Link href={href} className="font-semibold text-primary">
         {action}
       </Link>
     </p>
@@ -62,11 +62,11 @@ export function AuthFooterLink({ label, href, action }: AuthFooterLinkProps) {
 export function AuthDivider() {
   return (
     <div className="relative flex items-center">
-      <div className="h-px flex-1 bg-white/15" />
-      <span className="bg-[#21120c] px-5 text-sm uppercase tracking-[0.35em] text-[#b9aaa2] sm:text-base">
+      <div className="h-px flex-1 bg-border" />
+      <span className="bg-card px-5 text-sm uppercase tracking-[0.35em] text-muted-foreground sm:text-base">
         Or continue with
       </span>
-      <div className="h-px flex-1 bg-white/15" />
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }

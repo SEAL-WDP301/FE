@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 
 export function MentorHeader() {
     return (
-        <header className="border-b border-white/10 pb-6">
+        <header className="border-b border-border pb-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
+                    <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                         Team Workspace
                     </p>
-                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white">
+                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
                         Mentor Workspace
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export function MentorHeader() {
                         <Video className="h-4 w-4" />
                         Book Meeting
                     </Button>
-                    <Button variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03] px-5">
+                    <Button variant="outline" className="rounded-2xl border-border bg-muted px-5">
                         <MessageSquareText className="h-4 w-4" />
                         Message Mentor
                     </Button>

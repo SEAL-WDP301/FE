@@ -116,6 +116,7 @@ export default function JudgesSection() {
                             src={person.image}
                             alt={person.name}
                             fill
+                            sizes="96px"
                             className="object-cover"
                         />
                     </div>

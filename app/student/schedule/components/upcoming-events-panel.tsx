@@ -14,7 +14,7 @@ export function UpcomingEventsPanel({ events }: UpcomingEventsPanelProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Upcoming Events
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -31,7 +31,7 @@ export function UpcomingEventsPanel({ events }: UpcomingEventsPanelProps) {
                             key={`${event.title}-${event.time}`}
                             className={cn(
                                 "rounded-[20px] border bg-white/[0.035] p-4",
-                                urgent ? "border-red-500/25 border-l-red-500" : "border-white/10 border-l-orange-500/50",
+                                urgent ? "border-red-500/25 border-l-red-500" : "border-border border-l-orange-500/50",
                                 "border-l-2"
                             )}
                         >
@@ -41,7 +41,7 @@ export function UpcomingEventsPanel({ events }: UpcomingEventsPanelProps) {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <p className="font-semibold text-white">
+                                        <p className="font-semibold text-foreground">
                                             {event.title}
                                         </p>
                                         <ScheduleStatusBadge status={event.status} />

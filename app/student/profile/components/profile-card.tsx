@@ -1,5 +1,5 @@
 import { Camera, GraduationCap, Trophy } from "lucide-react";
-import { FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { FaGithub, FaFacebookF } from "react-icons/fa";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ export function ProfileCard() {
                 <div className="relative mx-auto w-fit">
                     <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-2xl" />
                     <Avatar className="relative mx-auto h-28 w-28 border border-orange-500/30 ring-4 ring-primary/25">
-                        <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-foreground">
                             MK
                         </AvatarFallback>
                     </Avatar>
@@ -84,7 +84,7 @@ export function ProfileCard() {
                         aria-label="LinkedIn profile"
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:-translate-y-0.5 hover:border-orange-500/40 hover:text-orange-400"
                     >
-                        <FaLinkedinIn className="h-4 w-4" />
+                        <FaFacebookF className="h-4 w-4" />
                     </button>
                 </div>
             </CardContent>

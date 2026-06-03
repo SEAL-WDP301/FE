@@ -22,7 +22,7 @@ export function MentorHeroCard() {
                     </div>
 
                     <div>
-                        <h2 className="text-3xl font-semibold tracking-tight text-white">
+                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">
                             {mentor.name}
                         </h2>
                         <p className="mt-2 text-sm font-medium text-orange-300">
@@ -36,7 +36,7 @@ export function MentorHeroCard() {
                             {mentor.expertise.map((skill) => (
                                 <span
                                     key={skill}
-                                    className="rounded-full border border-orange-500/15 bg-orange-500/5 px-3 py-1 text-xs font-medium text-white/85"
+                                    className="rounded-full border border-orange-500/15 bg-orange-500/5 px-3 py-1 text-xs font-medium text-foreground/85"
                                 >
                                     {skill}
                                 </span>
@@ -50,7 +50,7 @@ export function MentorHeroCard() {
                     </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/10 bg-white/[0.035] p-5">
+                <div className="rounded-[22px] border border-border bg-white/[0.035] p-5">
                     <Badge>
                         {reviewSummary.progressStatus}
                     </Badge>
@@ -68,13 +68,13 @@ export function MentorHeroCard() {
                     </div>
 
                     <div className="mt-5 space-y-3">
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                        <div className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.04] p-3">
                             <TrendingUp className="h-4 w-4 text-orange-400" />
-                            <span className="text-sm text-white">Review progress is on track</span>
+                            <span className="text-sm text-foreground">Review progress is on track</span>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                        <div className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.04] p-3">
                             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                            <span className="text-sm text-white">{reviewSummary.upcomingSession}</span>
+                            <span className="text-sm text-foreground">{reviewSummary.upcomingSession}</span>
                         </div>
                     </div>
                 </div>

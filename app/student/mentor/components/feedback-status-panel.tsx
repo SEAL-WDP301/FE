@@ -15,7 +15,7 @@ export function FeedbackStatusPanel({ stats }: FeedbackStatusPanelProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                     Feedback Status
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export function FeedbackStatusPanel({ stats }: FeedbackStatusPanelProps) {
                     return (
                         <div
                             key={stat.label}
-                            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+                            className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.035] p-3"
                         >
                             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400">
                                 <Icon className="h-4 w-4" />
@@ -39,7 +39,7 @@ export function FeedbackStatusPanel({ stats }: FeedbackStatusPanelProps) {
                                 <p className="text-xs text-muted-foreground">
                                     {stat.label}
                                 </p>
-                                <p className="text-lg font-semibold text-white">
+                                <p className="text-lg font-semibold text-foreground">
                                     {stat.value}
                                 </p>
                             </div>
