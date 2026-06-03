@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, Menu, Search } from "lucide-react"; // Thêm Menu icon nếu cần trigger sidebar sau này
+import { Bell, ChevronDown, Search } from "lucide-react"; // Thêm Menu icon nếu cần trigger sidebar sau này
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
+import Logo from "@/components/ui/logo";
 
 const notifications = [
     {
@@ -160,6 +161,8 @@ export function Topbar() {
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
             </div>
         </header>
