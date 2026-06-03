@@ -40,7 +40,8 @@ export default function EventPage() {
                 onClick={() => setActiveTab(tab.id)}
                 variant={activeTab === tab.id ? "eventTabActive" : "eventTab"}
                 size="eventTab"
-                className="font-black duration-150"
+                // Thu nhỏ font-size một chút trên mobile (text-sm md:text-base) để các tab vừa vặn tầm mắt
+                className="font-black duration-150 text-sm md:text-base flex-shrink-0"
               >
                 {tab.label}
               </Button>
@@ -48,14 +49,17 @@ export default function EventPage() {
           </div>
 
           {/* Nội dung động của Tab */}
-          <div className="w-full">
+          <div className="w-full min-w-0">
             <TabsContent activeTab={activeTab} />
           </div>
 
         </main>
 
-        {/* Cột phải: Sticky Sidebar (Đã được scale to rộng ở bước trước) */}
-        <Sidebar />
+        {/* Cột phải: Sidebar (Countdown + Thông số) */}
+        {/* Khi ở mobile, khối này sẽ tự động xếp hàng rơi xuống dưới cùng của cột trái nhờ cơ chế Grid hệ thống */}
+        <div className="w-full">
+          <Sidebar />
+        </div>
 
       </div>
     </div>
