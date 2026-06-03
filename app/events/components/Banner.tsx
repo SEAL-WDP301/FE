@@ -11,8 +11,8 @@ export default function Banner() {
     };
 
     return (
-
-        <section className="relative overflow-hidden border-b border-white/[0.03] rounded-none w-full left-0 translate-x-0 md:w-screen md:max-w-[100vw] md:left-1/2 md:-translate-x-1/2 bg-[#120F0E] mb-12 shadow-2xl py-10 sm:py-24 lg:py-28 px-4 sm:px-12 lg:px-20">
+        // Sử dụng breakout class để làm banner tràn viền vô cực 2 bên màn hình
+        <section className="relative overflow-hidden border-b border-white/[0.03] rounded-none w-screen max-w-[100vw] left-1/2 -translate-x-1/2 bg-[#120F0E] mb-12 shadow-2xl py-16 sm:py-24 lg:py-28 px-6 sm:px-12 lg:px-20">
 
             {/* HIỆU ỨNG LƯỚI Ô CARO CHUYÊN NGHIỆP */}
             <div

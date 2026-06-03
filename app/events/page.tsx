@@ -17,21 +17,23 @@ export default function EventPage() {
   ] as const;
 
   return (
-
-    <div className="relative min-h-screen w-full overflow-x-hidden text-[#F4F2F1] bg-[#120F0E] pt-0 pb-16 px-4 sm:px-12 lg:px-16 font-sans antialiased tracking-tight">
-
-      {/* Khối Banner phía trên */}
-      <div className="mx-auto max-w-[1400px] w-full">
+    // Đổi toàn bộ màu nền sang Đen gỗ ấm đặc trưng: bg-[#120F0E] 
+    // Thay đổi toàn bộ font chữ mặc định thành font-bold/font-black dầy cộm
+    <div className="relative min-h-screen text-[#F4F2F1] bg-[#120F0E] py-16 px-6 sm:px-12 lg:px-16 font-sans antialiased tracking-tight">
+      
+      {/* Khối Banner phía trên - Cho rộng tối đa max-w-[1400px] */}
+      <div className="mx-auto max-w-[1400px]">
         <Banner />
       </div>
 
+      {/* Grid nội dung chính bung rộng tối đa (max-w-[1400px]) và tăng khoảng cách gap-12 */}
+      <div className="mx-auto max-w-[1400px] mt-12 grid gap-12 lg:grid-cols-[1fr_420px] items-start">
 
-      <div className="mx-auto max-w-[1400px] mt-6 md:mt-12 grid gap-6 md:gap-12 grid-cols-1 lg:grid-cols-[1fr_420px] items-start w-full">
+        {/* Cột trái: Tab Bar & Chi tiết nội dung */}
+        <main className="space-y-10 w-full">
 
-
-        <main className="space-y-6 md:space-y-10 w-full min-w-0">
-
-          <div className="flex items-center border-b border-white/[0.06] overflow-x-auto whitespace-nowrap scrollbar-none sticky top-0 bg-[#120F0E]/95 backdrop-blur-md z-20 py-3 md:pb-4 gap-2 md:gap-4 w-full">
+          {/* Thanh Tab Navigation - Size chữ đẩy lên text-lg, font-black siêu dày */}
+          <div className="flex border-b border-white/[0.06] overflow-x-auto scrollbar-none sticky top-0 bg-[#120F0E]/95 backdrop-blur-md z-20 pb-4 gap-4">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
