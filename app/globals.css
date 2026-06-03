@@ -17,7 +17,7 @@
   /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
@@ -231,11 +231,9 @@
 
   .glass-card {
     @apply rounded-3xl border border-border backdrop-blur-xl;
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklch, var(--card) 88%, white 12%),
-      color-mix(in oklch, var(--card) 94%, transparent)
-    );
+    background: linear-gradient(180deg,
+        color-mix(in oklch, var(--card) 88%, white 12%),
+        color-mix(in oklch, var(--card) 94%, transparent));
   }
 
 }
@@ -254,12 +252,10 @@
   }
 
   .text-gradient-orange {
-    background: linear-gradient(
-      135deg,
-      #ffb370 0%,
-      #f37021 55%,
-      #c8470f 100%
-    );
+    background: linear-gradient(135deg,
+        #ffb370 0%,
+        #f37021 55%,
+        #c8470f 100%);
 
     -webkit-background-clip: text;
     background-clip: text;
@@ -275,11 +271,9 @@
   }
 
   .seal-glass {
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklch, var(--card) 88%, white 12%),
-      color-mix(in oklch, var(--card) 94%, transparent)
-    );
+    background: linear-gradient(180deg,
+        color-mix(in oklch, var(--card) 88%, white 12%),
+        color-mix(in oklch, var(--card) 94%, transparent));
 
     backdrop-filter: blur(14px);
 
@@ -314,5 +308,28 @@
     border-color: #f37021;
 
     box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.35);
+  }
+}
+
+/* =========================
+   HIDE SCROLLBAR
+========================== */
+
+@layer base {
+
+  html,
+  body,
+  * {
+    -ms-overflow-style: none;
+    /* IE & Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari */
   }
 }

@@ -20,52 +20,57 @@ export default function RankingSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-background py-24">
+    // Giảm bớt padding dọc từ py-24 xuống py-12 trên mobile để giao diện chặt chẽ hơn
+    <section className="relative overflow-hidden bg-background py-12 md:py-24">
       {/* Background Glow */}
       <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[200px]" />
 
       <div className="container relative z-10 mx-auto px-4">
         {/* Header */}
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-black md:text-5xl">
+        <div className="mb-10 md:mb-16 text-center">
+          <h2 className="mb-4 text-3xl font-black md:text-5xl">
             <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               Live Rankings
             </span>
           </h2>
-
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base md:text-lg text-muted-foreground">
             Current leaderboard standings
           </p>
         </div>
 
-        {/* Table */}
+        {/* Table Container */}
         <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-xl">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
+            {/* THAY ĐỔI: Bỏ min-w-[900px] cố định, dùng w-full */}
+            <table className="w-full table-auto">
               {/* Header */}
               <thead className="border-b border-orange-500/20 bg-orange-500/5">
                 <tr>
-                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
+                  {/* Padding nhỏ hơn trên mobile (px-3 py-4) */}
+                  <th className="px-3 md:px-6 py-4 md:py-5 text-left text-xs md:text-sm font-medium text-muted-foreground w-16">
                     Rank
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
+                  <th className="px-3 md:px-6 py-4 md:py-5 text-left text-xs md:text-sm font-medium text-muted-foreground">
                     Team
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
+                  {/* THAY ĐỔI: Thêm hidden md:table-cell để ẩn trên mobile */}
+                  <th className="hidden md:table-cell px-6 py-5 text-left text-xs md:text-sm font-medium text-muted-foreground">
                     University
                   </th>
 
-                  <th className="px-6 py-5 text-left text-sm font-medium text-muted-foreground">
+                  {/* THAY ĐỔI: Thêm hidden lg:table-cell để ẩn trên mobile/tablet nhỏ */}
+                  <th className="hidden lg:table-cell px-6 py-5 text-left text-xs md:text-sm font-medium text-muted-foreground">
                     Category
                   </th>
 
-                  <th className="px-6 py-5 text-right text-sm font-medium text-muted-foreground">
+                  <th className="px-3 md:px-6 py-4 md:py-5 text-right text-xs md:text-sm font-medium text-muted-foreground">
                     Score
                   </th>
 
-                  <th className="px-6 py-5 text-center text-sm font-medium text-muted-foreground">
+                  {/* THAY ĐỔI: Thêm hidden sm:table-cell */}
+                  <th className="hidden sm:table-cell px-6 py-5 text-center text-xs md:text-sm font-medium text-muted-foreground">
                     Trend
                   </th>
                 </tr>
@@ -76,75 +81,75 @@ export default function RankingSection() {
                 {teams.map((team) => (
                   <tr
                     key={team.rank}
-                    className={`transition-colors hover:bg-orange-500/5 ${
-                      team.rank <= 3
-                        ? 'bg-orange-500/5'
-                        : ''
-                    }`}
+                    className={`transition-colors hover:bg-orange-500/5 ${team.rank <= 3 ? 'bg-orange-500/5' : ''
+                      }`}
                   >
-                    {/* Rank */}
-                    <td className="px-6 py-5">
+                    {/* Rank column */}
+                    <td className="px-3 md:px-6 py-4 md:py-5">
                       {team.rank <= 3 ? (
+                        // Thu nhỏ khối huy chương/cup một chút trên mobile (h-9 w-9 thay vì h-11 w-11)
                         <div
-                          className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${getRankColor(
+                          className={`flex h-9 w-9 md:h-11 md:w-11 items-center justify-center rounded-xl md:rounded-2xl bg-gradient-to-br ${getRankColor(
                             team.rank
                           )} shadow-lg`}
                         >
                           {team.rank === 1 ? (
-                            <Trophy className="text-foreground" />
+                            <Trophy className="h-4 w-4 md:h-5 md:w-5 text-white" />
                           ) : (
-                            <Medal className="text-foreground" />
+                            <Medal className="h-4 w-4 md:h-5 md:w-5 text-white" />
                           )}
                         </div>
                       ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
+                        <div className="flex h-9 w-9 md:h-11 md:w-11 items-center justify-center rounded-xl md:rounded-2xl bg-muted text-xs md:text-sm font-semibold text-muted-foreground">
                           {team.rank}
                         </div>
                       )}
                     </td>
 
-                    {/* Team */}
-                    <td className="px-6 py-5">
-                      <div className="font-semibold text-foreground">
+                    {/* Team column */}
+                    <td className="px-3 md:px-6 py-4 md:py-5">
+                      <div className="font-semibold text-sm md:text-base text-foreground">
                         {team.name}
+                      </div>
+                      {/* HIỂN THỊ THÊM TRÊN MOBILE: Gom tên trường vào dưới tên Team để không bị mất thông tin */}
+                      <div className="block md:hidden text-xs text-muted-foreground mt-0.5">
+                        {team.university} • <span className="text-orange-400/80">{team.category}</span>
                       </div>
                     </td>
 
-                    {/* University */}
-                    <td className="px-6 py-5">
+                    {/* University column (Ẩn trên mobile) */}
+                    <td className="hidden md:table-cell px-6 py-5">
                       <span className="text-sm text-muted-foreground">
                         {team.university}
                       </span>
                     </td>
 
-                    {/* Category */}
-                    <td className="px-6 py-5">
+                    {/* Category column (Ẩn trên mobile/tablet) */}
+                    <td className="hidden lg:table-cell px-6 py-5">
                       <span className="rounded-xl bg-orange-500/10 px-3 py-1 text-sm text-orange-400">
                         {team.category}
                       </span>
                     </td>
 
-                    {/* Score */}
-                    <td className="px-6 py-5 text-right">
+                    {/* Score column */}
+                    <td className="px-3 md:px-6 py-4 md:py-5 text-right">
                       <span
                         className={`bg-gradient-to-r ${getRankColor(
                           team.rank
-                        )} bg-clip-text text-2xl font-black text-transparent`}
+                        )} bg-clip-text text-xl md:text-2xl font-black text-transparent`}
                       >
                         {team.score}
                       </span>
                     </td>
 
-                    {/* Trend */}
-                    <td className="px-6 py-5 text-center">
+                    {/* Trend column (Ẩn trên mobile) */}
+                    <td className="hidden sm:table-cell px-6 py-5 text-center">
                       {team.trend === 'up' && (
                         <TrendingUp className="mx-auto text-green-500" />
                       )}
-
                       {team.trend === 'down' && (
                         <TrendingDown className="mx-auto text-red-500" />
                       )}
-
                       {team.trend === 'same' && (
                         <div className="mx-auto h-[2px] w-4 rounded-full bg-zinc-500" />
                       )}
@@ -157,9 +162,8 @@ export default function RankingSection() {
 
           {/* Footer */}
           <div className="border-t border-orange-500/20 bg-orange-500/5 px-6 py-4">
-            <p className="text-center text-sm text-muted-foreground">
-              Rankings update every 6 hours based on
-              qualification round submissions
+            <p className="text-center text-xs md:text-sm text-muted-foreground">
+              Rankings update every 6 hours based on qualification round submissions
             </p>
           </div>
         </div>

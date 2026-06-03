@@ -7,7 +7,7 @@ export function SettingsHeader() {
         <header className="border-b border-border pb-6">
             <div className="mx-auto flex max-w-[1500px] flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
+                    <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                         Team Workspace
                     </p>
                     <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
@@ -16,7 +16,8 @@ export function SettingsHeader() {
                     <p className="mt-2 text-sm text-muted-foreground">
                         Manage your team workspace and preferences
                     </p>
-                </div>
+                </div><div>
+            </div>
 
                 <div className="flex flex-wrap gap-3">
                     <Button variant="outline" className="rounded-2xl border-border bg-muted px-5">
