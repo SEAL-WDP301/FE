@@ -60,7 +60,7 @@ export default function FeaturedHero() {
                         size="lg" 
                         className="relative h-14 rounded-lg bg-orange-500 px-8 text-lg font-bold text-primary-foreground transition-all duration-300 hover:scale-105 hover:bg-orange-600 hover:shadow-[0_0_40px_-10px_rgba(243,112,33,0.8)]"
                     >
-                        <Link href="/events/1">
+                        <Link href="/home/events/1">
                             View detail
                         </Link>
                     </Button>

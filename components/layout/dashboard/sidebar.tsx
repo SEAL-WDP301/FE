@@ -65,8 +65,7 @@ export function Sidebar() {
         <aside className="hidden w-[280px] border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl lg:flex lg:flex-col">
             {/* Logo */}
             <div className="border-b border-sidebar-border p-6">
-                <Logo />
-
+                <Logo href="/home" />
             </div>
 
             {/* Menu */}

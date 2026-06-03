@@ -1,11 +1,10 @@
-import type { ReactNode } from "react";
 import HomeHeader from "@/components/layout/dashboard/home-header";
 import { ProfileChecker } from "@/components/layout/public/profile-checker";
 
-export default function StudentLayout({
+export default function OrganizerLayout({
     children,
 }: {
-    children: ReactNode;
+    children: React.ReactNode;
 }) {
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -17,5 +16,3 @@ export default function StudentLayout({
         </div>
     );
 }
-
-

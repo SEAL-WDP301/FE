@@ -1,19 +1,37 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { enqueueSnackbar } from 'notistack';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 
+const STUDENT_MENUS = [
+    { label: "Overview", href: "/student/dashboard" },
+    { label: "Events", href: "/student/events" },
+    { label: "My Teams", href: "/student/teams" },
+    { label: "Mentor", href: "/student/mentor" },
+    { label: "Submissions", href: "/student/submissions" },
+    { label: "Schedule", href: "/student/schedule" },
+];
+
+const ORGANIZER_MENUS = [
+    { label: "Dashboard", href: "/organizer" },
+    { label: "Events", href: "/organizer/events" },
+    { label: "Judges & Mentors", href: "/organizer/judges" },
+    { label: "Settings", href: "/organizer/settings" },
+];
+
 export default function HomeHeader() {
     const router = useRouter();
+    const pathname = usePathname();
     const queryClient = useQueryClient();
 
     const { data: user, isLoading, isError } = useQuery({
@@ -53,31 +71,67 @@ export default function HomeHeader() {
                 {/* Logo */}
                 <Logo size='sm' href="/home" />
 
+                {/* Center Navigation */}
+                {(user?.role?.toLowerCase() === 'student' || user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') && (
+                    <nav className="flex flex-wrap items-center justify-center rounded-full border border-border bg-card px-2 py-1.5 shadow-sm gap-1">
+                        {(user.role.toLowerCase() === 'student' ? STUDENT_MENUS : ORGANIZER_MENUS).map((item) => {
+                            const isActive = pathname === item.href || (item.href !== '/organizer' && pathname.startsWith(`${item.href}/`));
+                            const activeColor = user.role.toLowerCase() === 'student' 
+                                ? "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400" 
+                                : "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400";
+                            
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        "relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-300",
+                                        isActive 
+                                            ? activeColor 
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+                )}
+
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
                     {isLoading ? (
                         <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
                     ) : user && !isError ? (
                         <div className="flex items-center gap-3">
+                            {user.role === 'mentor' ? (
+                                <Link href="/mentor/dashboard">
+                                    <Button variant="outline" size="sm" className="hidden sm:flex border-purple-500/30 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 dark:text-purple-400">
+                                        Mentor Workspace
+                                    </Button>
+                                </Link>
+                            ) : null}
                             <ThemeToggle />
                             <div className="hidden flex-col items-end sm:flex pl-2">
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                 <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
-                            <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
-                                {avatarUrl ? (
-                                    <AvatarImage
-                                        key={avatarUrl}
-                                        src={avatarUrl}
-                                        alt={user.name}
-                                        referrerPolicy="no-referrer"
-                                    />
-                                ) : null}
+                            <Link href="/home" className="cursor-pointer transition-transform hover:scale-105">
+                                <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
+                                    {avatarUrl ? (
+                                        <AvatarImage
+                                            key={avatarUrl}
+                                            src={avatarUrl}
+                                            alt={user.name}
+                                            referrerPolicy="no-referrer"
+                                        />
+                                    ) : null}
 
-                                <AvatarFallback>
-                                    {user.name?.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                                    <AvatarFallback>
+                                        {user.name?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </Link>
 
                             <Button variant="ghost" size="sm" onClick={handleLogout} className="ml-2 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300">
                                 Logout
