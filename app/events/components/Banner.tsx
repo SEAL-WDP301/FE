@@ -11,8 +11,8 @@ export default function Banner() {
     };
 
     return (
-        // Sử dụng breakout class để làm banner tràn viền vô cực 2 bên màn hình
-        <section className="relative overflow-hidden border-b border-white/[0.03] rounded-none w-screen max-w-[100vw] left-1/2 -translate-x-1/2 bg-[#120F0E] mb-12 shadow-2xl py-16 sm:py-24 lg:py-28 px-6 sm:px-12 lg:px-20">
+
+        <section className="relative overflow-hidden border-b border-white/[0.03] rounded-none w-full left-0 translate-x-0 md:w-screen md:max-w-[100vw] md:left-1/2 md:-translate-x-1/2 bg-[#120F0E] mb-12 shadow-2xl py-10 sm:py-24 lg:py-28 px-4 sm:px-12 lg:px-20">
 
             {/* HIỆU ỨNG LƯỚI Ô CARO CHUYÊN NGHIỆP */}
             <div
@@ -31,7 +31,7 @@ export default function Banner() {
             {/* Đốm sáng cam tỏa mịn ở trung tâm nền */}
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[35rem] w-[70rem] bg-[#FF6B2C]/10 blur-[160px] animate-seal-pulse rounded-full pointer-events-none" />
 
-            {/* BACKGROUND GRAPHICS: Đa giác 2 cánh */}
+            {/* BACKGROUND GRAPHICS: Đa giác 2 cánh (Chỉ hiện trên Desktop) */}
             {/* Cánh trái: Đa giác Cyan */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[350px] h-[300px] opacity-20 pointer-events-none hidden md:block">
                 <svg viewBox="0 0 100 100" className="w-full h-full text-[#06b6d4] stroke-current stroke-[0.3] fill-none">
@@ -59,40 +59,44 @@ export default function Banner() {
                 <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
 
                     {/* NÚT BACK TO HOME */}
-                    <Button
-                        onClick={handleBackToHome}
-                        variant="eventBack"
-                        size="eventBack"
-                        className="gap-2.5 font-black uppercase tracking-widest"
-                    >
-                        <span className="transform group-hover:-translate-x-0.5 transition-transform duration-150 text-sm leading-none">←</span>
-                        <span>Back to home</span>
-                    </Button>
+                    <div className="flex items-center">
+                        <Button
+                            onClick={handleBackToHome}
+                            variant="eventBack"
+                            size="eventBack"
+                            className="gap-2.5 font-black uppercase tracking-widest text-xs md:text-sm"
+                        >
+                            <span className="transform group-hover:-translate-x-0.5 transition-transform duration-150 text-sm leading-none">←</span>
+                            <span>Back to home</span>
+                        </Button>
+                    </div>
 
-                    {/* Cặp Badges bên phải */}
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B2C]/20 bg-[#FF6B2C]/5 px-3.5 py-1 text-xs">
+                    {/* Cặp Badges bên phải (Tự động xuống hàng mượt mà nếu thiếu không gian trên mobile) */}
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B2C]/20 bg-[#FF6B2C]/5 px-3 py-1 md:px-3.5 md:py-1 text-[10px] md:text-xs">
                             <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B2C] animate-pulse" />
                             <span className="text-[#FF6B2C] font-semibold tracking-wide uppercase">S.01 · SEAL Spring 2026</span>
                         </div>
-                        <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tracking-wider uppercase">
+                        <span className="px-3 py-1 md:px-3.5 md:py-1 rounded-full text-[10px] md:text-[11px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tracking-wider uppercase">
                             7 days to deadline
                         </span>
                     </div>
                 </div>
 
                 {/* TIÊU ĐỀ KHỔNG LỒ 2 DÒNG */}
-                <h1 className="text-5xl sm:text-7xl lg:text-[76px] xl:text-[84px] font-black text-white tracking-tighter leading-[1.05] flex flex-col gap-2">
+                {/* ĐÃ SỬA: text-3xl trên mobile, tự động phóng to lên text-5xl -> text-[76px] trên màn hình máy tính */}
+                <h1 className="text-3xl sm:text-5xl lg:text-[76px] xl:text-[84px] font-black text-white tracking-tighter leading-[1.1] flex flex-col gap-1 md:gap-2">
                     <span>Build the future,</span>
                     <span className="text-[#FF6B2C]">in 48 hours.</span>
                 </h1>
 
                 {/* PHẦN TIỂU ĐỀ PHÂN LAYER */}
-                <div className="mt-8 space-y-3 max-w-4xl">
-                    <p className="text-xl sm:text-2xl font-extrabold text-[#F4F2F1] leading-snug">
+                {/* ĐÃ SỬA: Hạ cỡ chữ text-base/text-sm trên mobile để giao diện thanh thoát và không chật chội */}
+                <div className="mt-6 md:mt-8 space-y-2 md:space-y-3 max-w-4xl">
+                    <p className="text-base sm:text-2xl font-extrabold text-[#F4F2F1] leading-snug">
                         SEAL Spring is the kickoff season of the 2026 league.
                     </p>
-                    <p className="text-base sm:text-lg text-[#A39690] font-bold leading-relaxed">
+                    <p className="text-xs sm:text-lg text-[#A39690] font-bold leading-relaxed">
                         Eight tracks, sixty-two mentors, 140Mđ in prizes - and one weekend you&apos;ll never forget.
                     </p>
                 </div>
