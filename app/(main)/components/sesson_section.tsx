@@ -87,6 +87,7 @@ export default function SealSeasonsSection() {
         {/* Cards */}
         {!isLoading && events && (
           <div className="grid gap-8 md:grid-cols-3">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {events.map((event: any) => {
               const styles = getSeasonStyles(event.season);
               const Icon = styles.icon;

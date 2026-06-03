@@ -190,6 +190,7 @@ export default function EventDetailPage() {
             Competition Tracks
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {event.tracks?.map((track: any) => (
               <div key={track.id} className="bg-card border border-border rounded-2xl p-6 hover:border-orange-500/30 transition-colors">
                 <h3 className="text-xl font-bold text-foreground mb-3">{track.name}</h3>

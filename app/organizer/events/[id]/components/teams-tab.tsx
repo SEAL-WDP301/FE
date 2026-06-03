@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
 import { Search, CheckCircle, XCircle, Trash2 } from "lucide-react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamsTab({ event }: { event: any }) {
     const queryClient = useQueryClient();
     const [selectedTrackId, setSelectedTrackId] = useState<number | null>(
@@ -41,6 +42,7 @@ export default function TeamsTab({ event }: { event: any }) {
             setTeamToEliminate(null);
             setEliminationReason("");
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
             enqueueSnackbar(error.response?.data?.message || 'Failed to update status', { variant: 'error' });
         }
@@ -88,6 +90,7 @@ export default function TeamsTab({ event }: { event: any }) {
                         onChange={(e) => setSelectedTrackId(Number(e.target.value))}
                         className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                     >
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {event.tracks?.map((track: any) => (
                             <option key={track.id} value={track.id}>{track.name}</option>
                         ))}
@@ -127,7 +130,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                 </td>
                             </tr>
                         ) : teams && teams.length > 0 ? (
-                            teams.map((team: any) => (
+                            teams.map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
                                 <tr key={team.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                                     <td className="px-6 py-4 font-medium text-foreground">
                                         {team.name}

@@ -79,14 +79,6 @@ export function Sidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
 
-<<<<<<< HEAD
-    return (
-        <aside className="hidden w-[280px] border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl lg:flex lg:flex-col">
-            {/* Logo */}
-            <div className="border-b border-sidebar-border p-6">
-                <Logo href="/home" />
-            </div>
-=======
   return (
     <aside
       className={cn(
@@ -111,7 +103,6 @@ export function Sidebar({
         <nav className="space-y-2">
           {menus.map((item) => {
             const Icon = item.icon;
->>>>>>> c0d3cfc6fa0ab242060b0a0ed20c4046d0418916
 
             const active = pathname === item.href;
 

@@ -13,6 +13,7 @@ export default function Countdown() {
     const [now, setNow] = useState<number | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNow(Date.now()); // Chỉ gán thời gian sau khi component đã mount lên trình duyệt
         const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);

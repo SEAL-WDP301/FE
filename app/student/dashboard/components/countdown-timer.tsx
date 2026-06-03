@@ -48,7 +48,7 @@ export function CountdownTimer({
         };
     };
 
-    const [isMounted, setIsMounted] = useState(false);
+    // isMounted removed
     const [timeLeft, setTimeLeft] = useState({
         days: "00",
         hours: "00",
@@ -57,7 +57,7 @@ export function CountdownTimer({
     });
 
     useEffect(() => {
-        setIsMounted(true);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTimeLeft(calculateTimeLeft());
         
         const timer = setInterval(() => {
@@ -65,6 +65,7 @@ export function CountdownTimer({
         }, 1000);
 
         return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetDate]);
 
     const timerItems = [

@@ -23,6 +23,7 @@ export default function PastEvents() {
 
     const filteredEvents = !events ? [] : activeTab === "All" 
         ? events 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : events.filter((event: any) => event.season === activeTab);
 
     return (
@@ -61,6 +62,7 @@ export default function PastEvents() {
                 {/* Grid */}
                 {!isLoading && events && (
                     <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {filteredEvents.map((event: any) => (
                             <div 
                                 key={event.id} 

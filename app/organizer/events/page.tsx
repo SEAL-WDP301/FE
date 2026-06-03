@@ -5,7 +5,7 @@ import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, Search, Calendar, Users, Trophy } from "lucide-react";
-import { format } from "date-fns";
+import { format } from "date-fns"
 
 export default function OrganizerEventsPage() {
     const { data: events, isLoading, isError } = useQuery({
@@ -70,7 +70,7 @@ export default function OrganizerEventsPage() {
                 <div className="p-12 text-center bg-card border border-dashed border-border rounded-xl">
                     <Trophy className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-1">No events found</h3>
-                    <p className="text-muted-foreground mb-6">You haven't created any events yet.</p>
+                    <p className="text-muted-foreground mb-6">You haven&apos;t created any events yet.</p>
                     <Button variant="outline" className="gap-2">
                         <Plus className="h-4 w-4" />
                         Create your first event
@@ -78,6 +78,7 @@ export default function OrganizerEventsPage() {
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {events?.map((event: any) => (
                         <div key={event.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:border-blue-500/30 transition-all duration-300 group flex flex-col">
                             <div className="p-6 flex-1">

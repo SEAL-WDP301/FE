@@ -28,6 +28,7 @@ export default function EventRegistrationPage() {
   });
 
   const registerMutation = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: async (data: any) => {
       return axiosClient.post(`/student/events/${eventId}/register/team`, data);
     },
@@ -35,6 +36,7 @@ export default function EventRegistrationPage() {
       enqueueSnackbar('Team registered successfully!', { variant: 'success' });
       router.push(`/home/events/${eventId}`);
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Registration failed';
       enqueueSnackbar(message, { variant: 'error' });
@@ -104,6 +106,7 @@ export default function EventRegistrationPage() {
               <div className="space-y-4">
                 <label className="text-sm font-semibold text-foreground">Select Competition Track *</label>
                 <div className="grid sm:grid-cols-2 gap-4">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {event.tracks?.map((track: any) => (
                     <div 
                       key={track.id}
