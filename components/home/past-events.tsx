@@ -16,14 +16,13 @@ export default function PastEvents() {
       queryKey: ['publicEvents'],
       queryFn: async () => {
         const res = await axiosClient.get('/public/events');
-        // Filter only completed/closed events if needed, but for now we'll show all or based on status
         return res.data.data;
       },
+      staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
     const filteredEvents = !events ? [] : activeTab === "All" 
         ? events 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : events.filter((event: any) => event.season === activeTab);
 
     return (

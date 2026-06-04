@@ -12,15 +12,7 @@ import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
-
-const STUDENT_MENUS = [
-    { label: "Overview", href: "/student/dashboard" },
-    { label: "Events", href: "/student/events" },
-    { label: "My Teams", href: "/student/teams" },
-    { label: "Mentor", href: "/student/mentor" },
-    { label: "Submissions", href: "/student/submissions" },
-    { label: "Schedule", href: "/student/schedule" },
-];
+import { InvitationsMenu } from './invitations-menu';
 
 const ORGANIZER_MENUS = [
     { label: "Dashboard", href: "/organizer" },
@@ -72,13 +64,11 @@ export default function HomeHeader() {
                 <Logo size='sm' href="/home" />
 
                 {/* Center Navigation */}
-                {(user?.role?.toLowerCase() === 'student' || user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') && (
+                {(user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') && (
                     <nav className="flex flex-wrap items-center justify-center rounded-full border border-border bg-card px-2 py-1.5 shadow-sm gap-1">
-                        {(user.role.toLowerCase() === 'student' ? STUDENT_MENUS : ORGANIZER_MENUS).map((item) => {
+                        {ORGANIZER_MENUS.map((item) => {
                             const isActive = pathname === item.href || (item.href !== '/organizer' && pathname.startsWith(`${item.href}/`));
-                            const activeColor = user.role.toLowerCase() === 'student' 
-                                ? "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400" 
-                                : "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400";
+                            const activeColor = "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400";
                             
                             return (
                                 <Link
@@ -111,6 +101,9 @@ export default function HomeHeader() {
                                     </Button>
                                 </Link>
                             ) : null}
+                            
+                            {user.role === 'student' && <InvitationsMenu />}
+                            
                             <ThemeToggle />
                             <div className="hidden flex-col items-end sm:flex pl-2">
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>

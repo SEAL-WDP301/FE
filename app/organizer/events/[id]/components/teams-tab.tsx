@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
-import { Search, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamsTab({ event }: { event: any }) {
@@ -16,6 +17,8 @@ export default function TeamsTab({ event }: { event: any }) {
 
     const [eliminationReason, setEliminationReason] = useState("");
     const [teamToEliminate, setTeamToEliminate] = useState<number | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
 
     // Fetch Teams for the selected track
     const { data: teams, isLoading } = useQuery({
@@ -145,6 +148,14 @@ export default function TeamsTab({ event }: { event: any }) {
                                         {getStatusBadge(team.status)}
                                     </td>
                                     <td className="px-6 py-4 text-right space-x-2">
+                                        <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            className="text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 px-2"
+                                            onClick={() => setSelectedTeamForDetails(team)}
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
                                         {team.status === 'pending' && (
                                             <>
                                                 <Button 
@@ -232,6 +243,94 @@ export default function TeamsTab({ event }: { event: any }) {
                     </div>
                 </div>
             )}
+
+            {/* Team Details Dialog */}
+            <Dialog open={!!selectedTeamForDetails} onOpenChange={(open) => !open && setSelectedTeamForDetails(null)}>
+                <DialogContent className="sm:max-w-[600px] bg-card border-border">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            Team: <span className="text-blue-500">{selectedTeamForDetails?.name}</span>
+                            {selectedTeamForDetails?.status && (
+                                <span className="ml-2">
+                                    {getStatusBadge(selectedTeamForDetails.status)}
+                                </span>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Review the members of this team and their registration details.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="mt-4 space-y-4">
+                        {/* Leader */}
+                        <div className="p-4 border border-border rounded-lg bg-muted/20">
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Leader</h4>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-foreground">{selectedTeamForDetails?.leader?.name || 'Unknown'}</p>
+                                    <p className="text-sm text-muted-foreground">{selectedTeamForDetails?.leader?.email}</p>
+                                    {selectedTeamForDetails?.leader?.studentProfile && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Code: {selectedTeamForDetails.leader.studentProfile.studentCode} • 
+                                            {selectedTeamForDetails.leader.studentProfile.universityName && ` ${selectedTeamForDetails.leader.studentProfile.universityName}`}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Accepted</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Members */}
+                        <div className="p-4 border border-border rounded-lg bg-muted/20">
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+                                Members 
+                                <span className="bg-muted px-2 py-0.5 rounded-full text-foreground">
+                                    {selectedTeamForDetails?.members?.length || 0}
+                                </span>
+                            </h4>
+                            
+                            {(!selectedTeamForDetails?.members || selectedTeamForDetails.members.length === 0) ? (
+                                <p className="text-sm text-muted-foreground italic">No members yet.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    {selectedTeamForDetails.members.map((member: any) => (
+                                        <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
+                                            <div>
+                                                <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
+                                                <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                                                {member.user?.studentProfile && (
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Code: {member.user.studentProfile.studentCode} • 
+                                                        {member.user.studentProfile.universityName && ` ${member.user.studentProfile.universityName}`}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                {member.status === 'pending' ? (
+                                                    <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold whitespace-nowrap">
+                                                        Invitation Pending
+                                                    </span>
+                                                ) : member.status === 'accepted' ? (
+                                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">
+                                                        Accepted
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">
+                                                        Rejected
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

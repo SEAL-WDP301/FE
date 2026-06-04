@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export default function EventRegistrationPage() {
   const [memberEmails, setMemberEmails] = useState<string[]>(['']);
 
   // Fetch Event Details to get Tracks
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading: isEventLoading } = useQuery({
     queryKey: ['publicEvent', eventId],
     queryFn: async () => {
       const res = await axiosClient.get(`/public/events/${eventId}`);
@@ -27,13 +27,39 @@ export default function EventRegistrationPage() {
     },
   });
 
+  // Fetch Student Registration Status
+  const { data: studentInfo, isLoading: isStudentLoading } = useQuery({
+    queryKey: ['studentEventStatus', eventId],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/student/events/${eventId}`);
+      return res.data.data;
+    },
+  });
+
+  const isEditing = !!studentInfo?.teamInfo;
+
+  // Pre-fill form if editing
+  useEffect(() => {
+    if (isEditing && studentInfo.teamInfo.team) {
+      setTeamName(studentInfo.teamInfo.team.name);
+      setSelectedTrack(studentInfo.teamInfo.team.trackId);
+      // We don't fetch member emails from this endpoint currently, so we leave it empty or fetch if needed
+    }
+  }, [isEditing, studentInfo]);
+
+  const queryClient = useQueryClient();
+
   const registerMutation = useMutation({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: async (data: any) => {
+      if (isEditing) {
+        return axiosClient.put(`/student/events/${eventId}/register/team`, data);
+      }
       return axiosClient.post(`/student/events/${eventId}/register/team`, data);
     },
     onSuccess: () => {
-      enqueueSnackbar('Team registered successfully!', { variant: 'success' });
+      enqueueSnackbar(isEditing ? 'Team updated successfully!' : 'Team registered successfully!', { variant: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['studentEventStatus', eventId] });
       router.push(`/home/events/${eventId}`);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +68,8 @@ export default function EventRegistrationPage() {
       enqueueSnackbar(message, { variant: 'error' });
     }
   });
+
+  const isLoading = isEventLoading || isStudentLoading;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

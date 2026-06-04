@@ -15,7 +15,7 @@ export default function OrganizerEventControlRoom() {
     const { data: event, isLoading, isError } = useQuery({
         queryKey: ['organizerEvent', eventId],
         queryFn: async () => {
-            const res = await axiosClient.get(`/organizer/events/${eventId}`);
+            const res = await axiosClient.get(`/public/events/${eventId}`);
             return res.data.data;
         },
     });

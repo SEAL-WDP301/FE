@@ -5,7 +5,7 @@ import { axiosClient } from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock } from 'lucide-react';
+import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock, BellRing } from 'lucide-react';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -40,6 +40,18 @@ export default function EventDetailPage() {
     },
     enabled: !!user && user.role === 'student',
   });
+
+  // Fetch Pending Invitations to check if we need to show an alert
+  const { data: pendingInvitations } = useQuery({
+    queryKey: ['pendingInvitations'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/student/events/invitations/pending');
+      return res.data.data;
+    },
+    enabled: !!user && user.role === 'student',
+  });
+
+  const eventPendingInvitations = pendingInvitations?.filter((inv: any) => inv.team.eventId === Number(eventId)) || [];
 
   if (isEventLoading) {
     return (
@@ -93,15 +105,46 @@ export default function EventDetailPage() {
 
       // Check if student is already registered
       if (studentInfo?.individualRegistration || studentInfo?.teamInfo) {
-        const teamStatus = studentInfo.teamInfo?.status;
+        const teamInfo = studentInfo.teamInfo;
+        const memberStatus = teamInfo?.status;
+        const teamStatus = teamInfo?.team?.status || studentInfo?.registrationStatus;
+        const displayStatus = memberStatus === 'pending' ? 'Invitation Pending' : teamStatus;
+        
         return (
-          <Button size="lg" disabled className="w-full sm:w-auto px-8 bg-green-600 opacity-100 cursor-default">
-            {teamStatus === 'pending' ? 'Registration Pending' : 'Registered Successfully'}
-          </Button>
+          <div className="bg-card/40 backdrop-blur-md border border-border/50 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full sm:w-auto shadow-lg shadow-black/5">
+            <div>
+              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Users className="h-4 w-4 text-orange-500" />
+                {teamInfo ? `Team: ${teamInfo.team.name}` : 'Individual Registration'}
+              </p>
+              <div className="text-xs text-muted-foreground uppercase mt-2 font-medium flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  {displayStatus === 'pending' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${displayStatus === 'pending' ? 'bg-yellow-500' : displayStatus === 'accepted' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                </span>
+                Status: <span className="text-foreground">{displayStatus}</span>
+              </div>
+            </div>
+            
+            {displayStatus === 'pending' && teamInfo?.role === 'leader' && (
+              <Link href={`/home/events/${eventId}/register`}>
+                <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 transition-colors">
+                  Edit Registration
+                </Button>
+              </Link>
+            )}
+            {displayStatus === 'accepted' && (
+              <Link href={`/home/events/${eventId}/tracks/${teamInfo?.team?.trackId}/teams`}>
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white transition-colors">
+                  Enter Workspace
+                </Button>
+              </Link>
+            )}
+          </div>
         );
       }
 
-      // Not registered, but check event status
+      // Not registered, check event status
       if (event.status !== 'active') {
         return (
           <Button size="lg" disabled className="w-full sm:w-auto px-8">
@@ -151,6 +194,15 @@ export default function EventDetailPage() {
 
             <div className="flex flex-wrap gap-4 mb-8">
               <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-4 py-3 border border-border">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider">Registration Deadline</div>
+                  <div className="font-semibold text-foreground">
+                    {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString() : 'TBA'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-4 py-3 border border-border">
                 <Clock className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wider">Start Date</div>
@@ -182,6 +234,19 @@ export default function EventDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Pending Invitations Alert */}
+        {eventPendingInvitations.length > 0 && (
+          <div className="mb-12 bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 flex items-center justify-between text-orange-600 dark:text-orange-400">
+            <div className="flex items-center gap-3">
+              <BellRing className="h-5 w-5 animate-pulse" />
+              <span className="font-medium">
+                You have {eventPendingInvitations.length} pending team invitation(s) for this event. 
+                Please check your notifications bell on the header to accept or reject them.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Tracks Section */}
         <div className="mb-12">

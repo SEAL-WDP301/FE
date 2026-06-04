@@ -7,14 +7,9 @@ import Countdown from "./Countdown";
 export default function Sidebar() {
     return (
         <>
-            {/* 1. SIDEBAR CHÍNH: Hiển thị tự nhiên trên Desktop, tạo khoảng cách đệm trên Mobile */}
             <aside className="lg:sticky lg:top-24 self-start space-y-6 pb-24 lg:pb-0 w-full">
-                {/* Live Countdown Component */}
                 <Countdown />
 
-                {/* Khối thông số chi tiết */}
-                {/* ĐÃ SỬA: Chuyển sang sử dụng bg-card và border-border để tương thích light/dark, 
-                    trả lại màu gốc dark:bg-[#141210] khi gạt sang tối */}
                 <div className="border rounded-[24px] p-6 space-y-4 text-sm font-medium bg-card border-border/80 dark:bg-[#141210] dark:border-white/[0.04] transition-colors duration-300">
 
                     <div className="flex justify-between items-center pb-3 border-b border-border/60 dark:border-white/[0.04] transition-colors">
