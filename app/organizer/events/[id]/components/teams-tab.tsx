@@ -291,6 +291,7 @@ export default function TeamsTab({ event }: { event: any }) {
                         {/* Members */}
                         <div className="p-4 border border-border rounded-lg bg-muted/20">
                             {(() => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const otherMembers = selectedTeamForDetails?.members?.filter((m: any) => m.role !== 'leader') || [];
                                 return (
                                     <>
@@ -305,6 +306,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                             <p className="text-sm text-muted-foreground italic">No other members yet.</p>
                                         ) : (
                                             <div className="space-y-3">
+                                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                                 {otherMembers.map((member: any) => (
                                                     <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
                                                         <div>

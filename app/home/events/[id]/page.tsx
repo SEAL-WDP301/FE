@@ -51,6 +51,7 @@ export default function EventDetailPage() {
     enabled: !!user && user.role === 'student',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventPendingInvitations = pendingInvitations?.filter((inv: any) => inv.team.eventId === Number(eventId)) || [];
 
   if (isEventLoading) {

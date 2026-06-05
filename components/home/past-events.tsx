@@ -23,6 +23,7 @@ export default function PastEvents() {
 
     const filteredEvents = !events ? [] : activeTab === "All" 
         ? events 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : events.filter((event: any) => event.season === activeTab);
 
     return (

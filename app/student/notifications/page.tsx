@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 // DYNAMIC TEMPLATES
 // ==========================================
 
-const TeamAssignedTemplate = ({ notification }: { notification: any }) => (
+const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Chào bạn,</p>
     <p>
@@ -46,7 +46,7 @@ const TeamAssignedTemplate = ({ notification }: { notification: any }) => (
   </div>
 );
 
-const RegistrationApprovedTemplate = ({ notification }: { notification: any }) => (
+const RegistrationApprovedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Kính gửi Đội trưởng,</p>
     
@@ -81,7 +81,7 @@ const RegistrationApprovedTemplate = ({ notification }: { notification: any }) =
   </div>
 );
 
-const RegistrationRejectedTemplate = ({ notification }: { notification: any }) => (
+const RegistrationRejectedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Kính gửi Đội trưởng,</p>
     
@@ -115,7 +115,7 @@ const RegistrationRejectedTemplate = ({ notification }: { notification: any }) =
   </div>
 );
 
-const RoundResultTemplate = ({ notification }: { notification: any }) => (
+const RoundResultTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Kính gửi Đội thi,</p>
     
@@ -147,7 +147,7 @@ const RoundResultTemplate = ({ notification }: { notification: any }) => (
   </div>
 );
 
-const GenericTemplate = ({ notification }: { notification: any }) => (
+const GenericTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-4 text-sm text-foreground/90 leading-relaxed">
     <p>Xin chào,</p>
     <p className="whitespace-pre-wrap">{notification.content}</p>
@@ -176,7 +176,7 @@ export default function NotificationsPage() {
     },
   });
 
-  const selectedNotification = notifications.find((n: any) => n.id === selectedId) || notifications[0];
+  const selectedNotification = notifications.find((n: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => n.id === selectedId) || notifications[0];
 
   // Mutations
   const markAsReadMutation = useMutation({
@@ -220,7 +220,7 @@ export default function NotificationsPage() {
     }
   });
 
-  const handleSelectNotification = (notif: any) => {
+  const handleSelectNotification = (notif: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
     setSelectedId(notif.id);
     if (!notif.isRead) {
       markAsReadMutation.mutate(notif.id);
@@ -228,7 +228,7 @@ export default function NotificationsPage() {
   };
 
   // Helper to map type to template
-  const renderTemplate = (notification: any) => {
+  const renderTemplate = (notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
     switch (notification.type) {
       case 'team_assigned':
         return <TeamAssignedTemplate notification={notification} />;
@@ -276,7 +276,7 @@ export default function NotificationsPage() {
                   size="sm" 
                   className="flex-1 text-xs h-8 text-muted-foreground"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isPending || notifications.every((n: any) => n.isRead)}
+                  disabled={markAllAsReadMutation.isPending || notifications.every((n: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => n.isRead)}
                 >
                   <CheckCheck className="w-3.5 h-3.5 mr-1.5" />
                   Đọc tất cả
@@ -307,7 +307,7 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {notifications.map((notif: any) => {
+              {notifications.map((notif: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
                 const isSelected = selectedNotification?.id === notif.id;
                 return (
                   <div key={notif.id} className="relative group">

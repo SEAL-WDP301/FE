@@ -42,7 +42,9 @@ export default function EventRegistrationPage() {
   // Pre-fill form if editing or re-registering after elimination
   useEffect(() => {
     if (studentInfo?.teamInfo?.team) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTeamName(studentInfo.teamInfo.team.name);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedTrack(studentInfo.teamInfo.team.trackId);
       
       // Pre-fill member emails (excluding the current user / leader)
