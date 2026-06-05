@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
-import { Search, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, Crown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,9 +34,9 @@ export default function TeamsTab({ event }: { event: any }) {
     // Update Team Status Mutation
     const updateStatusMutation = useMutation({
         mutationFn: async ({ teamId, status, reason }: { teamId: number, status: string, reason?: string }) => {
-            return axiosClient.patch(`/organizer/events/${event.id}/teams/${teamId}/status`, {
+            return axiosClient.put(`/organizer/events/${event.id}/tracks/${selectedTrackId}/teams/${teamId}/status`, {
                 status,
-                eliminationReason: reason
+                reason
             });
         },
         onSuccess: () => {
@@ -71,7 +71,7 @@ export default function TeamsTab({ event }: { event: any }) {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending': return <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold">Pending</span>;
-            case 'accepted': return <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Accepted</span>;
+            case 'approved': return <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Approved</span>;
             case 'eliminated': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Eliminated</span>;
             default: return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-xs font-semibold">{status}</span>;
         }
@@ -162,7 +162,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                                     size="sm" 
                                                     variant="outline" 
                                                     className="border-green-500/30 text-green-500 hover:bg-green-500/10"
-                                                    onClick={() => handleUpdateStatus(team.id, 'accepted')}
+                                                    onClick={() => handleUpdateStatus(team.id, 'approved')}
                                                     disabled={updateStatusMutation.isPending}
                                                 >
                                                     <CheckCircle className="h-4 w-4 mr-1" /> Approve
@@ -178,7 +178,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                                 </Button>
                                             </>
                                         )}
-                                        {team.status === 'accepted' && (
+                                        {team.status === 'approved' && (
                                             <Button 
                                                 size="sm" 
                                                 variant="outline" 
@@ -263,11 +263,17 @@ export default function TeamsTab({ event }: { event: any }) {
                     
                     <div className="mt-4 space-y-4">
                         {/* Leader */}
-                        <div className="p-4 border border-border rounded-lg bg-muted/20">
-                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Leader</h4>
-                            <div className="flex justify-between items-start">
+                        <div className="p-4 border border-amber-500/30 rounded-lg bg-amber-500/5 relative overflow-hidden">
+                            <div className="absolute -top-4 -right-4 p-2 opacity-10">
+                                <Crown className="w-24 h-24 text-amber-500" />
+                            </div>
+                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <Crown className="w-4 h-4" />
+                                Team Leader
+                            </h4>
+                            <div className="flex justify-between items-start relative z-10">
                                 <div>
-                                    <p className="font-semibold text-foreground">{selectedTeamForDetails?.leader?.name || 'Unknown'}</p>
+                                    <p className="font-semibold text-foreground text-base">{selectedTeamForDetails?.leader?.name || 'Unknown'}</p>
                                     <p className="text-sm text-muted-foreground">{selectedTeamForDetails?.leader?.email}</p>
                                     {selectedTeamForDetails?.leader?.studentProfile && (
                                         <p className="text-xs text-muted-foreground mt-1">
@@ -276,57 +282,63 @@ export default function TeamsTab({ event }: { event: any }) {
                                         </p>
                                     )}
                                 </div>
-                                <div className="text-right">
-                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Accepted</span>
+                                <div className="text-right mt-1">
+                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold shadow-sm">Accepted</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Members */}
                         <div className="p-4 border border-border rounded-lg bg-muted/20">
-                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
-                                Members 
-                                <span className="bg-muted px-2 py-0.5 rounded-full text-foreground">
-                                    {selectedTeamForDetails?.members?.length || 0}
-                                </span>
-                            </h4>
-                            
-                            {(!selectedTeamForDetails?.members || selectedTeamForDetails.members.length === 0) ? (
-                                <p className="text-sm text-muted-foreground italic">No members yet.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    {selectedTeamForDetails.members.map((member: any) => (
-                                        <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
-                                            <div>
-                                                <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
-                                                <p className="text-sm text-muted-foreground">{member.user?.email}</p>
-                                                {member.user?.studentProfile && (
-                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                        Code: {member.user.studentProfile.studentCode} • 
-                                                        {member.user.studentProfile.universityName && ` ${member.user.studentProfile.universityName}`}
-                                                    </p>
-                                                )}
+                            {(() => {
+                                const otherMembers = selectedTeamForDetails?.members?.filter((m: any) => m.role !== 'leader') || [];
+                                return (
+                                    <>
+                                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+                                            Members 
+                                            <span className="bg-muted px-2 py-0.5 rounded-full text-foreground">
+                                                {otherMembers.length}
+                                            </span>
+                                        </h4>
+                                        
+                                        {otherMembers.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">No other members yet.</p>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {otherMembers.map((member: any) => (
+                                                    <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
+                                                        <div>
+                                                            <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
+                                                            <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                                                            {member.user?.studentProfile && (
+                                                                <p className="text-xs text-muted-foreground mt-1">
+                                                                    Code: {member.user.studentProfile.studentCode} • 
+                                                                    {member.user.studentProfile.universityName && ` ${member.user.studentProfile.universityName}`}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-right">
+                                                            {member.status === 'pending' ? (
+                                                                <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold whitespace-nowrap">
+                                                                    Invitation Pending
+                                                                </span>
+                                                            ) : member.status === 'accepted' ? (
+                                                                <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">
+                                                                    Accepted
+                                                                </span>
+                                                            ) : (
+                                                                <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">
+                                                                    Rejected
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            <div className="text-right">
-                                                {member.status === 'pending' ? (
-                                                    <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold whitespace-nowrap">
-                                                        Invitation Pending
-                                                    </span>
-                                                ) : member.status === 'accepted' ? (
-                                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">
-                                                        Accepted
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">
-                                                        Rejected
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
                 </DialogContent>

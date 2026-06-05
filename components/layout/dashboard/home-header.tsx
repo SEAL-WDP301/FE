@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 import { InvitationsMenu } from './invitations-menu';
+import { NotificationsMenu } from './notifications-menu';
 
 const ORGANIZER_MENUS = [
     { label: "Dashboard", href: "/organizer" },
@@ -103,6 +104,7 @@ export default function HomeHeader() {
                             ) : null}
                             
                             {user.role === 'student' && <InvitationsMenu />}
+                            <NotificationsMenu />
                             
                             <ThemeToggle />
                             <div className="hidden flex-col items-end sm:flex pl-2">

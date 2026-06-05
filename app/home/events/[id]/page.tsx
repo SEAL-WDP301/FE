@@ -120,7 +120,7 @@ export default function EventDetailPage() {
               <div className="text-xs text-muted-foreground uppercase mt-2 font-medium flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   {displayStatus === 'pending' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>}
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${displayStatus === 'pending' ? 'bg-yellow-500' : displayStatus === 'accepted' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${displayStatus === 'pending' || displayStatus === 'Invitation Pending' ? 'bg-yellow-500' : displayStatus === 'approved' ? 'bg-green-500' : 'bg-red-500'}`}></span>
                 </span>
                 Status: <span className="text-foreground">{displayStatus}</span>
               </div>
@@ -133,10 +133,17 @@ export default function EventDetailPage() {
                 </Button>
               </Link>
             )}
-            {displayStatus === 'accepted' && (
+            {displayStatus === 'approved' && (
               <Link href={`/home/events/${eventId}/tracks/${teamInfo?.team?.trackId}/teams`}>
                 <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white transition-colors">
                   Enter Workspace
+                </Button>
+              </Link>
+            )}
+            {displayStatus === 'eliminated' && (
+              <Link href={`/home/events/${eventId}/register`}>
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                  Register Again
                 </Button>
               </Link>
             )}

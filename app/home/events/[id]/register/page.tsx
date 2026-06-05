@@ -36,16 +36,32 @@ export default function EventRegistrationPage() {
     },
   });
 
-  const isEditing = !!studentInfo?.teamInfo;
+  const teamStatus = studentInfo?.teamInfo?.team?.status;
+  const isEditing = !!studentInfo?.teamInfo && teamStatus !== 'eliminated';
 
-  // Pre-fill form if editing
+  // Pre-fill form if editing or re-registering after elimination
   useEffect(() => {
-    if (isEditing && studentInfo.teamInfo.team) {
+    if (studentInfo?.teamInfo?.team) {
       setTeamName(studentInfo.teamInfo.team.name);
       setSelectedTrack(studentInfo.teamInfo.team.trackId);
-      // We don't fetch member emails from this endpoint currently, so we leave it empty or fetch if needed
+      
+      // Pre-fill member emails (excluding the current user / leader)
+      if (studentInfo.teamInfo.team.members) {
+        const otherMembers = studentInfo.teamInfo.team.members
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .filter((m: any) => m.role === 'member')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((m: any) => m.user?.email)
+          .filter(Boolean);
+          
+        if (otherMembers.length > 0) {
+          setMemberEmails(otherMembers);
+        } else {
+          setMemberEmails(['']);
+        }
+      }
     }
-  }, [isEditing, studentInfo]);
+  }, [studentInfo]);
 
   const queryClient = useQueryClient();
 

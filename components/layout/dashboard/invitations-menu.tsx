@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
-import { Bell, CheckCircle2, XCircle } from 'lucide-react';
+import { UserPlus, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -63,7 +63,7 @@ export function InvitationsMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+          <UserPlus className="h-5 w-5 text-muted-foreground hover:text-foreground" />
           {pendingCount > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -87,7 +87,7 @@ export function InvitationsMenu() {
           <div className="py-4 text-center text-sm text-muted-foreground">Loading...</div>
         ) : pendingCount === 0 ? (
           <div className="py-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <Bell className="h-8 w-8 opacity-20" />
+            <UserPlus className="h-8 w-8 opacity-20" />
             <p>No pending invitations</p>
           </div>
         ) : (
