@@ -120,7 +120,7 @@ export default function EventCard({ event }: EventCardProps) {
                 </div>
 
                 <div className="mt-6 flex justify-start">
-                    <Link href="/judge/evaluation">
+                    <Link href="/judge/evalution">
                         <Button className="w-full bg-orange hover:bg-orange/90">
                             Review
                             <ArrowRight className="ml-1 h-4 w-4" />
