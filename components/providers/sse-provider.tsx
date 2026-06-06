@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
@@ -8,10 +8,19 @@ import { usePathname } from "next/navigation";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
+class FatalError extends Error {}
+
 export function SseProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const ctrlRef = useRef<AbortController | null>(null);
   const pathname = usePathname();
+  const [tokenVersion, setTokenVersion] = useState(0);
+
+  useEffect(() => {
+    const handleTokenRefreshed = () => setTokenVersion(v => v + 1);
+    window.addEventListener('token-refreshed', handleTokenRefreshed);
+    return () => window.removeEventListener('token-refreshed', handleTokenRefreshed);
+  }, []);
 
   useEffect(() => {
     // Only connect if we have a token and are not on an auth page
@@ -36,8 +45,20 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
             Accept: "text/event-stream",
           },
           signal: ctrlRef.current?.signal,
+          async onopen(response) {
+            if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
+              return; // everything's good
+            } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+              // client-side errors are usually non-retriable:
+              throw new FatalError(`SSE Connection failed with status: ${response.status}`);
+            } else {
+              // fallback to let it retry or fail
+              throw new Error("Unexpected response from SSE endpoint");
+            }
+          },
           onmessage(ev) {
             try {
+              if (!ev.data) return;
               const data = JSON.parse(ev.data);
               
               enqueueSnackbar(data.title || "Bạn có thông báo mới!", {
@@ -51,9 +72,10 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
             }
           },
           onerror(err) {
-            console.error("SSE Error:", err);
-            // Throw to retry, or don't throw to just stop
-            // In a real app we might want to implement exponential backoff
+            if (err instanceof FatalError) {
+              throw err; // Rethrow to stop retries entirely
+            }
+            // For other errors, do nothing to automatically retry
           },
           onclose() {
             // Connection closed by server
@@ -72,7 +94,7 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
         ctrlRef.current = null;
       }
     };
-  }, [queryClient, pathname]);
+  }, [queryClient, pathname, tokenVersion]);
 
   return <>{children}</>;
 }

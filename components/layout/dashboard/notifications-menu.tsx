@@ -85,10 +85,11 @@ export function NotificationsMenu() {
         
         {notifications.length > 0 && (
           <>
-            <DropdownMenuSeparator className="my-2" />
-            <Link href="/student/notifications" className="block w-full text-center text-xs font-medium text-blue-500 hover:text-blue-600 hover:underline p-1">
-              View all notifications
+            <div className="border-t border-border bg-muted/30">
+            <Link href="/home/notifications" className="block w-full text-center text-xs font-medium text-blue-500 hover:text-blue-600 hover:underline p-1">
+              Xem tất cả thông báo
             </Link>
+            </div>
           </>
         )}
       </DropdownMenuContent>

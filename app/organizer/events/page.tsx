@@ -32,10 +32,12 @@ export default function OrganizerEventsPage() {
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">Events Management</h1>
                     <p className="text-muted-foreground mt-1">Create, manage and monitor all your hackathons.</p>
                 </div>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create New Event
-                </Button>
+                <Link href="/organizer/events/create">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create New Event
+                    </Button>
+                </Link>
             </div>
 
             {/* Filters Bar */}
@@ -71,10 +73,12 @@ export default function OrganizerEventsPage() {
                     <Trophy className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-1">No events found</h3>
                     <p className="text-muted-foreground mb-6">You haven&apos;t created any events yet.</p>
-                    <Button variant="outline" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create your first event
-                    </Button>
+                    <Link href="/organizer/events/create">
+                        <Button variant="outline" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Create your first event
+                        </Button>
+                    </Link>
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

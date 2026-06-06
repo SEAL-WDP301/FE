@@ -85,7 +85,7 @@ export function Topbar() {
                                     className="cursor-pointer rounded-xl p-0 focus:bg-transparent"
                                 >
                                     <Link
-                                        href={"/student/notifications"}
+                                        href={"/home/notifications"}
                                         className="w-full rounded-xl px-3 py-3 transition-colors hover:bg-white/5"
                                     >
                                         <div className="flex flex-col gap-1">

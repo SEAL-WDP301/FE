@@ -87,6 +87,7 @@ axiosClient.interceptors.response.use(
         if (newAccessToken) {
           if (typeof window !== 'undefined') {
             localStorage.setItem('access_token', newAccessToken);
+            window.dispatchEvent(new Event('token-refreshed'));
           }
           
           originalRequest.headers = AxiosHeaders.from(originalRequest.headers);

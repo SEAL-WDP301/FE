@@ -1,8 +1,38 @@
-export default function MentorPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Mentor Workspace</h1>
-      <p className="text-muted-foreground mt-2">Mentor connection and feedback tools coming soon...</p>
-    </div>
-  );
+import { FeedbackStatusPanel } from "./components/feedback-status-panel";
+import { FeedbackThreadCard } from "./components/feedback-thread-card";
+import { MentorActivityTimeline } from "./components/mentor-activity-timeline";
+import { MentorHeader } from "./components/mentor-header";
+import { MentorHeroCard } from "./components/mentor-hero-card";
+import { SharedResourcesCard } from "./components/shared-resources-card";
+import { TeamMentorChatCard } from "./components/team-mentor-chat-card";
+import { TeamQuestionsCard } from "./components/team-questions-card";
+import {
+    chatFeedbackMessages,
+    feedbackItems,
+    feedbackStats,
+    mentorActivities,
+    questions,
+    resources,
+} from "./mock-data";
+
+export default function MentorWorkspacePage() {
+    return (
+        <div className="mx-auto max-w-[1500px] space-y-6">
+            <MentorHeader />
+            <MentorHeroCard />
+
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <main className="space-y-5">
+                    <FeedbackThreadCard items={feedbackItems} />
+                    <TeamQuestionsCard questions={questions} />
+                    <SharedResourcesCard resources={resources} />
+                </main>
+
+                <aside className="space-y-5">
+                    <FeedbackStatusPanel stats={feedbackStats} />
+                    <MentorActivityTimeline activities={mentorActivities} />
+                </aside>
+            </div>
+        </div>
+    );
 }
