@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Software Engineering Agile League",
 };
 
+import { SseProvider } from "../components/providers/sse-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,9 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <SnackbarProvider>
-              {children}
+              <SseProvider>
+                {children}
+              </SseProvider>
             </SnackbarProvider>
           </ThemeProvider>
         </QueryProvider>
