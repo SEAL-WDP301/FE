@@ -67,6 +67,18 @@ export default function EventRegistrationPage() {
 
   const queryClient = useQueryClient();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const selectedTrackData = event?.tracks?.find((t: any) => t.id === selectedTrack);
+  const maxAdditionalMembers = selectedTrackData?.maxMembersPerTeam ? selectedTrackData.maxMembersPerTeam - 1 : 10;
+
+  useEffect(() => {
+    if (selectedTrackData?.maxMembersPerTeam && memberEmails.length > maxAdditionalMembers) {
+      setMemberEmails(prev => prev.slice(0, maxAdditionalMembers));
+      enqueueSnackbar(`Đã cắt giảm danh sách thành viên để phù hợp giới hạn Track (${selectedTrackData.maxMembersPerTeam} người).`, { variant: 'info' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTrackData?.id]);
+
   const registerMutation = useMutation({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: async (data: any) => {
@@ -106,7 +118,17 @@ export default function EventRegistrationPage() {
     });
   };
 
-  const addEmailField = () => setMemberEmails([...memberEmails, '']);
+  const addEmailField = () => {
+    if (!selectedTrack) {
+      enqueueSnackbar('Vui lòng chọn Track trước khi thêm thành viên', { variant: 'warning' });
+      return;
+    }
+    if (memberEmails.length >= maxAdditionalMembers) {
+      enqueueSnackbar(`Track này giới hạn tối đa ${selectedTrackData?.maxMembersPerTeam} thành viên (đã bao gồm bạn)`, { variant: 'warning' });
+      return;
+    }
+    setMemberEmails([...memberEmails, '']);
+  };
   const removeEmailField = (index: number) => {
     const newEmails = [...memberEmails];
     newEmails.splice(index, 1);
@@ -187,7 +209,14 @@ export default function EventRegistrationPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-semibold text-foreground">Invite Members (Optional)</label>
-                  <Button type="button" variant="outline" size="sm" onClick={addEmailField} className="h-8">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={addEmailField} 
+                    className="h-8"
+                    disabled={!selectedTrack || memberEmails.length >= maxAdditionalMembers}
+                  >
                     <Plus className="h-4 w-4 mr-1" /> Add Member
                   </Button>
                 </div>

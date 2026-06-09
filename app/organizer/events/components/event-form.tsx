@@ -12,37 +12,96 @@ import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkI
 import { useRouter } from "next/navigation";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const eventSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    description: z.string().optional(),
+const createEventSchema = (isEdit: boolean) => z.object({
+    name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+    description: z.string().max(2000, "Description is too long").optional(),
     season: z.enum(["Spring", "Summer", "Fall"]),
-    year: z.coerce.number().min(2020),
+    year: z.coerce.number().int("Year must be an integer").min(2020, "Year must be >= 2020").max(new Date().getFullYear() + 5, "Year cannot exceed 5 years in the future"),
     status: z.enum(["draft", "active", "ongoing", "closed"]).optional(),
     registrationDeadline: z.string().optional(),
     startDate: z.string().optional(),
-    githubOrgUrl: z.string().url().optional().or(z.literal('')),
+    githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
     prize1st: z.string().optional(),
     prize2nd: z.string().optional(),
     prize3rd: z.string().optional(),
     prizeHonorable: z.string().optional(),
     tracks: z.array(z.object({
+        id: z.number().optional(),
+        _count: z.any().optional(),
         name: z.string().min(1, "Track name is required"),
         description: z.string().optional(),
-        maxTeams: z.coerce.number().optional(),
-        maxMembersPerTeam: z.coerce.number().optional(),
-    })).default([]),
+        maxTeams: z.union([z.coerce.number().int().min(1, "Must be >= 1").max(1000, "Max 1000 teams"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
+        maxMembersPerTeam: z.union([z.coerce.number().int().min(1, "Must be >= 1").max(20, "Max 20 members"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
+    })).min(1, "At least one track is required").default([{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }] as any),
     rounds: z.array(z.object({
-        roundNumber: z.coerce.number().min(1),
+        id: z.number().optional(),
+        _count: z.any().optional(),
+        roundNumber: z.coerce.number().int().min(1, "Must be >= 1"),
         name: z.string().min(1, "Round name is required"),
         submissionType: z.enum(["pdf", "github_link"]),
         submissionDeadline: z.string().optional(),
-    })).default([])
+    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "" }] as any)
+}).superRefine((data, ctx) => {
+    const now = new Date();
+
+    if (!isEdit && data.startDate) {
+        if (new Date(data.startDate) <= now) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Start date must be in the future", path: ["startDate"] });
+        }
+    }
+
+    if (!isEdit && data.registrationDeadline) {
+        if (new Date(data.registrationDeadline) <= now) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Registration deadline must be in the future", path: ["registrationDeadline"] });
+        }
+    }
+
+    if (data.registrationDeadline && data.startDate) {
+        if (new Date(data.registrationDeadline) > new Date(data.startDate)) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Registration deadline must be before or equal to the event start date", path: ["registrationDeadline"] });
+        }
+    }
+
+    const trackNames = data.tracks.map(t => t.name.trim().toLowerCase());
+    if (new Set(trackNames).size !== trackNames.length) {
+        trackNames.forEach((name, idx) => {
+            if (trackNames.indexOf(name) !== idx) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Track names must be unique", path: ["tracks", idx, "name"] });
+            }
+        });
+    }
+
+    const roundNumbers = data.rounds.map(r => r.roundNumber);
+    if (new Set(roundNumbers).size !== roundNumbers.length) {
+        roundNumbers.forEach((num, idx) => {
+            if (roundNumbers.indexOf(num) !== idx) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Round numbers must be unique", path: ["rounds", idx, "roundNumber"] });
+            }
+        });
+    }
+
+    data.rounds.forEach((round, idx) => {
+        if (round.submissionDeadline) {
+            const roundDate = new Date(round.submissionDeadline);
+            if (data.startDate && roundDate < new Date(data.startDate)) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Round deadline must be after or at the same time as event start date", path: ["rounds", idx, "submissionDeadline"] });
+            }
+            if (idx > 0) {
+                const prevRound = data.rounds[idx - 1];
+                if (prevRound.submissionDeadline) {
+                    if (roundDate < new Date(prevRound.submissionDeadline)) {
+                        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Deadline must be after or equal to Round ${prevRound.roundNumber}`, path: ["rounds", idx, "submissionDeadline"] });
+                    }
+                }
+            }
+        }
+    });
 });
 
-type EventFormValues = z.infer<typeof eventSchema>;
+type EventFormValues = z.infer<ReturnType<typeof createEventSchema>>;
 
 interface EventFormProps {
     initialData?: Partial<EventFormValues> & { id?: number };
@@ -67,8 +126,13 @@ export default function EventForm({ initialData }: EventFormProps) {
         prize3rd: initialData?.prize3rd || "",
         prizeHonorable: initialData?.prizeHonorable || "",
         tracks: initialData?.tracks || [{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }],
-        rounds: initialData?.rounds || [{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "" }]
+        rounds: initialData?.rounds?.map((r: any) => ({
+            ...r,
+            submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : ""
+        })) || [{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "" }]
     };
+
+    const eventSchema = useMemo(() => createEventSchema(isEdit), [isEdit]);
 
     const form = useForm<EventFormValues>({
         resolver: zodResolver(eventSchema) as any,
@@ -87,6 +151,26 @@ export default function EventForm({ initialData }: EventFormProps) {
         name: "rounds",
     });
 
+    const handleRemoveTrack = (index: number) => {
+        const track = form.getValues(`tracks.${index}`);
+        if (track.id && track._count?.teams > 0) {
+            if (!window.confirm(`Cảnh báo: Track này đang có ${track._count.teams} đội tham gia.\nViệc xóa sẽ XÓA VĨNH VIỄN toàn bộ đội và bài nộp liên quan.\nBạn có chắc chắn muốn xóa không?`)) {
+                return;
+            }
+        }
+        removeTrack(index);
+    };
+
+    const handleRemoveRound = (index: number) => {
+        const round = form.getValues(`rounds.${index}`);
+        if (round.id && round._count?.submissions > 0) {
+            if (!window.confirm(`Cảnh báo: Round này đang có ${round._count.submissions} bài nộp.\nViệc xóa sẽ XÓA VĨNH VIỄN toàn bộ bài nộp và phân công giám khảo.\nBạn có chắc chắn muốn xóa không?`)) {
+                return;
+            }
+        }
+        removeRound(index);
+    };
+
     const onSubmit = async (data: EventFormValues) => {
         setIsLoading(true);
         try {
@@ -94,20 +178,25 @@ export default function EventForm({ initialData }: EventFormProps) {
                 ...data,
                 registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
                 startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+                githubOrgUrl: data.githubOrgUrl || undefined,
                 tracks: data.tracks?.map(t => ({
-                    ...t,
+                    id: t.id,
+                    name: t.name,
+                    description: t.description,
                     maxTeams: t.maxTeams ? Number(t.maxTeams) : undefined,
                     maxMembersPerTeam: t.maxMembersPerTeam ? Number(t.maxMembersPerTeam) : undefined
                 })),
                 rounds: data.rounds?.map(r => ({
-                    ...r,
+                    id: r.id,
+                    roundNumber: r.roundNumber,
+                    name: r.name,
+                    submissionType: r.submissionType,
                     submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString() : undefined
                 }))
             };
 
             if (isEdit && initialData?.id) {
-                const { tracks, rounds, ...updatePayload } = payload;
-                await axiosClient.put(`/organizer/events/${initialData.id}`, updatePayload);
+                await axiosClient.put(`/organizer/events/${initialData.id}`, payload);
                 enqueueSnackbar("Event updated successfully", { variant: "success" });
                 router.push(`/organizer/events/${initialData.id}`);
             } else {
@@ -117,7 +206,16 @@ export default function EventForm({ initialData }: EventFormProps) {
             }
         } catch (error: any) {
             console.error("Event form error", error);
-            enqueueSnackbar(error.response?.data?.message || "Failed to save event", { variant: "error" });
+            const errData = error.response?.data?.message;
+            let errorMessage = "Failed to save event";
+            
+            if (Array.isArray(errData)) {
+                errorMessage = errData.join(", ");
+            } else if (typeof errData === "string") {
+                errorMessage = errData;
+            }
+            
+            enqueueSnackbar(errorMessage, { variant: "error" });
         } finally {
             setIsLoading(false);
         }
@@ -284,9 +382,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                     </div>
                 </motion.div>
 
-                {!isEdit && (
-                    <>
-                        {/* TRACKS */}
+                {/* TRACKS */}
                         <motion.div custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-emerald-500/10 group-hover:to-teal-500/10" />
                             <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
@@ -337,7 +433,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                         <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Members</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
                                                     )} />
                                                     {trackFields.length > 1 && (
-                                                        <Button type="button" variant="ghost" size="icon" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl mb-1 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => removeTrack(index)}>
+                                                        <Button type="button" variant="ghost" size="icon" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl mb-1 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => handleRemoveTrack(index)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     )}
@@ -410,7 +506,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                         <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
                                                     )} />
                                                     {roundFields.length > 1 && (
-                                                        <Button type="button" variant="ghost" size="icon" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl mb-1 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => removeRound(index)}>
+                                                        <Button type="button" variant="ghost" size="icon" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl mb-1 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => handleRemoveRound(index)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     )}
@@ -421,8 +517,6 @@ export default function EventForm({ initialData }: EventFormProps) {
                                 </div>
                             </div>
                         </motion.div>
-                    </>
-                )}
 
                 {/* BOTTOM ACTIONS BAR */}
                 <motion.div 
