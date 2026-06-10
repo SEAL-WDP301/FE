@@ -25,7 +25,7 @@ export default function TeamsTab({ event }: { event: any }) {
         queryKey: ['organizerTeams', event.id, selectedTrackId],
         queryFn: async () => {
             if (!selectedTrackId) return [];
-            const res = await axiosClient.get(`/organizer/events/${event.id}/tracks/${selectedTrackId}/teams`);
+            const res = await axiosClient.get(`/organizer/teams/events/${event.id}/tracks/${selectedTrackId}`);
             return res.data.data;
         },
         enabled: !!selectedTrackId,
@@ -34,7 +34,7 @@ export default function TeamsTab({ event }: { event: any }) {
     // Update Team Status Mutation
     const updateStatusMutation = useMutation({
         mutationFn: async ({ teamId, status, reason }: { teamId: number, status: string, reason?: string }) => {
-            return axiosClient.put(`/organizer/events/${event.id}/tracks/${selectedTrackId}/teams/${teamId}/status`, {
+            return axiosClient.put(`/organizer/teams/${teamId}/status`, {
                 status,
                 reason
             });
@@ -52,7 +52,7 @@ export default function TeamsTab({ event }: { event: any }) {
     });
 
     const handleUpdateStatus = (teamId: number, status: string) => {
-        if (status === 'eliminated') {
+        if (status === 'rejected' || status === 'disqualified') {
             setTeamToEliminate(teamId);
             return;
         }
@@ -62,17 +62,18 @@ export default function TeamsTab({ event }: { event: any }) {
     const confirmElimination = () => {
         if (!teamToEliminate) return;
         if (!eliminationReason.trim()) {
-            enqueueSnackbar('Please provide a reason for elimination', { variant: 'warning' });
+            enqueueSnackbar('Please provide a reason', { variant: 'warning' });
             return;
         }
-        updateStatusMutation.mutate({ teamId: teamToEliminate, status: 'eliminated', reason: eliminationReason });
+        updateStatusMutation.mutate({ teamId: teamToEliminate, status: 'rejected', reason: eliminationReason });
     };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending': return <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold">Pending</span>;
             case 'approved': return <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Approved</span>;
-            case 'eliminated': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Eliminated</span>;
+            case 'rejected': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Rejected</span>;
+            case 'disqualified': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Disqualified</span>;
             default: return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-xs font-semibold">{status}</span>;
         }
     };
@@ -171,7 +172,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                                     size="sm" 
                                                     variant="outline" 
                                                     className="border-red-500/30 text-red-500 hover:bg-red-500/10"
-                                                    onClick={() => handleUpdateStatus(team.id, 'eliminated')}
+                                                    onClick={() => handleUpdateStatus(team.id, 'rejected')}
                                                     disabled={updateStatusMutation.isPending}
                                                 >
                                                     <XCircle className="h-4 w-4 mr-1" /> Reject
@@ -183,13 +184,13 @@ export default function TeamsTab({ event }: { event: any }) {
                                                 size="sm" 
                                                 variant="outline" 
                                                 className="border-red-500/30 text-red-500 hover:bg-red-500/10"
-                                                onClick={() => handleUpdateStatus(team.id, 'eliminated')}
+                                                onClick={() => handleUpdateStatus(team.id, 'disqualified')}
                                                 disabled={updateStatusMutation.isPending}
                                             >
-                                                <Trash2 className="h-4 w-4 mr-1" /> Eliminate
+                                                <Trash2 className="h-4 w-4 mr-1" /> Disqualify
                                             </Button>
                                         )}
-                                        {team.status === 'eliminated' && (
+                                        {(team.status === 'rejected' || team.status === 'disqualified') && (
                                             <span className="text-xs text-muted-foreground italic max-w-[150px] inline-block truncate" title={team.eliminationReason}>
                                                 {team.eliminationReason || 'No reason provided'}
                                             </span>
@@ -212,9 +213,9 @@ export default function TeamsTab({ event }: { event: any }) {
             {teamToEliminate && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-card border border-border p-6 rounded-2xl w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold text-foreground mb-2">Eliminate Team</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">Reject / Disqualify Team</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Please provide a reason for eliminating this team. This reason will be recorded and potentially visible to the team.
+                            Please provide a reason for rejecting or disqualifying this team. This reason will be recorded and potentially visible to the team.
                         </p>
                         <textarea
                             className="w-full bg-background border border-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none mb-4 min-h-[100px]"
@@ -237,7 +238,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                 onClick={confirmElimination}
                                 disabled={updateStatusMutation.isPending || !eliminationReason.trim()}
                             >
-                                {updateStatusMutation.isPending ? 'Processing...' : 'Confirm Elimination'}
+                                {updateStatusMutation.isPending ? 'Processing...' : 'Confirm Action'}
                             </Button>
                         </div>
                     </div>

@@ -35,7 +35,7 @@ export default function EventDetailPage() {
   const { data: studentInfo, isLoading: isStudentLoading } = useQuery({
     queryKey: ['studentEventStatus', eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/student/events/${eventId}`);
+      const res = await axiosClient.get(`/student/teams/status/${eventId}`);
       return res.data.data;
     },
     enabled: !!user && user.role === 'student',
@@ -45,7 +45,7 @@ export default function EventDetailPage() {
   const { data: pendingInvitations } = useQuery({
     queryKey: ['pendingInvitations'],
     queryFn: async () => {
-      const res = await axiosClient.get('/student/events/invitations/pending');
+      const res = await axiosClient.get('/student/teams/invitations/pending');
       return res.data.data;
     },
     enabled: !!user && user.role === 'student',
@@ -135,13 +135,13 @@ export default function EventDetailPage() {
               </Link>
             )}
             {displayStatus === 'approved' && (
-              <Link href={`/home/events/${eventId}/tracks/${teamInfo?.team?.trackId}/teams`}>
+              <Link href={`/student/events/${eventId}/workspace`}>
                 <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white transition-colors">
                   Enter Workspace
                 </Button>
               </Link>
             )}
-            {displayStatus === 'eliminated' && (
+            {(displayStatus === 'rejected' || displayStatus === 'disqualified') && (
               <Link href={`/home/events/${eventId}/register`}>
                 <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                   Register Again

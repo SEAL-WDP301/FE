@@ -22,14 +22,14 @@ export function InvitationsMenu() {
   const { data, isLoading } = useQuery({
     queryKey: ['pendingInvitations'],
     queryFn: async () => {
-      const res = await axiosClient.get('/student/events/invitations/pending');
+      const res = await axiosClient.get('/student/teams/invitations/pending');
       return res.data.data;
     },
   });
 
   const acceptMutation = useMutation({
     mutationFn: async (teamId: number) => {
-      return axiosClient.post(`/student/events/invitations/${teamId}/accept`);
+      return axiosClient.post(`/student/teams/invitations/${teamId}/accept`);
     },
     onSuccess: () => {
       enqueueSnackbar('Invitation accepted!', { variant: 'success' });
@@ -44,7 +44,7 @@ export function InvitationsMenu() {
 
   const rejectMutation = useMutation({
     mutationFn: async (teamId: number) => {
-      return axiosClient.post(`/student/events/invitations/${teamId}/reject`);
+      return axiosClient.post(`/student/teams/invitations/${teamId}/reject`);
     },
     onSuccess: () => {
       enqueueSnackbar('Invitation rejected!', { variant: 'info' });

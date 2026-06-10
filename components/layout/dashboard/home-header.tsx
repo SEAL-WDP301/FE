@@ -22,7 +22,7 @@ const ORGANIZER_MENUS = [
     { label: "Settings", href: "/organizer/settings" },
 ];
 
-export default function HomeHeader() {
+export default function HomeHeader({ customCenterContent }: { customCenterContent?: React.ReactNode } = {}) {
     const router = useRouter();
     const pathname = usePathname();
     const queryClient = useQueryClient();
@@ -65,7 +65,11 @@ export default function HomeHeader() {
                 <Logo size='sm' href="/home" />
 
                 {/* Center Navigation */}
-                {(user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') && (
+                {customCenterContent ? (
+                    <div className="flex flex-1 items-center justify-center overflow-x-auto mx-2 md:mx-4 scrollbar-none">
+                        {customCenterContent}
+                    </div>
+                ) : (user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') ? (
                     <nav className="flex flex-wrap items-center justify-center rounded-full border border-border bg-card px-2 py-1.5 shadow-sm gap-1">
                         {ORGANIZER_MENUS.map((item) => {
                             const isActive = pathname === item.href || (item.href !== '/organizer' && pathname.startsWith(`${item.href}/`));
@@ -87,7 +91,7 @@ export default function HomeHeader() {
                             );
                         })}
                     </nav>
-                )}
+                ) : null}
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">

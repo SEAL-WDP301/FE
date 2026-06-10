@@ -31,13 +31,13 @@ export default function EventRegistrationPage() {
   const { data: studentInfo, isLoading: isStudentLoading } = useQuery({
     queryKey: ['studentEventStatus', eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/student/events/${eventId}`);
+      const res = await axiosClient.get(`/student/teams/status/${eventId}`);
       return res.data.data;
     },
   });
 
   const teamStatus = studentInfo?.teamInfo?.team?.status;
-  const isEditing = !!studentInfo?.teamInfo && teamStatus !== 'eliminated';
+  const isEditing = !!studentInfo?.teamInfo && teamStatus !== 'rejected' && teamStatus !== 'disqualified';
 
   // Pre-fill form if editing or re-registering after elimination
   useEffect(() => {
@@ -83,9 +83,9 @@ export default function EventRegistrationPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: async (data: any) => {
       if (isEditing) {
-        return axiosClient.put(`/student/events/${eventId}/register/team`, data);
+        return axiosClient.put(`/student/teams/register/team/${eventId}`, data);
       }
-      return axiosClient.post(`/student/events/${eventId}/register/team`, data);
+      return axiosClient.post(`/student/teams/register/team/${eventId}`, data);
     },
     onSuccess: () => {
       enqueueSnackbar(isEditing ? 'Team updated successfully!' : 'Team registered successfully!', { variant: 'success' });
