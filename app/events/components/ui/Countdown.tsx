@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function Countdown() {
     // Giả định mốc thời gian diễn ra sự kiện Hackathon SEAL Spring 2026
-    const targetDate = new Date("2026-04-15T00:00:00").getTime();
+    const targetDate = new Date("2026-12-31T00:00:00").getTime();
 
     // Khởi tạo state bằng một hàm callback để tránh tính toán lại mỗi lần render
     const [timeLeft, setTimeLeft] = useState(() => {

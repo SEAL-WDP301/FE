@@ -44,7 +44,7 @@ export default function EventRegistrationPage() {
     if (studentInfo?.teamInfo?.team) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTeamName(studentInfo.teamInfo.team.name);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setSelectedTrack(studentInfo.teamInfo.team.trackId);
       
       // Pre-fill member emails (excluding the current user / leader)
@@ -74,7 +74,7 @@ export default function EventRegistrationPage() {
   useEffect(() => {
     if (selectedTrackData?.maxMembersPerTeam && memberEmails.length > maxAdditionalMembers) {
       setMemberEmails(prev => prev.slice(0, maxAdditionalMembers));
-      enqueueSnackbar(`Đã cắt giảm danh sách thành viên để phù hợp giới hạn Track (${selectedTrackData.maxMembersPerTeam} người).`, { variant: 'info' });
+      enqueueSnackbar(`The member list has been shortened to fit the Track limit (${selectedTrackData.maxMembersPerTeam} menber).`, { variant: 'info' });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTrackData?.id]);
@@ -120,11 +120,11 @@ export default function EventRegistrationPage() {
 
   const addEmailField = () => {
     if (!selectedTrack) {
-      enqueueSnackbar('Vui lòng chọn Track trước khi thêm thành viên', { variant: 'warning' });
+      enqueueSnackbar('Please select a track before adding a member.', { variant: 'warning' });
       return;
     }
     if (memberEmails.length >= maxAdditionalMembers) {
-      enqueueSnackbar(`Track này giới hạn tối đa ${selectedTrackData?.maxMembersPerTeam} thành viên (đã bao gồm bạn)`, { variant: 'warning' });
+      enqueueSnackbar(`This track has a maximum limit ${selectedTrackData?.maxMembersPerTeam} members (including you)`, { variant: 'warning' });
       return;
     }
     setMemberEmails([...memberEmails, '']);

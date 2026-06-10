@@ -7,14 +7,12 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { enqueueSnackbar } from 'notistack';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 export function InvitationsMenu() {
   const queryClient = useQueryClient();

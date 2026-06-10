@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { useParams, useRouter } from "next/navigation";
+import { useParams} from "next/navigation";
 import { ArrowLeft, Settings, Users, GitMerge, FileText } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

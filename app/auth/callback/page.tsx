@@ -4,7 +4,6 @@ import { useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import Image from "next/image";
 import { axiosClient } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 
