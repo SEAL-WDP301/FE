@@ -20,10 +20,10 @@ export default function EventPage() {
 
     return (
         /* Thiết lập nền thích ứng mượt mà theo hệ thống theme */
-        <div className="relative min-h-screen w-full overflow-x-hidden text-foreground bg-background transition-colors duration-300 antialiased tracking-tight">
+        <div className="relative min-h-screen w-full text-foreground bg-background transition-colors duration-300 antialiased tracking-tight">
 
             {/* KHU VỰC HEADER */}
-            <div className="mx-auto max-w-[1400px] w-full px-4 sm:px-6 lg:px-8">
+            <div className="z-50 mx-auto max-w-[1400px] w-full px-4 sm:px-6 lg:px-8 sticky top-0">
                 <Header />
             </div>
 
@@ -72,9 +72,9 @@ export default function EventPage() {
                     </div>
 
                     {/* Cột phải: Sidebar (Countdown + Thông số) */}
-                    <div className="w-full">
+                    <aside className="w-full self-start sticky top-24">
                         <Sidebar />
-                    </div>
+                    </aside>
 
                 </div>
             </main>

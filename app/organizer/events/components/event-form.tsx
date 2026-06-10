@@ -154,7 +154,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const handleRemoveTrack = (index: number) => {
         const track = form.getValues(`tracks.${index}`);
         if (track.id && track._count?.teams > 0) {
-            if (!window.confirm(`Cảnh báo: Track này đang có ${track._count.teams} đội tham gia.\nViệc xóa sẽ XÓA VĨNH VIỄN toàn bộ đội và bài nộp liên quan.\nBạn có chắc chắn muốn xóa không?`)) {
+            if (!window.confirm(`Warning: This track currently has ${track._count.teams} participating teams.\nDelete it ưill PERMANENTLY REMOVE all associated teams and submisions.\nAre you sure to delete?`)) {
                 return;
             }
         }
@@ -164,7 +164,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const handleRemoveRound = (index: number) => {
         const round = form.getValues(`rounds.${index}`);
         if (round.id && round._count?.submissions > 0) {
-            if (!window.confirm(`Cảnh báo: Round này đang có ${round._count.submissions} bài nộp.\nViệc xóa sẽ XÓA VĨNH VIỄN toàn bộ bài nộp và phân công giám khảo.\nBạn có chắc chắn muốn xóa không?`)) {
+            if (!window.confirm(`Warning: This round currently has ${round._count.submissions} submissions.\nThe deletion will PERMANENTLY DELETE all submissions and examiner assignments.\nAre you sure to delete?`)) {
                 return;
             }
         }

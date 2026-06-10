@@ -19,7 +19,7 @@ import { axiosClient } from "@/lib/axios";
 // Zod schemas
 const studentSchema = z.object({
   studentType: z.enum(["fpt", "external"]),
-  studentCode: z.string().min(1, "Mã số sinh viên là bắt buộc"),
+  studentCode: z.string().min(1, "Student ID is required"),
   universityName: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -54,14 +54,14 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
     try {
       const payload = {
         ...values,
-        universityName: values.studentType === "fpt" ? "Đại học FPT" : values.universityName,
+        universityName: values.studentType === "fpt" ? "FPT University" : values.universityName,
       };
       await axiosClient.put("/users/profile/student", payload);
-      enqueueSnackbar("Cập nhật hồ sơ sinh viên thành công", { variant: "success" });
+      enqueueSnackbar("Student profile updated successfully.", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       onOpenChange?.(false);
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || "Lỗi khi cập nhật hồ sơ", { variant: "error" });
+      enqueueSnackbar(error.response?.data?.message || "Error when updating profile", { variant: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -71,11 +71,11 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
     setIsSubmitting(true);
     try {
       await axiosClient.put("/users/profile/stakeholder", values);
-      enqueueSnackbar("Cập nhật hồ sơ đối tác thành công", { variant: "success" });
+      enqueueSnackbar("Stakeholder profile updated successfully.", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       onOpenChange?.(false);
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || "Lỗi khi cập nhật hồ sơ", { variant: "error" });
+      enqueueSnackbar(error.response?.data?.message || "Error when updating profile", { variant: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -85,16 +85,16 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Hoàn thiện hồ sơ</DialogTitle>
+          <DialogTitle>Complete Your Profile</DialogTitle>
           <DialogDescription>
-            Vui lòng chọn vai trò và cung cấp thông tin để tiếp tục sử dụng hệ thống.
+            Please select your role and provide the required information to continue using the system.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="student">Học sinh / Sinh viên</TabsTrigger>
-            <TabsTrigger value="stakeholder">Đối tác / Doanh nghiệp</TabsTrigger>
+            <TabsTrigger value="student">Student</TabsTrigger>
+            <TabsTrigger value="stakeholder">Partner / Organization</TabsTrigger>
           </TabsList>
 
           <TabsContent value="student">
@@ -105,22 +105,22 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="studentType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Trường đại học</FormLabel>
+                      <FormLabel>University</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn trường đại học">
+                            <SelectValue placeholder="Select a university">
                               {(val: string | null) =>
-                                val === "fpt" ? "Đại học FPT" :
-                                  val === "external" ? "Trường khác" :
-                                    "Chọn trường đại học"
+                                val === "fpt" ? "FPT University" :
+                                  val === "external" ? "Other University" :
+                                    "Select a university"
                               }
                             </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="fpt" >Đại học FPT</SelectItem>
-                          <SelectItem value="external">Trường khác</SelectItem>
+                          <SelectItem value="fpt" >FPT University</SelectItem>
+                          <SelectItem value="external">Other University</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -132,9 +132,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="studentCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mã số sinh viên (*)</FormLabel>
+                      <FormLabel>Student ID (*)</FormLabel>
                       <FormControl>
-                        <Input placeholder="VD: SE123456" {...field} />
+                        <Input placeholder="E.g: SE123456" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -146,9 +146,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                     name="universityName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tên trường Đại học (*)</FormLabel>
+                        <FormLabel>University Name (*)</FormLabel>
                         <FormControl>
-                          <Input placeholder="VD: Đại học Bách Khoa" {...field} />
+                          <Input placeholder="E.g. Ho Chi Minh City University of Technology" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -160,16 +160,16 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Số điện thoại</FormLabel>
+                      <FormLabel>Phone number</FormLabel>
                       <FormControl>
-                        <Input placeholder="VD: 0987654321" {...field} />
+                        <Input placeholder="E.g: 0987654321" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Đang lưu..." : "Lưu hồ sơ Sinh viên"}
+                  {isSubmitting ? "Saving..." : "Save sttudent profile"}
                 </Button>
               </form>
             </Form>
@@ -183,9 +183,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="jobTitle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Chức danh</FormLabel>
+                      <FormLabel>Job title</FormLabel>
                       <FormControl>
-                        <Input placeholder="VD: CEO, Manager, Developer" {...field} />
+                        <Input placeholder="E.g: CEO, Manager, Developer" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,9 +196,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="organization"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tổ chức / Công ty</FormLabel>
+                      <FormLabel>Organization / Company</FormLabel>
                       <FormControl>
-                        <Input placeholder="VD: FPT Software" {...field} />
+                        <Input placeholder="E.g: FPT Software" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,9 +209,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="experience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Kinh nghiệm</FormLabel>
+                      <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input placeholder="VD: 5 năm trong lĩnh vực AI" {...field} />
+                        <Input placeholder="E.g: 5 years in the field of AI" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,9 +222,9 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="achievements"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Thành tựu</FormLabel>
+                      <FormLabel>Achievements</FormLabel>
                       <FormControl>
-                        <Input placeholder="Các thành tựu nổi bật..." {...field} />
+                        <Input placeholder="Key achievements..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -235,16 +235,16 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tiểu sử ngắn</FormLabel>
+                      <FormLabel>Short Bio</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Vài nét về bản thân..." {...field} />
+                        <Textarea placeholder="Tell us about yourself..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Đang lưu..." : "Lưu hồ sơ Đối tác"}
+                  {isSubmitting ? "Saving..." : "Save parner profile"}
                 </Button>
               </form>
             </Form>

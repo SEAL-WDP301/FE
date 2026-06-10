@@ -15,15 +15,15 @@ import { Button } from "@/components/ui/button";
 
 const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
-    <p className="font-medium text-lg">Chào bạn,</p>
+    <p className="font-medium text-lg">Hello,</p>
     <p>
-      Hệ thống thông báo có một sự thay đổi về thành viên trong đội thi của bạn. Vui lòng kiểm tra thông tin chi tiết bên dưới.
+      The system has detected a change in your team membership. Please review the updated information below.
     </p>
     
     <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
       <p className="text-blue-600 dark:text-blue-400 font-bold text-base mb-2 flex items-center gap-2">
         <CheckCircle2 className="w-5 h-5" />
-        THÔNG TIN CẬP NHẬT
+        UPDATED INFORMATION
       </p>
       <p className="whitespace-pre-wrap">{notification.content}</p>
     </div>
@@ -31,16 +31,16 @@ const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-di
     <div>
       <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
         <Calendar className="w-4 h-4 text-orange-500" />
-        BƯỚC TIẾP THEO
+        NEXT STEPS
       </h3>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li>Truy cập vào trang quản lý đội để xem chi tiết danh sách thành viên hiện tại.</li>
-        <li>Nhanh chóng kết nối và phân chia công việc để chuẩn bị cho vòng thi sắp tới.</li>
+        <li>Visit the Team Management page to review the current team member list.</li>
+        <li>Connect with your teammates and assign responsibilities to prepare for the upcoming round.</li>
       </ul>
     </div>
     
     <div className="pt-6 border-t border-border mt-8">
-      <p>Trân trọng,</p>
+      <p>Best regards,</p>
       <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name || 'Hệ thống SEAL'}</p>
     </div>
   </div>
@@ -48,16 +48,16 @@ const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-di
 
 const RegistrationApprovedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
-    <p className="font-medium text-lg">Kính gửi Đội trưởng,</p>
+    <p className="font-medium text-lg">Dear Team Leader,</p>
     
     <p>
-      Ban tổ chức xin chúc mừng đội thi của bạn đã nộp hồ sơ đăng ký thành công!
+      Congratulations! Your team registration has been successfully approved.
     </p>
     
     <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg">
       <p className="text-green-600 dark:text-green-400 font-bold text-base mb-2 flex items-center gap-2">
         <CheckCircle2 className="w-5 h-5" />
-        ĐĂNG KÝ HỢP LỆ
+        REGISTRATION APPROVED
       </p>
       <p className="whitespace-pre-wrap">{notification.content}</p>
     </div>
@@ -65,34 +65,34 @@ const RegistrationApprovedTemplate = ({ notification }: { notification: any /* e
     <div>
       <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
         <Download className="w-4 h-4 text-orange-500" />
-        TÀI LIỆU QUAN TRỌNG
+        IMPORTANT DOCUMENTS
       </h3>
-      <p className="mb-2">Vui lòng tải xuống và đọc kỹ các quy định của sự kiện:</p>
+      <p className="mb-2">Please download and carefully review the following event documents:</p>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li><strong>Thể lệ cuộc thi:</strong> Nắm rõ luật chơi và tiêu chí chấm điểm.</li>
-        <li><strong>Hướng dẫn nền tảng:</strong> Cách sử dụng hệ thống nộp bài.</li>
+        <li><strong>Competition Rules:</strong> Understand the regulations and judging criteria.</li>
+        <li><strong>Platform Guide:</strong> Learn how to use the submission system.</li>
       </ul>
     </div>
 
     <div className="pt-6 border-t border-border mt-8">
-      <p>Trân trọng,</p>
-      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Ban tổ chức ${notification.event.name}` : 'Ban tổ chức sự kiện'}</p>
+      <p>Best regards,</p>
+      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Organizing Committee ${notification.event.name}` : 'Event Organizing Committee'}</p>
     </div>
   </div>
 );
 
 const RegistrationRejectedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
-    <p className="font-medium text-lg">Kính gửi Đội trưởng,</p>
+    <p className="font-medium text-lg">Dear Team Leader,</p>
     
     <p>
-      Ban tổ chức rất tiếc phải thông báo rằng hồ sơ đăng ký của đội bạn chưa đáp ứng đủ yêu cầu của sự kiện lần này.
+       We regret to inform you that your registration did not meet the requirements for this event.
     </p>
     
     <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg">
       <p className="text-red-600 dark:text-red-400 font-bold text-base mb-2 flex items-center gap-2">
         <XCircle className="w-5 h-5" />
-        LÝ DO TỪ CHỐI
+        REJECTION REASON
       </p>
       <p className="whitespace-pre-wrap">{notification.content}</p>
     </div>
@@ -100,16 +100,16 @@ const RegistrationRejectedTemplate = ({ notification }: { notification: any /* e
     <div>
       <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
         <AlertCircle className="w-4 h-4 text-orange-500" />
-        HƯỚNG DẪN KHẮC PHỤC
+        NEXT ACTIONS
       </h3>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li>Nếu sự kiện vẫn đang trong thời hạn mở đăng ký, bạn có thể bổ sung thông tin và nộp lại hồ sơ.</li>
-        <li>Vui lòng kiểm tra kỹ lại thông tin thành viên và các tài liệu đính kèm.</li>
+        <li>If registration is still open, you may update the required information and resubmit your application.</li>
+        <li>Please carefully review your team information and attached documents.</li>
       </ul>
     </div>
 
     <div className="pt-6 border-t border-border mt-8">
-      <p>Trân trọng,</p>
+      <p>Best regards,</p>
       <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Ban tổ chức ${notification.event.name}` : 'Ban tổ chức sự kiện'}</p>
     </div>
   </div>
@@ -117,44 +117,44 @@ const RegistrationRejectedTemplate = ({ notification }: { notification: any /* e
 
 const RoundResultTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
-    <p className="font-medium text-lg">Kính gửi Đội thi,</p>
+    <p className="font-medium text-lg">Dear Team,</p>
     
     <p>
-      Kết quả của vòng thi vừa qua đã chính thức được công bố. Cảm ơn các bạn đã nỗ lực hết mình!
+      The results for the recent round have been officially announced. Thank you for your hard work and dedication.
     </p>
     
     <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-lg">
-      <p className="text-orange-600 dark:text-orange-400 font-bold text-base mb-2">🎉 KẾT QUẢ VÒNG THI</p>
+      <p className="text-orange-600 dark:text-orange-400 font-bold text-base mb-2">🎉 ROUND RESULTS</p>
       <p className="whitespace-pre-wrap">{notification.content}</p>
     </div>
 
     <div>
       <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
         <ExternalLink className="w-4 h-4 text-orange-500" />
-        HỖ TRỢ THÊM
+        ADDITIONAL SUPPORT
       </h3>
-      <p className="mb-2">Nếu có bất kỳ thắc mắc nào về kết quả chấm điểm, vui lòng liên hệ:</p>
+      <p className="mb-2">If you have any questions regarding the evaluation results, please contact:</p>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li><strong>Email BTC:</strong> support@seal.edu.vn</li>
-        <li>Gửi câu hỏi trực tiếp thông qua hệ thống Ticket của cuộc thi.</li>
+        <li><strong>Organizer Email:</strong> support@seal.edu.vn</li>
+        <li> Submit your inquiries through the competition Ticket System.</li>
       </ul>
     </div>
 
     <div className="pt-6 border-t border-border mt-8">
-      <p>Trân trọng,</p>
-      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Hội đồng Chuyên môn ${notification.event.name}` : 'Hội đồng Chuyên môn'}</p>
+      <p>Best regards,</p>
+      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Evaluation Committee ${notification.event.name}` : 'Evaluation Committee'}</p>
     </div>
   </div>
 );
 
 const GenericTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
   <div className="space-y-4 text-sm text-foreground/90 leading-relaxed">
-    <p>Xin chào,</p>
+    <p>Hello,</p>
     <p className="whitespace-pre-wrap">{notification.content}</p>
     <br />
     <div className="pt-6 border-t border-border mt-8">
-      <p>Trân trọng,</p>
-      <p className="font-bold">Hệ thống SEAL</p>
+      <p>Best regards,,</p>
+      <p className="font-bold">SEAL System</p>
     </div>
   </div>
 );
@@ -194,7 +194,7 @@ export default function NotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
-      enqueueSnackbar("Đã đánh dấu tất cả là đã đọc", { variant: 'success' });
+      enqueueSnackbar("All have been marked as read.", { variant: 'success' });
     }
   });
 
@@ -205,7 +205,7 @@ export default function NotificationsPage() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
       if (selectedId === id) setSelectedId(null);
-      enqueueSnackbar("Đã xoá thông báo", { variant: 'info' });
+      enqueueSnackbar("Notification removed", { variant: 'info' });
     }
   });
 
@@ -216,7 +216,7 @@ export default function NotificationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
       setSelectedId(null);
-      enqueueSnackbar("Đã xoá tất cả thông báo", { variant: 'info' });
+      enqueueSnackbar("All notification have been deleted", { variant: 'info' });
     }
   });
 
@@ -251,9 +251,9 @@ export default function NotificationsPage() {
       <div className="px-6 py-4 border-b border-border bg-card/50">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Bell className="w-6 h-6 text-orange-500" />
-          Hộp thư Thông báo
+          Notification Center
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Cập nhật tin tức, thông báo và lịch trình mới nhất từ hệ thống và các sự kiện.</p>
+        <p className="text-sm text-muted-foreground mt-1">Stay updated with the latest announcements, notifications, and event schedules.</p>
       </div>
 
       {/* Main Inbox Layout */}
@@ -279,14 +279,14 @@ export default function NotificationsPage() {
                   disabled={markAllAsReadMutation.isPending || notifications.every((n: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => n.isRead)}
                 >
                   <CheckCheck className="w-3.5 h-3.5 mr-1.5" />
-                  Đọc tất cả
+                  Mark all read
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="text-xs h-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                   onClick={() => {
-                    if (window.confirm("Bạn có chắc chắn muốn xóa tất cả thông báo không?")) {
+                    if (window.confirm("Are you sure you want to delete all notifications?")) {
                       deleteAllMutation.mutate();
                     }
                   }}
@@ -299,11 +299,11 @@ export default function NotificationsPage() {
           </div>
           
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground animate-pulse">Đang tải thông báo...</div>
+            <div className="p-8 text-center text-muted-foreground animate-pulse">Loading notifications...</div>
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
               <Bell className="w-12 h-12 mb-3 opacity-20" />
-              <p>Bạn chưa có thông báo nào.</p>
+              <p>No notifications available.</p>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -329,7 +329,7 @@ export default function NotificationsPage() {
                             <MailOpen className={cn("w-4 h-4 shrink-0", isSelected ? "text-orange-500" : "text-muted-foreground")} />
                           )}
                           <span className="text-xs font-semibold text-muted-foreground truncate max-w-[120px]" title={notif.event?.name || 'Hệ thống SEAL'}>
-                            {notif.event?.name || 'Hệ thống SEAL'}
+                            {notif.event?.name || 'SEAL System'}
                           </span>
                         </div>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-1">
@@ -352,7 +352,7 @@ export default function NotificationsPage() {
                         deleteMutation.mutate(notif.id);
                       }}
                       className="absolute top-4 right-3 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1 rounded-md"
-                      title="Xóa thông báo"
+                      title="Delete notification"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -384,8 +384,8 @@ export default function NotificationsPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{selectedNotification.event?.name || 'Hệ thống SEAL'}</p>
-                      <p className="text-xs text-muted-foreground">Tới: Bạn</p>
+                      <p className="font-semibold text-foreground">{selectedNotification.event?.name || 'SEAL System'}</p>
+                      <p className="text-xs text-muted-foreground">To: You</p>
                     </div>
                   </div>
                   <div className="text-right hidden sm:block">
@@ -405,7 +405,7 @@ export default function NotificationsPage() {
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
               <MailOpen className="w-16 h-16 opacity-20 mb-4" />
-              <p>Chọn một thông báo để đọc nội dung chi tiết</p>
+              <p>Select a notification to view its details</p>
             </div>
           )}
         </div>
