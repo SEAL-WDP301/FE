@@ -62,6 +62,11 @@ export default function WorkspaceOverviewPage() {
   const rounds = workspaceData?.rounds || [];
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
+  const activeIndex = rounds.findIndex((r: any) => r.status === "open");
+  const completedCount = rounds.filter((r: any) => r.status === "closed" || r.status === "results_published").length;
+  const currentIndex = activeIndex !== -1 ? activeIndex : completedCount - 1;
+  const progressWidth = rounds.length > 0 && currentIndex >= 0 ? ((currentIndex + 0.5) / rounds.length) * 100 : 0;
+
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -106,7 +111,11 @@ export default function WorkspaceOverviewPage() {
           
           <div className="relative">
             {/* Connecting Line */}
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-border -translate-y-1/2 rounded-full hidden md:block" />
+            <div className="absolute top-[24px] left-0 w-full h-1 bg-border -translate-y-1/2 rounded-full hidden md:block" />
+            <div 
+              className="absolute top-[24px] left-0 h-1 bg-orange-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out" 
+              style={{ width: `${progressWidth}%` }} 
+            />
             
             <div className={`grid grid-cols-1 md:grid-cols-${Math.max(1, rounds.length)} gap-6 relative z-10`}>
               {rounds.map((round: any, index: number) => {
