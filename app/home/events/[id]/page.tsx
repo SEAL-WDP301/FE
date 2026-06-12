@@ -108,7 +108,7 @@ export default function EventDetailPage() {
       if (studentInfo?.individualRegistration || studentInfo?.teamInfo) {
         const teamInfo = studentInfo.teamInfo;
         const memberStatus = teamInfo?.status;
-        const teamStatus = teamInfo?.team?.status || studentInfo?.registrationStatus;
+        const teamStatus = teamInfo?.team?.status || "registered";
         const displayStatus = memberStatus === 'pending' ? 'Invitation Pending' : teamStatus;
         
         return (

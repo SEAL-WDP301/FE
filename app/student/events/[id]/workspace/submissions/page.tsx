@@ -67,6 +67,7 @@ export default function SubmissionsPage() {
   const workspaceData = data?.data;
   const currentActiveRound = workspaceData?.currentActiveRound;
   const latestSubmission = workspaceData?.latestSubmission;
+  const isLeader = workspaceData?.role === "leader";
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
   const isDeadlinePassed = currentActiveRound?.submissionDeadline 
@@ -198,6 +199,19 @@ export default function SubmissionsPage() {
         </div>
       </header>
 
+      {/* Non-Leader Read-Only Alert */}
+      {!isLeader && (
+        <div className="bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+          <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">Read-Only View</h4>
+            <p className="text-sm mt-1 opacity-90">
+              You are viewing this page as a Team Member. Only the Team Leader can submit or modify the project.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main Form Area */}
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-6 md:grid-cols-3">
@@ -207,11 +221,16 @@ export default function SubmissionsPage() {
             <GlassCard className="p-8 rounded-[24px]">
               <h2 className="text-xl font-semibold mb-4">Upload File</h2>
               <div 
-                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${isDragging ? "border-orange-500 bg-orange-500/5" : "border-border hover:bg-white/[0.02]"} ${isDeadlinePassed ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
+                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
+                  isDragging ? "border-orange-500 bg-orange-500/5" : "border-border hover:bg-white/[0.02]"
+                } ${isDeadlinePassed || !isLeader ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (!isLeader) return;
+                  fileInputRef.current?.click();
+                }}
               >
                 <input 
                   type="file" 
@@ -219,7 +238,7 @@ export default function SubmissionsPage() {
                   className="hidden" 
                   onChange={handleFileChange}
                   accept=".pdf,.zip,.rar"
-                  disabled={isDeadlinePassed}
+                  disabled={isDeadlinePassed || !isLeader}
                 />
                 
                 {file ? (
@@ -250,7 +269,7 @@ export default function SubmissionsPage() {
                       <UploadCloud className="h-8 w-8" />
                     </div>
                     <p className="font-semibold text-foreground mb-1">
-                      Click or drag file to this area to upload
+                      {isLeader ? "Click or drag file to this area to upload" : "No file uploaded"}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Support for a single PDF or ZIP upload. Maximum {currentActiveRound?.maxFileSizeMb || 20}MB.
@@ -268,11 +287,11 @@ export default function SubmissionsPage() {
                   GitHub Repository URL
                 </label>
                 <Input 
-                  placeholder="https://github.com/your-username/repo" 
+                  placeholder={isLeader ? "https://github.com/your-username/repo" : "No GitHub URL provided"} 
                   className="bg-background border-border h-12"
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
-                  disabled={isDeadlinePassed}
+                  disabled={isDeadlinePassed || !isLeader}
                 />
               </div>
 
@@ -281,11 +300,11 @@ export default function SubmissionsPage() {
                   Project Description / Notes
                 </label>
                 <Textarea 
-                  placeholder="Briefly describe your project or add any notes for the judges..." 
+                  placeholder={isLeader ? "Briefly describe your project or add any notes for the judges..." : "No description provided"} 
                   className="bg-background border-border min-h-[120px] resize-none"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  disabled={isDeadlinePassed}
+                  disabled={isDeadlinePassed || !isLeader}
                 />
               </div>
             </GlassCard>
@@ -370,10 +389,8 @@ export default function SubmissionsPage() {
                 
                 {latestSubmission.history.length > 5 && (
                   <Dialog>
-                    <DialogTrigger>
-                      <Button variant="outline" className="w-full mt-4" size="sm">
-                        View all {latestSubmission.history.length} records
-                      </Button>
+                    <DialogTrigger render={<Button variant="outline" className="w-full mt-4" size="sm" />}>
+                      View all {latestSubmission.history.length} records
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
@@ -419,7 +436,8 @@ export default function SubmissionsPage() {
         type="submit" 
         variant="orange" 
         className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(243,112,33,0.3)]"
-        disabled={isDeadlinePassed || submitMutation.isPending || (!file && !githubUrl && !latestSubmission)}
+        disabled={isDeadlinePassed || submitMutation.isPending || (!file && !githubUrl && !latestSubmission) || !isLeader}
+        title={!isLeader ? "Only the team leader can submit the project" : ""}
       >
         {submitMutation.isPending ? (
           <Loader2 className="h-5 w-5 animate-spin mr-2" />
