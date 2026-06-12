@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Target,
   Zap,
-  Loader2
+  Loader2,
+  Crown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -122,6 +123,8 @@ export default function WorkspaceOverviewPage() {
                 const isCompleted = round.status === "closed" || round.status === "results_published";
                 const isActive = round.status === "open";
 
+                const isFinalRound = index === rounds.length - 1;
+
                 return (
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -130,15 +133,42 @@ export default function WorkspaceOverviewPage() {
                     key={round.id} 
                     className="flex flex-col items-center text-center"
                   >
-                    <div 
-                      className={`h-12 w-12 rounded-full flex items-center justify-center mb-4 transition-all duration-300 shadow-lg
-                        ${isCompleted ? "bg-orange-500 text-white" : 
-                          isActive ? "bg-background border-2 border-orange-500 text-orange-500 shadow-[0_0_20px_rgba(243,112,33,0.4)]" : 
-                          "bg-muted border border-border text-muted-foreground"}`}
-                    >
-                      {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <span className="font-bold text-lg">{round.roundNumber}</span>}
+                    <div className="relative mb-4">
+                      {/* Radiating Glow Effect for Active Phase */}
+                      {isActive && (
+                        <div className={`absolute inset-0 rounded-full animate-ping z-0 opacity-75 ${isFinalRound ? 'bg-yellow-500' : 'bg-orange-500'}`} style={{ animationDuration: '2s' }} />
+                      )}
+                      
+                      {/* Tilted Crown for Final Round */}
+                      {isFinalRound && (
+                        <motion.div 
+                          initial={{ opacity: 0, rotate: -45, y: 10 }}
+                          animate={{ opacity: 1, rotate: 15, y: 0 }}
+                          transition={{ delay: index * 0.1 + 0.3, type: "spring" }}
+                          className="absolute -top-4 -right-3 z-20"
+                        >
+                          <Crown className={`h-6 w-6 ${isCompleted ? 'text-yellow-400 drop-shadow-[0_2px_10px_rgba(250,204,21,0.8)]' : isActive ? 'text-yellow-500/80 drop-shadow-sm' : 'text-yellow-500/40'}`} fill="currentColor" />
+                        </motion.div>
+                      )}
+                      
+                      {/* Circle Node */}
+                      <div 
+                        className={`h-12 w-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg relative z-10
+                          ${isFinalRound ? (
+                            isCompleted ? "bg-gradient-to-tr from-orange-500 to-yellow-400 text-white ring-4 ring-yellow-500/40 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.4)]" :
+                            isActive ? "bg-background border-2 border-yellow-500 text-yellow-600 ring-4 ring-yellow-500/20 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.3)]" :
+                            "bg-muted border-2 border-yellow-500/30 text-muted-foreground"
+                          ) : (
+                            isCompleted ? "bg-orange-500 text-white" : 
+                            isActive ? "bg-background border-2 border-orange-500 text-orange-500 shadow-[0_0_20px_rgba(243,112,33,0.4)]" : 
+                            "bg-muted border border-border text-muted-foreground"
+                          )}`}
+                      >
+                        {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <span className="font-bold text-lg">{round.roundNumber}</span>}
+                      </div>
                     </div>
-                    <h3 className={`font-semibold ${isActive ? "text-orange-400" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+                    
+                    <h3 className={`font-semibold ${isFinalRound && (isActive || isCompleted) ? 'text-yellow-600 dark:text-yellow-500' : isActive ? "text-orange-400" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
                       {round.name}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 font-medium">
@@ -181,9 +211,25 @@ export default function WorkspaceOverviewPage() {
                     <Clock className="h-4 w-4" />
                     <span className="text-sm font-medium">Time Remaining</span>
                   </div>
-                  <div className="text-3xl font-mono font-bold text-foreground">
-                    {timeLeft.days > 0 && <>{timeLeft.days}<span className="text-xl text-muted-foreground">d</span> : </>}
-                    {String(timeLeft.hours).padStart(2, '0')}<span className="text-xl text-muted-foreground">h</span> : {String(timeLeft.minutes).padStart(2, '0')}<span className="text-xl text-muted-foreground">m</span>
+                  <div className="flex items-center gap-2">
+                    {timeLeft.days > 0 && (
+                      <>
+                        <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
+                          <span className="text-xl font-bold font-mono text-foreground leading-none">{timeLeft.days}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Days</span>
+                        </div>
+                        <span className="text-muted-foreground font-bold text-lg mb-1">:</span>
+                      </>
+                    )}
+                    <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
+                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Hrs</span>
+                    </div>
+                    <span className="text-muted-foreground font-bold text-lg mb-1">:</span>
+                    <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
+                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Mins</span>
+                    </div>
                   </div>
                   <Link href={`${basePath}/submissions`} className="w-full">
                     <Button variant="orange" className="w-full mt-2 rounded-xl h-11 shadow-[0_0_15px_rgba(243,112,33,0.3)]">

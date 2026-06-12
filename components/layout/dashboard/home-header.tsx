@@ -15,12 +15,7 @@ import { ThemeToggle } from './theme-toggle';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
 
-const ORGANIZER_MENUS = [
-    { label: "Dashboard", href: "/organizer" },
-    { label: "Events", href: "/organizer/events" },
-    { label: "Judges & Mentors", href: "/organizer/judges" },
-    { label: "Settings", href: "/organizer/settings" },
-];
+// ORGANIZER_MENUS removed per user request
 
 export default function HomeHeader({ customCenterContent }: { customCenterContent?: React.ReactNode } = {}) {
     const router = useRouter();
@@ -69,28 +64,6 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                     <div className="flex flex-1 items-center justify-center overflow-x-auto mx-2 md:mx-4 scrollbar-none">
                         {customCenterContent}
                     </div>
-                ) : (user?.role?.toLowerCase() === 'organizer' || user?.role?.toLowerCase() === 'admin') ? (
-                    <nav className="flex flex-wrap items-center justify-center rounded-full border border-border bg-card px-2 py-1.5 shadow-sm gap-1">
-                        {ORGANIZER_MENUS.map((item) => {
-                            const isActive = pathname === item.href || (item.href !== '/organizer' && pathname.startsWith(`${item.href}/`));
-                            const activeColor = "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400";
-                            
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-300",
-                                        isActive 
-                                            ? activeColor 
-                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    )}
-                                >
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
                 ) : null}
 
                 {/* Right Actions */}

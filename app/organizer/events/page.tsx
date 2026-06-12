@@ -26,7 +26,7 @@ export default function OrganizerEventsPage() {
     };
 
     return (
-        <div className="p-8">
+        <div className="p-8 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">Events Management</h1>

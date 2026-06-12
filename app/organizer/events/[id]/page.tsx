@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
-export default function OrganizerEventRoot({ params }: { params: { id: string } }) {
-  redirect(`/organizer/events/${params.id}/overview`);
+export default async function OrganizerEventRoot({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  redirect(`/organizer/events/${resolvedParams.id}/overview`);
 }
