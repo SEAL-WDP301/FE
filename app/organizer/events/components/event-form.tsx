@@ -41,9 +41,11 @@ const createEventSchema = (isEdit: boolean) => z.object({
         _count: z.any().optional(),
         roundNumber: z.coerce.number().int().min(1, "Must be >= 1"),
         name: z.string().min(1, "Round name is required"),
-        submissionType: z.enum(["pdf", "github_link"]),
+        submissionType: z.enum(["pdf", "github_link", "file"]),
         submissionDeadline: z.string().optional(),
-    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "" }] as any)
+        maxFileSizeMb: z.coerce.number().int().min(1, "Must be >= 1").max(500, "Max 500MB").default(20),
+        isTrackSpecific: z.boolean().default(true),
+    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }] as any)
 }).superRefine((data, ctx) => {
     const now = new Date();
 
@@ -128,8 +130,10 @@ export default function EventForm({ initialData }: EventFormProps) {
         tracks: initialData?.tracks || [{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }],
         rounds: initialData?.rounds?.map((r: any) => ({
             ...r,
-            submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : ""
-        })) || [{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "" }]
+            submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : "",
+            maxFileSizeMb: r.maxFileSizeMb || 20,
+            isTrackSpecific: r.isTrackSpecific !== undefined ? r.isTrackSpecific : true
+        })) || [{ roundNumber: 1, name: "", submissionType: "pdf", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }]
     };
 
     const eventSchema = useMemo(() => createEventSchema(isEdit), [isEdit]);
@@ -191,7 +195,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                     roundNumber: r.roundNumber,
                     name: r.name,
                     submissionType: r.submissionType,
-                    submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString() : undefined
+                    submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString() : undefined,
+                    maxFileSizeMb: r.maxFileSizeMb,
+                    isTrackSpecific: r.isTrackSpecific
                 }))
             };
 
@@ -486,7 +492,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                         <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Round Name *</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="e.g. Semi-final" {...field} /></FormControl><FormMessage /></FormItem>
                                                     )} />
                                                 </div>
-                                                <div className="md:col-span-3">
+                                                <div className="md:col-span-2">
                                                     <FormField control={control} name={`rounds.${index}.submissionType`} render={({ field }) => (
                                                         <FormItem>
                                                             <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Submission Type *</FormLabel>
@@ -494,6 +500,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                                 <FormControl><SelectTrigger className="bg-card/50 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
                                                                 <SelectContent className="rounded-xl">
                                                                     <SelectItem value="pdf">PDF Document</SelectItem>
+                                                                    <SelectItem value="file">Project File (ZIP/RAR)</SelectItem>
                                                                     <SelectItem value="github_link">GitHub Link</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
@@ -501,9 +508,32 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                         </FormItem>
                                                     )} />
                                                 </div>
+                                                <div className="md:col-span-1">
+                                                    <FormField control={control} name={`rounds.${index}.maxFileSizeMb`} render={({ field }) => (
+                                                        <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max (MB)</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
+                                                    )} />
+                                                </div>
                                                 <div className="md:col-span-3 flex justify-between items-end gap-3">
                                                     <FormField control={control} name={`rounds.${index}.submissionDeadline`} render={({ field }) => (
                                                         <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
+                                                    )} />
+                                                </div>
+                                                <div className="md:col-span-12 flex items-center justify-between mt-2 pt-4 border-t border-border/50">
+                                                    <FormField control={control} name={`rounds.${index}.isTrackSpecific`} render={({ field }) => (
+                                                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                                            <FormControl>
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500" 
+                                                                    checked={field.value} 
+                                                                    onChange={field.onChange} 
+                                                                />
+                                                            </FormControl>
+                                                            <div className="space-y-1 leading-none">
+                                                                <FormLabel className="text-sm font-medium text-foreground">Separate submissions by Track</FormLabel>
+                                                                <p className="text-xs text-muted-foreground">If checked, files will be saved in track-specific folders.</p>
+                                                            </div>
+                                                        </FormItem>
                                                     )} />
                                                     {roundFields.length > 1 && (
                                                         <Button type="button" variant="ghost" size="icon" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl mb-1 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => handleRemoveRound(index)}>
