@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { enqueueSnackbar } from "notistack";
 
 export default function EventOverviewPage() {
   const params = useParams();
   const eventId = params.id as string;
+  const queryClient = useQueryClient();
 
   const { data: event, isLoading, isError } = useQuery({
     queryKey: ["organizerEvent", eventId],
@@ -19,6 +21,20 @@ export default function EventOverviewPage() {
       const res = await axiosClient.get(`/public/events/${eventId}`);
       return res.data.data;
     },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const res = await axiosClient.patch(`/organizer/events/${eventId}/status`, { status: newStatus });
+      return res.data;
+    },
+    onSuccess: () => {
+      enqueueSnackbar('Event status updated successfully', { variant: 'success' });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error.response?.data?.message || 'Failed to update status', { variant: 'error' });
+    }
   });
 
   if (isLoading) {
@@ -43,9 +59,22 @@ export default function EventOverviewPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{event.name}</h1>
-          <p className="text-muted-foreground mt-1">
-            Season {event.season} {event.year} • <span className="uppercase text-blue-500 font-semibold">{event.status}</span>
-          </p>
+          <div className="text-muted-foreground mt-1 flex items-center gap-2">
+            Season {event.season} {event.year} • 
+            <select
+              value={event.status}
+              onChange={(e) => updateStatusMutation.mutate(e.target.value)}
+              disabled={updateStatusMutation.isPending}
+              className="bg-transparent border border-border rounded-md text-sm uppercase text-blue-500 font-semibold focus:ring-blue-500 focus:border-blue-500 p-1 cursor-pointer"
+            >
+              <option value="draft">DRAFT</option>
+              <option value="published">PUBLISHED</option>
+              <option value="active">ACTIVE</option>
+              <option value="completed">COMPLETED</option>
+              <option value="cancelled">CANCELLED</option>
+            </select>
+            {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+          </div>
         </div>
         <Link href={`/organizer/events/${eventId}/edit`}>
           <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
-import { Search, CheckCircle, XCircle, Trash2, Eye, Crown } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,15 +20,29 @@ export default function TeamsTab({ event }: { event: any }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
 
+    const [isAssignMentorOpen, setIsAssignMentorOpen] = useState(false);
+    const [selectedMentorUser, setSelectedMentorUser] = useState<number | "">("");
+
     // Fetch Teams for the selected track
     const { data: teams, isLoading } = useQuery({
         queryKey: ['organizerTeams', event.id, selectedTrackId],
         queryFn: async () => {
             if (!selectedTrackId) return [];
-            const res = await axiosClient.get(`/organizer/teams/events/${event.id}/tracks/${selectedTrackId}`);
+            // Use the query param endpoint to get mentorAssignments
+            const res = await axiosClient.get(`/organizer/teams/events/${event.id}?trackId=${selectedTrackId}`);
             return res.data.data;
         },
         enabled: !!selectedTrackId,
+    });
+
+    // Fetch Users for mentor assignment
+    const { data: users, isLoading: isLoadingUsers } = useQuery({
+        queryKey: ["allUsers"],
+        queryFn: async () => {
+            const res = await axiosClient.get(`/users`);
+            return res.data.data;
+        },
+        enabled: isAssignMentorOpen,
     });
 
     // Update Team Status Mutation
@@ -44,10 +58,48 @@ export default function TeamsTab({ event }: { event: any }) {
             queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
             setTeamToEliminate(null);
             setEliminationReason("");
+            // Update selected team details if open
+            if (selectedTeamForDetails) {
+                queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+            }
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
             enqueueSnackbar(error.response?.data?.message || 'Failed to update status', { variant: 'error' });
+        }
+    });
+
+    // Assign Mentor Mutation
+    const assignMentorMutation = useMutation({
+        mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
+            const res = await axiosClient.post(`/organizer/teams/${teamId}/mentors`, { stakeholderId });
+            return res.data;
+        },
+        onSuccess: () => {
+            enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+            setIsAssignMentorOpen(false);
+            setSelectedMentorUser("");
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+            enqueueSnackbar(error.response?.data?.message || 'Failed to assign mentor', { variant: 'error' });
+        }
+    });
+
+    // Unassign Mentor Mutation
+    const unassignMentorMutation = useMutation({
+        mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
+            const res = await axiosClient.delete(`/organizer/teams/${teamId}/mentors/${stakeholderId}`);
+            return res.data;
+        },
+        onSuccess: () => {
+            enqueueSnackbar('Mentor unassigned successfully', { variant: 'success' });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+            enqueueSnackbar(error.response?.data?.message || 'Failed to unassign mentor', { variant: 'error' });
         }
     });
 
@@ -77,6 +129,10 @@ export default function TeamsTab({ event }: { event: any }) {
             default: return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-xs font-semibold">{status}</span>;
         }
     };
+
+    // Update selected team from updated cache
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentTeamDetails = teams?.find((t: any) => t.id === selectedTeamForDetails?.id) || selectedTeamForDetails;
 
     return (
         <div className="bg-card border border-border rounded-xl flex flex-col min-h-[500px]">
@@ -122,6 +178,7 @@ export default function TeamsTab({ event }: { event: any }) {
                             <th className="px-6 py-4 font-semibold">Team Name</th>
                             <th className="px-6 py-4 font-semibold">Leader</th>
                             <th className="px-6 py-4 font-semibold">Members</th>
+                            <th className="px-6 py-4 font-semibold">Mentors</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-right">Actions</th>
                         </tr>
@@ -129,7 +186,7 @@ export default function TeamsTab({ event }: { event: any }) {
                     <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center">
+                                <td colSpan={6} className="px-6 py-12 text-center">
                                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
                                 </td>
                             </tr>
@@ -144,6 +201,9 @@ export default function TeamsTab({ event }: { event: any }) {
                                     </td>
                                     <td className="px-6 py-4">
                                         {team.members?.length || 0} / {team.track?.maxMembersPerTeam || '∞'}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {team.mentorAssignments?.length || 0}
                                     </td>
                                     <td className="px-6 py-4">
                                         {getStatusBadge(team.status)}
@@ -200,7 +260,7 @@ export default function TeamsTab({ event }: { event: any }) {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                                <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                                     No teams registered for this track yet.
                                 </td>
                             </tr>
@@ -246,23 +306,28 @@ export default function TeamsTab({ event }: { event: any }) {
             )}
 
             {/* Team Details Dialog */}
-            <Dialog open={!!selectedTeamForDetails} onOpenChange={(open) => !open && setSelectedTeamForDetails(null)}>
-                <DialogContent className="sm:max-w-[600px] bg-card border-border">
+            <Dialog open={!!selectedTeamForDetails} onOpenChange={(open) => {
+                if(!open) {
+                    setSelectedTeamForDetails(null);
+                    setIsAssignMentorOpen(false);
+                }
+            }}>
+                <DialogContent className="sm:max-w-[700px] bg-card border-border max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl flex items-center gap-2">
-                            Team: <span className="text-blue-500">{selectedTeamForDetails?.name}</span>
-                            {selectedTeamForDetails?.status && (
+                            Team: <span className="text-blue-500">{currentTeamDetails?.name}</span>
+                            {currentTeamDetails?.status && (
                                 <span className="ml-2">
-                                    {getStatusBadge(selectedTeamForDetails.status)}
+                                    {getStatusBadge(currentTeamDetails.status)}
                                 </span>
                             )}
                         </DialogTitle>
                         <DialogDescription>
-                            Review the members of this team and their registration details.
+                            Review team members, registration details, and assign mentors.
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-4 space-y-6">
                         {/* Leader */}
                         <div className="p-4 border border-amber-500/30 rounded-lg bg-amber-500/5 relative overflow-hidden">
                             <div className="absolute -top-4 -right-4 p-2 opacity-10">
@@ -274,12 +339,12 @@ export default function TeamsTab({ event }: { event: any }) {
                             </h4>
                             <div className="flex justify-between items-start relative z-10">
                                 <div>
-                                    <p className="font-semibold text-foreground text-base">{selectedTeamForDetails?.leader?.name || 'Unknown'}</p>
-                                    <p className="text-sm text-muted-foreground">{selectedTeamForDetails?.leader?.email}</p>
-                                    {selectedTeamForDetails?.leader?.studentProfile && (
+                                    <p className="font-semibold text-foreground text-base">{currentTeamDetails?.leader?.name || 'Unknown'}</p>
+                                    <p className="text-sm text-muted-foreground">{currentTeamDetails?.leader?.email}</p>
+                                    {currentTeamDetails?.leader?.studentProfile && (
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            Code: {selectedTeamForDetails.leader.studentProfile.studentCode} • 
-                                            {selectedTeamForDetails.leader.studentProfile.universityName && ` ${selectedTeamForDetails.leader.studentProfile.universityName}`}
+                                            Code: {currentTeamDetails.leader.studentProfile.studentCode} • 
+                                            {currentTeamDetails.leader.studentProfile.universityName && ` ${currentTeamDetails.leader.studentProfile.universityName}`}
                                         </p>
                                     )}
                                 </div>
@@ -293,7 +358,7 @@ export default function TeamsTab({ event }: { event: any }) {
                         <div className="p-4 border border-border rounded-lg bg-muted/20">
                             {(() => {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const otherMembers = selectedTeamForDetails?.members?.filter((m: any) => m.role !== 'leader') || [];
+                                const otherMembers = currentTeamDetails?.members?.filter((m: any) => m.role !== 'leader') || [];
                                 return (
                                     <>
                                         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
@@ -343,6 +408,80 @@ export default function TeamsTab({ event }: { event: any }) {
                                 );
                             })()}
                         </div>
+
+                        {/* Mentors */}
+                        <div className="p-4 border border-blue-500/20 rounded-lg bg-blue-500/5">
+                             <div className="flex justify-between items-center mb-3">
+                                <h4 className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Users className="w-4 h-4" />
+                                    Mentors
+                                </h4>
+                                {!isAssignMentorOpen && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="h-7 text-xs gap-1 border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+                                      onClick={() => setIsAssignMentorOpen(true)}
+                                    >
+                                        <UserPlus className="w-3 h-3" /> Assign Mentor
+                                    </Button>
+                                )}
+                             </div>
+
+                             {isAssignMentorOpen && (
+                                 <div className="mb-4 p-3 border border-border rounded bg-background flex flex-col gap-2">
+                                     <div className="text-xs font-medium text-foreground">Select a Stakeholder to Assign as Mentor</div>
+                                     <select
+                                        value={selectedMentorUser}
+                                        onChange={(e) => setSelectedMentorUser(e.target.value ? Number(e.target.value) : "")}
+                                        className="w-full bg-muted border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2"
+                                     >
+                                        <option value="">-- Choose Stakeholder --</option>
+                                        {isLoadingUsers ? (
+                                            <option disabled>Loading...</option>
+                                        ) : users?.filter((u: any) => u.role === 'stakeholder').map((u: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                                            <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                                        ))}
+                                     </select>
+                                     <div className="flex justify-end gap-2 mt-1">
+                                         <Button size="sm" variant="ghost" onClick={() => setIsAssignMentorOpen(false)}>Cancel</Button>
+                                         <Button 
+                                            size="sm" 
+                                            disabled={!selectedMentorUser || assignMentorMutation.isPending}
+                                            onClick={() => assignMentorMutation.mutate({ teamId: currentTeamDetails.id, stakeholderId: Number(selectedMentorUser) })}
+                                         >
+                                            {assignMentorMutation.isPending ? "Assigning..." : "Assign"}
+                                         </Button>
+                                     </div>
+                                 </div>
+                             )}
+
+                             {currentTeamDetails?.mentorAssignments?.length === 0 ? (
+                                 <p className="text-sm text-muted-foreground italic">No mentors assigned.</p>
+                             ) : (
+                                 <div className="space-y-2">
+                                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                     {currentTeamDetails?.mentorAssignments?.map((assignment: any) => (
+                                         <div key={assignment.mentorId} className="flex justify-between items-center py-2 border-t border-border/50 first:border-0 first:pt-0">
+                                            <div>
+                                                <p className="font-semibold text-foreground text-sm">{assignment.mentor?.name || 'Unknown User'}</p>
+                                                <p className="text-xs text-muted-foreground">{assignment.mentor?.email}</p>
+                                            </div>
+                                            <Button 
+                                                size="sm" 
+                                                variant="ghost" 
+                                                className="h-8 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 px-2"
+                                                onClick={() => unassignMentorMutation.mutate({ teamId: currentTeamDetails.id, stakeholderId: assignment.mentorId })}
+                                                disabled={unassignMentorMutation.isPending}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                                            </Button>
+                                         </div>
+                                     ))}
+                                 </div>
+                             )}
+                        </div>
+
                     </div>
                 </DialogContent>
             </Dialog>

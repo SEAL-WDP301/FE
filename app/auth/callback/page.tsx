@@ -47,9 +47,13 @@ function CallbackContent() {
 
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
 
-        // Redirect to Home
+        // Redirect based on role
         setTimeout(() => {
-          router.push("/home");
+          if (user.role === "admin" || user.role === "organizer") {
+            router.push("/organizer/events");
+          } else {
+            router.push("/home");
+          }
         }, 1000);
       })
       .catch(err => {

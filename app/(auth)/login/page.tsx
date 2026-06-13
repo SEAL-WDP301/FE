@@ -48,8 +48,13 @@ export default function LoginPage() {
       // Update global user state
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
-      // Redirect to home/dashboard
-      router.push("/home");
+      // Redirect based on role
+      const role = res.data?.data?.user?.role;
+      if (role === "admin" || role === "organizer") {
+        router.push("/organizer/events");
+      } else {
+        router.push("/home");
+      }
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)

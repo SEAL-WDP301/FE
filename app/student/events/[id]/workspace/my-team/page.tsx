@@ -14,7 +14,8 @@ import {
     UsersRound,
     Crown,
     LogOut,
-    Check
+    Check,
+    GraduationCap
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,21 @@ export default function TeamMembersPage() {
                         <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
                             View your team's roster, track pending invitations, and collaborate towards victory.
                         </p>
+                        {team.mentorAssignments && team.mentorAssignments.length > 0 && (
+                            <div className="mt-5 flex items-center gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20 w-fit pr-6">
+                                <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                                    {team.mentorAssignments[0].mentor?.avatarUrl ? (
+                                        <img src={team.mentorAssignments[0].mentor.avatarUrl} alt={team.mentorAssignments[0].mentor.name} className="h-full w-full rounded-full object-cover" />
+                                    ) : (
+                                        <GraduationCap className="h-5 w-5 text-blue-500" />
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-0.5">Team Mentor</p>
+                                    <p className="text-sm font-medium text-foreground">{team.mentorAssignments[0].mentor?.name}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">

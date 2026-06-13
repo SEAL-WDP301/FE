@@ -212,7 +212,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             }
         } catch (error: any) {
             console.error("Event form error", error);
-            const errData = error.response?.data?.message;
+            const errData = error.response?.data?.errors || error.response?.data?.message;
             let errorMessage = "Failed to save event";
             
             if (Array.isArray(errData)) {

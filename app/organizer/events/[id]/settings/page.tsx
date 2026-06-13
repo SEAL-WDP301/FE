@@ -53,12 +53,24 @@ export default function EventSettingsPage() {
         <p className="text-muted-foreground max-w-md mx-auto mb-6">
           To edit event descriptions, dates, or basic information, please use the main Edit page. We are currently working on moving those settings into this unified dashboard.
         </p>
-        <Link href={`/organizer/events/${eventId}/edit`}>
-          <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-            Go to Edit Form
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        {event.status === 'draft' ? (
+          <Link href={`/organizer/events/${eventId}/edit`}>
+            <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+              Go to Edit Form
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <Button className="gap-2 bg-muted text-muted-foreground" disabled>
+              Go to Edit Form
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-amber-500 font-medium bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              Only events in "Draft" status can be edited.
+            </span>
+          </div>
+        )}
       </GlassCard>
     </div>
   );
