@@ -588,6 +588,18 @@ export default function TeamsTab({ event }: { event: any }) {
                             Are you sure you want to delete {selectedTeamIds.length} team(s)? This action will permanently remove these teams, their members, and all submissions.
                         </DialogDescription>
                     </DialogHeader>
+                    
+                    <div className="bg-muted/50 p-3 rounded-md max-h-[150px] overflow-y-auto text-foreground text-sm mt-4">
+                        <ul className="list-disc pl-4 space-y-1">
+                            {teams?.filter((t: any) => selectedTeamIds.includes(t.id)).map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                                <li key={team.id}>
+                                    <span className="font-semibold">{team.name}</span>
+                                    {team.track && <span className="text-muted-foreground ml-1">({team.track.name})</span>}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
                     <div className="flex justify-end gap-3 mt-4">
                         <Button variant="ghost" onClick={() => setIsBulkDeleteOpen(false)}>
                             Cancel
