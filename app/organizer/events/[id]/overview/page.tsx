@@ -68,10 +68,9 @@ export default function EventOverviewPage() {
               className="bg-transparent border border-border rounded-md text-sm uppercase text-blue-500 font-semibold focus:ring-blue-500 focus:border-blue-500 p-1 cursor-pointer"
             >
               <option value="draft">DRAFT</option>
-              <option value="published">PUBLISHED</option>
               <option value="active">ACTIVE</option>
-              <option value="completed">COMPLETED</option>
-              <option value="cancelled">CANCELLED</option>
+              <option value="ongoing">ONGOING</option>
+              <option value="closed">CLOSED</option>
             </select>
             {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
           </div>

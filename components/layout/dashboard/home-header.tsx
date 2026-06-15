@@ -72,10 +72,10 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                         <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
                     ) : user && !isError ? (
                         <div className="flex items-center gap-3">
-                            {user.role === 'mentor' ? (
+                            {user.role === 'stakeholder' ? (
                                 <Link href="/mentor/dashboard">
                                     <Button variant="outline" size="sm" className="hidden sm:flex border-purple-500/30 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 dark:text-purple-400">
-                                        Mentor Workspace
+                                        Stakeholder Workspace
                                     </Button>
                                 </Link>
                             ) : null}

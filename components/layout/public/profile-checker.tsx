@@ -28,6 +28,12 @@ export function ProfileChecker() {
 
   useEffect(() => {
     if (isSuccess && user) {
+      // Skip check for admin and organizer roles
+      if (user.role === 'admin' || user.role === 'organizer') {
+        setHasChecked(true);
+        return;
+      }
+
       // Check if both profiles are missing
       if (!user.studentProfile && !user.stakeholderProfile) {
         setShowModal(true);

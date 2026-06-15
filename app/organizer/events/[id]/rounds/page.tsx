@@ -52,6 +52,8 @@ export default function EventRoundsPage() {
     );
   }
 
+  const canModifyStructure = event?.status === "draft" && (!event?.registrationDeadline || new Date(event.registrationDeadline) > new Date());
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -67,10 +69,12 @@ export default function EventRoundsPage() {
       <GlassCard className="p-6 rounded-[24px]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-blue-500">Event Rounds</h2>
-          <Button disabled className="gap-2 bg-blue-600 hover:bg-blue-700 opacity-50 cursor-not-allowed" title="Round creation is not yet available" size="sm">
-            <Plus className="h-4 w-4" />
-            Add Round
-          </Button>
+          {canModifyStructure && (
+            <Button disabled className="gap-2 bg-blue-600 hover:bg-blue-700 opacity-50 cursor-not-allowed" title="Round creation is not yet available" size="sm">
+              <Plus className="h-4 w-4" />
+              Add Round
+            </Button>
+          )}
         </div>
         
         {event.rounds && event.rounds.length > 0 ? (
@@ -135,10 +139,12 @@ export default function EventRoundsPage() {
       <GlassCard className="p-6 rounded-[24px]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-orange-500">Event Tracks</h2>
-          <Button disabled className="gap-2 bg-orange-600 hover:bg-orange-700 opacity-50 cursor-not-allowed" title="Track creation is not yet available" size="sm">
-            <Plus className="h-4 w-4" />
-            Add Track
-          </Button>
+          {canModifyStructure && (
+            <Button disabled className="gap-2 bg-orange-600 hover:bg-orange-700 opacity-50 cursor-not-allowed" title="Track creation is not yet available" size="sm">
+              <Plus className="h-4 w-4" />
+              Add Track
+            </Button>
+          )}
         </div>
         
         {event.tracks && event.tracks.length > 0 ? (

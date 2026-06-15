@@ -11,9 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamsTab({ event }: { event: any }) {
     const queryClient = useQueryClient();
-    const [selectedTrackId, setSelectedTrackId] = useState<number | null>(
-        event.tracks && event.tracks.length > 0 ? event.tracks[0].id : null
-    );
+    const [selectedTrackId, setSelectedTrackId] = useState<number | "all">("all");
+    const [selectedStatus, setSelectedStatus] = useState<string>("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     const [eliminationReason, setEliminationReason] = useState("");
     const [teamToEliminate, setTeamToEliminate] = useState<number | null>(null);
@@ -27,12 +29,13 @@ export default function TeamsTab({ event }: { event: any }) {
     const { data: teams, isLoading } = useQuery({
         queryKey: ['organizerTeams', event.id, selectedTrackId],
         queryFn: async () => {
-            if (!selectedTrackId) return [];
-            // Use the query param endpoint to get mentorAssignments
-            const res = await axiosClient.get(`/organizer/teams/events/${event.id}?trackId=${selectedTrackId}`);
+            const url = selectedTrackId === "all" 
+                ? `/organizer/teams/events/${event.id}` 
+                : `/organizer/teams/events/${event.id}?trackId=${selectedTrackId}`;
+            const res = await axiosClient.get(url);
             return res.data.data;
         },
-        enabled: !!selectedTrackId,
+        enabled: true,
     });
 
     // Fetch Users for mentor assignment
@@ -130,6 +133,47 @@ export default function TeamsTab({ event }: { event: any }) {
         }
     };
 
+    // Bulk Delete Mutation
+    const bulkDeleteMutation = useMutation({
+        mutationFn: async (teamIds: number[]) => {
+            return axiosClient.post(`/organizer/teams/bulk-delete`, { teamIds });
+        },
+        onSuccess: () => {
+            enqueueSnackbar('Teams deleted successfully', { variant: 'success' });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+            setSelectedTeamIds([]);
+            setIsBulkDeleteOpen(false);
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+            enqueueSnackbar(error.response?.data?.message || 'Failed to delete teams', { variant: 'error' });
+        }
+    });
+
+    // Filter teams locally based on status and search term
+    const filteredTeams = teams?.filter((team: any) => {
+        const matchesStatus = selectedStatus === "all" || team.status === selectedStatus;
+        const matchesSearch = !searchTerm || team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              team.leader?.email.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesStatus && matchesSearch;
+    }) || [];
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedTeamIds(filteredTeams.map((t: any) => t.id));
+        } else {
+            setSelectedTeamIds([]);
+        }
+    };
+
+    const handleSelectTeam = (teamId: number, checked: boolean) => {
+        if (checked) {
+            setSelectedTeamIds(prev => [...prev, teamId]);
+        } else {
+            setSelectedTeamIds(prev => prev.filter(id => id !== teamId));
+        }
+    };
+
     // Update selected team from updated cache
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentTeamDetails = teams?.find((t: any) => t.id === selectedTeamForDetails?.id) || selectedTeamForDetails;
@@ -143,20 +187,44 @@ export default function TeamsTab({ event }: { event: any }) {
                     <p className="text-muted-foreground text-sm">Review and approve teams registered for the tracks.</p>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    {/* Track Selector */}
+                <div className="flex flex-wrap items-center gap-4">
+                    {/* Bulk Delete Button */}
+                    {selectedTeamIds.length > 0 && (
+                        <Button 
+                            variant="destructive" 
+                            size="sm"
+                            className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
+                            onClick={() => setIsBulkDeleteOpen(true)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete ({selectedTeamIds.length})
+                        </Button>
+                    )}
+
+                    {/* Status Selector */}
                     <select 
-                        value={selectedTrackId || ''} 
-                        onChange={(e) => setSelectedTrackId(Number(e.target.value))}
+                        value={selectedStatus} 
+                        onChange={(e) => setSelectedStatus(e.target.value)}
                         className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                     >
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="disqualified">Disqualified</option>
+                    </select>
+
+                    {/* Track Selector */}
+                    <select 
+                        value={selectedTrackId} 
+                        onChange={(e) => setSelectedTrackId(e.target.value === "all" ? "all" : Number(e.target.value))}
+                        className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                    >
+                        <option value="all">All Tracks</option>
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {event.tracks?.map((track: any) => (
                             <option key={track.id} value={track.id}>{track.name}</option>
                         ))}
-                        {(!event.tracks || event.tracks.length === 0) && (
-                            <option value="">No tracks available</option>
-                        )}
                     </select>
 
                     <div className="relative">
@@ -164,6 +232,8 @@ export default function TeamsTab({ event }: { event: any }) {
                         <input 
                             type="text" 
                             placeholder="Search teams..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                     </div>
@@ -175,10 +245,19 @@ export default function TeamsTab({ event }: { event: any }) {
                 <table className="w-full text-sm text-left text-muted-foreground">
                     <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
                         <tr>
+                            <th className="px-6 py-4 font-semibold w-12 text-center">
+                                <input 
+                                    type="checkbox" 
+                                    className="rounded border-border"
+                                    checked={filteredTeams.length > 0 && selectedTeamIds.length === filteredTeams.length}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th className="px-6 py-4 font-semibold">Team Name</th>
                             <th className="px-6 py-4 font-semibold">Leader</th>
                             <th className="px-6 py-4 font-semibold">Members</th>
-                            <th className="px-6 py-4 font-semibold">Mentors</th>
+                            <th className="px-6 py-4 font-semibold">Mentor</th>
+                            <th className="px-6 py-4 font-semibold">Registered At</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-right">Actions</th>
                         </tr>
@@ -186,15 +265,26 @@ export default function TeamsTab({ event }: { event: any }) {
                     <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center">
+                                <td colSpan={8} className="px-6 py-12 text-center">
                                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
                                 </td>
                             </tr>
-                        ) : teams && teams.length > 0 ? (
-                            teams.map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                        ) : filteredTeams && filteredTeams.length > 0 ? (
+                            filteredTeams.map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
                                 <tr key={team.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                                    <td className="px-6 py-4 text-center">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-border"
+                                            checked={selectedTeamIds.includes(team.id)}
+                                            onChange={(e) => handleSelectTeam(team.id, e.target.checked)}
+                                        />
+                                    </td>
                                     <td className="px-6 py-4 font-medium text-foreground">
                                         {team.name}
+                                        {selectedTrackId === "all" && team.track && (
+                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{team.track.name}</div>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">
                                         {team.leader?.name || team.leader?.email}
@@ -203,7 +293,10 @@ export default function TeamsTab({ event }: { event: any }) {
                                         {team.members?.length || 0} / {team.track?.maxMembersPerTeam || '∞'}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {team.mentorAssignments?.length || 0}
+                                        {team.mentorAssignments?.[0]?.mentor?.name || <span className="text-muted-foreground italic">None</span>}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {team.createdAt ? new Date(team.createdAt).toLocaleDateString() : 'N/A'}
                                     </td>
                                     <td className="px-6 py-4">
                                         {getStatusBadge(team.status)}
@@ -260,8 +353,8 @@ export default function TeamsTab({ event }: { event: any }) {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                                    No teams registered for this track yet.
+                                <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                                    No teams found matching your filters.
                                 </td>
                             </tr>
                         )}
@@ -482,6 +575,30 @@ export default function TeamsTab({ event }: { event: any }) {
                              )}
                         </div>
 
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation Dialog */}
+            <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Bulk Deletion</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete {selectedTeamIds.length} team(s)? This action will permanently remove these teams, their members, and all submissions.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-3 mt-4">
+                        <Button variant="ghost" onClick={() => setIsBulkDeleteOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="destructive" 
+                            onClick={() => bulkDeleteMutation.mutate(selectedTeamIds)}
+                            disabled={bulkDeleteMutation.isPending}
+                        >
+                            {bulkDeleteMutation.isPending ? "Deleting..." : "Delete"}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
