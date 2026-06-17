@@ -1,22 +1,45 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { axiosClient } from "@/lib/axios";
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Settings2, Loader2, ArrowRight } from "lucide-react";
+import { Settings2, Loader2, ArrowRight, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { enqueueSnackbar } from "notistack";
+
+import { deleteOrganizerEvent, getOrganizerEvent } from "@/lib/api/organizer-events.api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function EventSettingsPage() {
   const params = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const eventId = params.id as string;
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { data: event, isLoading, isError } = useQuery({
     queryKey: ["organizerEvent", eventId],
-    queryFn: async () => {
-      const res = await axiosClient.get(`/public/events/${eventId}`);
-      return res.data.data;
+    queryFn: () => getOrganizerEvent(eventId),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteOrganizerEvent(eventId),
+    onSuccess: () => {
+      enqueueSnackbar("Event deleted successfully", { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvents"] });
+      router.push("/organizer/events");
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to delete event", { variant: "error" });
     },
   });
 
@@ -67,11 +90,55 @@ export default function EventSettingsPage() {
               <ArrowRight className="h-4 w-4" />
             </Button>
             <span className="text-sm text-amber-500 font-medium bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-              Only events in "Draft" status can be edited.
+              Only events in &quot;Draft&quot; status can be edited.
             </span>
           </div>
         )}
       </GlassCard>
+
+      <GlassCard className="p-8 rounded-[24px] border-red-500/20">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-red-500">Danger Zone</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Permanently delete this event, including its tracks and rounds.
+            </p>
+          </div>
+          <Button variant="destructive" className="gap-2" onClick={() => setIsDeleteOpen(true)}>
+            <Trash2 className="h-4 w-4" />
+            Delete Event
+          </Button>
+        </div>
+      </GlassCard>
+
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete event</DialogTitle>
+            <DialogDescription>
+              This will permanently delete {event.name}. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={deleteMutation.isPending}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

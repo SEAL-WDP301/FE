@@ -67,7 +67,7 @@ export default function EventRoundsPage() {
 
       {/* Rounds Section */}
       <GlassCard className="p-6 rounded-[24px]">
-        <div className="flex justify-between items-center mb-6">
+        {/* <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-blue-500">Event Rounds</h2>
           {canModifyStructure && (
             <Button disabled className="gap-2 bg-blue-600 hover:bg-blue-700 opacity-50 cursor-not-allowed" title="Round creation is not yet available" size="sm">
@@ -75,63 +75,63 @@ export default function EventRoundsPage() {
               Add Round
             </Button>
           )}
-        </div>
-        
+        </div> */}
+
         {event.rounds && event.rounds.length > 0 ? (
-           <div className="overflow-x-auto">
-             <table className="w-full text-sm text-left">
-               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
-                 <tr>
-                   <th className="px-6 py-4 font-semibold rounded-tl-lg">Round Name</th>
-                   <th className="px-6 py-4 font-semibold">Timeline</th>
-                   <th className="px-6 py-4 font-semibold">Requirements</th>
-                   <th className="px-6 py-4 font-semibold">Status</th>
-                   <th className="px-6 py-4 font-semibold rounded-tr-lg text-right">Action</th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                 {event.rounds.map((round: any) => (
-                   <tr key={round.id} className="border-b border-border hover:bg-muted/10">
-                     <td className="px-6 py-4 font-medium">
-                        {round.name}
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Round {round.roundNumber}</div>
-                     </td>
-                     <td className="px-6 py-4">
-                        <div className="text-xs">
-                          {round.startDate && <div>Start: {new Date(round.startDate).toLocaleDateString()}</div>}
-                          {round.submissionDeadline && <div className="text-red-400">Deadline: {new Date(round.submissionDeadline).toLocaleDateString()}</div>}
-                        </div>
-                     </td>
-                     <td className="px-6 py-4">
-                        <div className="text-xs">
-                           {round.submissionType} <br/>
-                           Max Size: {round.maxFileSizeMb}MB
-                        </div>
-                     </td>
-                     <td className="px-6 py-4">
-                        <select
-                            value={round.status}
-                            onChange={(e) => updateRoundStatusMutation.mutate({ roundId: round.id, status: e.target.value })}
-                            disabled={updateRoundStatusMutation.isPending}
-                            className="bg-background border border-border rounded-md text-sm text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-2 cursor-pointer shadow-sm"
-                          >
-                            <option value="not_started">Not Started</option>
-                            <option value="open">Open</option>
-                            <option value="closed">Closed</option>
-                            <option value="results_published">Results Published</option>
-                        </select>
-                     </td>
-                     <td className="px-6 py-4 text-right">
-                         <Button size="sm" variant="outline" disabled title="Edit round coming soon">Edit</Button>
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+                <tr>
+                  <th className="px-6 py-4 font-semibold rounded-tl-lg">Round Name</th>
+                  <th className="px-6 py-4 font-semibold">Timeline</th>
+                  <th className="px-6 py-4 font-semibold">Requirements</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold rounded-tr-lg text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {event.rounds.map((round: any) => (
+                  <tr key={round.id} className="border-b border-border hover:bg-muted/10">
+                    <td className="px-6 py-4 font-medium">
+                      {round.name}
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Round {round.roundNumber}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs">
+                        {round.startDate && <div>Start: {new Date(round.startDate).toLocaleDateString()}</div>}
+                        {round.submissionDeadline && <div className="text-red-400">Deadline: {new Date(round.submissionDeadline).toLocaleDateString()}</div>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs">
+                        {round.submissionType} <br />
+                        Max Size: {round.maxFileSizeMb}MB
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={round.status}
+                        onChange={(e) => updateRoundStatusMutation.mutate({ roundId: round.id, status: e.target.value })}
+                        disabled={updateRoundStatusMutation.isPending}
+                        className="bg-background border border-border rounded-md text-sm text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-2 cursor-pointer shadow-sm"
+                      >
+                        <option value="not_started">Not Started</option>
+                        <option value="open">Open</option>
+                        <option value="closed">Closed</option>
+                        <option value="results_published">Results Published</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Button size="sm" variant="outline" disabled title="Edit round coming soon">Edit</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-           <div className="text-muted-foreground text-center py-6 border border-dashed border-border rounded-xl">No rounds created for this event yet.</div>
+          <div className="text-muted-foreground text-center py-6 border border-dashed border-border rounded-xl">No rounds created for this event yet.</div>
         )}
       </GlassCard>
 
@@ -146,23 +146,23 @@ export default function EventRoundsPage() {
             </Button>
           )}
         </div>
-        
+
         {event.tracks && event.tracks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {event.tracks.map((track: any) => (
               <div key={track.id} className="p-4 border border-border rounded-xl bg-background flex flex-col gap-2">
-                 <h3 className="font-bold text-lg">{track.name}</h3>
-                 <p className="text-sm text-muted-foreground line-clamp-2">{track.description || "No description provided."}</p>
-                 <div className="mt-auto pt-4 flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <span>Max Teams: {track.maxTeams || 'Unlimited'}</span>
-                    <span>Max Members: {track.maxMembersPerTeam || 'Unlimited'}</span>
-                 </div>
+                <h3 className="font-bold text-lg">{track.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{track.description || "No description provided."}</p>
+                <div className="mt-auto pt-4 flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <span>Max Teams: {track.maxTeams || 'Unlimited'}</span>
+                  <span>Max Members: {track.maxMembersPerTeam || 'Unlimited'}</span>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-           <div className="text-muted-foreground text-center py-6 border border-dashed border-border rounded-xl">No tracks configured for this event.</div>
+          <div className="text-muted-foreground text-center py-6 border border-dashed border-border rounded-xl">No tracks configured for this event.</div>
         )}
       </GlassCard>
     </div>

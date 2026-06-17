@@ -1,40 +1,64 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { axiosClient } from "@/lib/axios";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2 } from "lucide-react";
+import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
+import { useState } from "react";
+
+import {
+  deleteOrganizerEvent,
+  getOrganizerEvent,
+  updateOrganizerEventStatus,
+  type EventStatus,
+} from "@/lib/api/organizer-events.api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function EventOverviewPage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params.id as string;
   const queryClient = useQueryClient();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { data: event, isLoading, isError } = useQuery({
     queryKey: ["organizerEvent", eventId],
-    queryFn: async () => {
-      const res = await axiosClient.get(`/public/events/${eventId}`);
-      return res.data.data;
-    },
+    queryFn: () => getOrganizerEvent(eventId),
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async (newStatus: string) => {
-      const res = await axiosClient.patch(`/organizer/events/${eventId}/status`, { status: newStatus });
-      return res.data;
-    },
+    mutationFn: (newStatus: EventStatus) => updateOrganizerEventStatus(eventId, newStatus),
     onSuccess: () => {
       enqueueSnackbar('Event status updated successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvents"] });
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { message?: string } } }) => {
       enqueueSnackbar(error.response?.data?.message || 'Failed to update status', { variant: 'error' });
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteOrganizerEvent(eventId),
+    onSuccess: () => {
+      enqueueSnackbar("Event deleted successfully", { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvents"] });
+      router.push("/organizer/events");
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to delete event", { variant: "error" });
+    },
   });
 
   if (isLoading) {
@@ -63,7 +87,7 @@ export default function EventOverviewPage() {
             Season {event.season} {event.year} • 
             <select
               value={event.status}
-              onChange={(e) => updateStatusMutation.mutate(e.target.value)}
+              onChange={(e) => updateStatusMutation.mutate(e.target.value as EventStatus)}
               disabled={updateStatusMutation.isPending}
               className="bg-transparent border border-border rounded-md text-sm uppercase text-blue-500 font-semibold focus:ring-blue-500 focus:border-blue-500 p-1 cursor-pointer"
             >
@@ -75,20 +99,26 @@ export default function EventOverviewPage() {
             {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
           </div>
         </div>
-        <Link href={`/organizer/events/${eventId}/edit`}>
-          <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">
-            <Settings className="h-4 w-4" />
-            Edit Event
+        <div className="flex items-center gap-2">
+          <Link href={`/organizer/events/${eventId}/edit`}>
+            <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">
+              <Settings className="h-4 w-4" />
+              Edit Event
+            </Button>
+          </Link>
+          <Button variant="destructive" className="gap-2" onClick={() => setIsDeleteOpen(true)}>
+            <Trash2 className="h-4 w-4" />
+            Delete
           </Button>
-        </Link>
+        </div>
       </div>
 
       {/* Quick Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { title: "Total Teams", value: "24", icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { title: "Submissions", value: "18", icon: FileText, color: "text-green-500", bg: "bg-green-500/10" },
-          { title: "Tracks", value: "3", icon: GitMerge, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { title: "Total Teams", value: String(event._count?.teams ?? 0), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
+          { title: "Submissions", value: String(event._count?.submissions ?? 0), icon: FileText, color: "text-green-500", bg: "bg-green-500/10" },
+          { title: "Tracks", value: String(event.tracks?.length ?? 0), icon: GitMerge, color: "text-purple-500", bg: "bg-purple-500/10" },
           { title: "Prize Pool", value: "🏆", icon: Trophy, color: "text-orange-500", bg: "bg-orange-500/10" },
         ].map((stat, i) => (
           <motion.div
@@ -168,6 +198,35 @@ export default function EventOverviewPage() {
           </GlassCard>
         </div>
       </div>
+
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete event</DialogTitle>
+            <DialogDescription>
+              This will permanently delete {event.name}. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={deleteMutation.isPending}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

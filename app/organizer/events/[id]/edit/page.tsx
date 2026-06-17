@@ -1,11 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import EventForm from "../../components/event-form";
+import { getOrganizerEvent } from "@/lib/api/organizer-events.api";
 
 export default function EditEventPage() {
     const params = useParams();
@@ -13,10 +13,7 @@ export default function EditEventPage() {
 
     const { data: event, isLoading, isError } = useQuery({
         queryKey: ['organizerEvent', eventId],
-        queryFn: async () => {
-            const res = await axiosClient.get(`/public/events/${eventId}`);
-            return res.data.data;
-        },
+        queryFn: () => getOrganizerEvent(eventId),
     });
 
     if (isLoading) {

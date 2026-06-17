@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { axiosClient } from "@/lib/axios";
+import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 
 function CallbackContent() {
@@ -47,13 +48,8 @@ function CallbackContent() {
 
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
 
-        // Redirect based on role
         setTimeout(() => {
-          if (user.role === "admin" || user.role === "organizer") {
-            router.push("/organizer/events");
-          } else {
-            router.push("/home");
-          }
+          router.push(getRoleHomePath(user.role));
         }, 1000);
       })
       .catch(err => {

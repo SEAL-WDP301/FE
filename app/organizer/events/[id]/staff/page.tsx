@@ -98,13 +98,15 @@ export default function EventStaffPage() {
     });
   };
 
-  // Filter stakeholders
+  // Filter stakeholders and judges that can be assigned to judge rounds
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stakeholders = users?.filter((u: any) => u.role === 'stakeholder') || [];
+  const staffUsers = users?.filter((u: any) => u.role === 'stakeholder' || u.role === 'judge') || [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const judgeCandidates = staffUsers.filter((u: any) => u.role === 'stakeholder' || u.role === 'judge');
   
   // Filter for search inside modal
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredModalUsers = stakeholders.filter((u: any) => 
+  const filteredModalUsers = judgeCandidates.filter((u: any) => 
     u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -132,7 +134,7 @@ export default function EventStaffPage() {
       <GlassCard className="p-6 rounded-[24px]">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <GraduationCap className="h-5 w-5 text-blue-500" />
-          All Stakeholders
+          Staff Pool
         </h2>
         
         <div className="overflow-x-auto">
@@ -151,9 +153,9 @@ export default function EventStaffPage() {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                   </td>
                 </tr>
-              ) : stakeholders.length > 0 ? (
+              ) : staffUsers.length > 0 ? (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                stakeholders.map((user: any) => {
+                staffUsers.map((user: any) => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const judgeAssignments = allJudgeAssignments.filter((ja: any) => ja.judgeId === user.id);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,7 +214,7 @@ export default function EventStaffPage() {
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground">
-                    No stakeholders found in the system.
+                    No stakeholder or judge accounts found in the system.
                   </td>
                 </tr>
               )}
@@ -227,18 +229,18 @@ export default function EventStaffPage() {
           <DialogHeader>
             <DialogTitle>Assign Judge</DialogTitle>
             <DialogDescription>
-              Select a stakeholder to act as a judge for a specific round.
+              Select a stakeholder or judge account to act as a judge for a specific round.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Search Stakeholder</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Search Staff</label>
               <div className="relative mb-2">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                  <input 
                     type="text" 
-                    placeholder="Search by name or email..." 
+                    placeholder="Search by name or email..."
                     className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -293,7 +295,7 @@ export default function EventStaffPage() {
                     // Show all rounds if no track selected
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     event?.tracks?.flatMap((t: any) => t.rounds || []).map((round: any) => (
-                       <option key={round.id} value={round.id}>{round.name} ({event.tracks.find((tr:any)=>tr.id === round.trackId)?.name})</option>
+                       <option key={round.id} value={round.id}>{round.name} ({event.tracks.find((tr: { id: number; name?: string }) => tr.id === round.trackId)?.name})</option>
                     ))
                  )}
                </select>

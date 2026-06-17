@@ -9,6 +9,7 @@ import { Topbar } from "@/components/layout/dashboard/topbar";
 import { ProfileChecker } from "@/components/layout/public/profile-checker";
 import { Sidebar } from "@/components/layout/dashboard/sidebar";
 import HomeHeader from "@/components/layout/dashboard/home-header";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -27,6 +28,7 @@ export default function StudentLayout({
     const hideSidebar = isWorkspace || isProfile;
 
     return (
+        <RoleGuard allowedRoles={["student"]}>
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
                 {/* Sidebar */}
@@ -54,5 +56,6 @@ export default function StudentLayout({
                 </div>
             </div>
         </div>
+        </RoleGuard>
     );
 }

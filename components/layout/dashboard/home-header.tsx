@@ -73,7 +73,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                     ) : user && !isError ? (
                         <div className="flex items-center gap-3">
                             {user.role === 'stakeholder' ? (
-                                <Link href="/mentor/dashboard">
+                                <Link href="/mentor">
                                     <Button variant="outline" size="sm" className="hidden sm:flex border-purple-500/30 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 dark:text-purple-400">
                                         Stakeholder Workspace
                                     </Button>

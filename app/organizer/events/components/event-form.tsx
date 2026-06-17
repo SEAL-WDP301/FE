@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,10 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+    createOrganizerEvent,
+    updateOrganizerEvent,
+    type OrganizerEvent,
+    type OrganizerEventPayload,
+} from "@/lib/api/organizer-events.api";
 
 const createEventSchema = (isEdit: boolean) => z.object({
     name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -30,22 +35,22 @@ const createEventSchema = (isEdit: boolean) => z.object({
     prizeHonorable: z.string().optional(),
     tracks: z.array(z.object({
         id: z.number().optional(),
-        _count: z.any().optional(),
+        _count: z.object({ teams: z.number().optional() }).optional(),
         name: z.string().min(1, "Track name is required"),
         description: z.string().optional(),
         maxTeams: z.union([z.coerce.number().int().min(1, "Must be >= 1").max(1000, "Max 1000 teams"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
         maxMembersPerTeam: z.union([z.coerce.number().int().min(1, "Must be >= 1").max(20, "Max 20 members"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
-    })).min(1, "At least one track is required").default([{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }] as any),
+    })).min(1, "At least one track is required").default([{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }]),
     rounds: z.array(z.object({
         id: z.number().optional(),
-        _count: z.any().optional(),
+        _count: z.object({ submissions: z.number().optional() }).optional(),
         roundNumber: z.coerce.number().int().min(1, "Must be >= 1"),
         name: z.string().min(1, "Round name is required"),
         submissionType: z.enum(["github_link", "file"]),
         submissionDeadline: z.string().optional(),
         maxFileSizeMb: z.coerce.number().int().min(1, "Must be >= 1").max(500, "Max 500MB").default(20),
         isTrackSpecific: z.boolean().default(true),
-    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }] as any)
+    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }])
 }).superRefine((data, ctx) => {
     const now = new Date();
 
@@ -106,7 +111,7 @@ const createEventSchema = (isEdit: boolean) => z.object({
 type EventFormValues = z.infer<ReturnType<typeof createEventSchema>>;
 
 interface EventFormProps {
-    initialData?: Partial<EventFormValues> & { id?: number };
+    initialData?: OrganizerEvent;
 }
 
 export default function EventForm({ initialData }: EventFormProps) {
@@ -127,8 +132,13 @@ export default function EventForm({ initialData }: EventFormProps) {
         prize2nd: initialData?.prize2nd || "",
         prize3rd: initialData?.prize3rd || "",
         prizeHonorable: initialData?.prizeHonorable || "",
-        tracks: initialData?.tracks || [{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }],
-        rounds: initialData?.rounds?.map((r: any) => ({
+        tracks: initialData?.tracks?.map((track) => ({
+            ...track,
+            description: track.description || "",
+            maxTeams: track.maxTeams ?? 50,
+            maxMembersPerTeam: track.maxMembersPerTeam ?? 4,
+        })) || [{ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 }],
+        rounds: initialData?.rounds?.map((r) => ({
             ...r,
             submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : "",
             maxFileSizeMb: r.maxFileSizeMb || 20,
@@ -139,19 +149,19 @@ export default function EventForm({ initialData }: EventFormProps) {
     const eventSchema = useMemo(() => createEventSchema(isEdit), [isEdit]);
 
     const form = useForm<EventFormValues>({
-        resolver: zodResolver(eventSchema) as any,
+        resolver: zodResolver(eventSchema) as Resolver<EventFormValues>,
         defaultValues,
     });
 
-    const watchedStatus = form.watch("status");
-    const watchedRegistrationDeadline = form.watch("registrationDeadline");
+    const watchedStatus = useWatch({ control: form.control, name: "status" });
+    const watchedRegistrationDeadline = useWatch({ control: form.control, name: "registrationDeadline" });
 
     const canModifyStructure = !isEdit || (
         watchedStatus === "draft" && 
         (!watchedRegistrationDeadline || new Date(watchedRegistrationDeadline) > new Date())
     );
 
-    const control = form.control as any;
+    const control = form.control;
 
     const { fields: trackFields, append: appendTrack, remove: removeTrack } = useFieldArray({
         control: form.control,
@@ -165,8 +175,9 @@ export default function EventForm({ initialData }: EventFormProps) {
 
     const handleRemoveTrack = (index: number) => {
         const track = form.getValues(`tracks.${index}`);
-        if (track.id && track._count?.teams > 0) {
-            if (!window.confirm(`Warning: This track currently has ${track._count.teams} participating teams.\nDelete it ưill PERMANENTLY REMOVE all associated teams and submisions.\nAre you sure to delete?`)) {
+        const teamCount = track._count?.teams ?? 0;
+        if (track.id && teamCount > 0) {
+            if (!window.confirm(`Warning: This track currently has ${teamCount} participating teams.\nDelete it will PERMANENTLY REMOVE all associated teams and submissions.\nAre you sure to delete?`)) {
                 return;
             }
         }
@@ -175,8 +186,9 @@ export default function EventForm({ initialData }: EventFormProps) {
 
     const handleRemoveRound = (index: number) => {
         const round = form.getValues(`rounds.${index}`);
-        if (round.id && round._count?.submissions > 0) {
-            if (!window.confirm(`Warning: This round currently has ${round._count.submissions} submissions.\nThe deletion will PERMANENTLY DELETE all submissions and examiner assignments.\nAre you sure to delete?`)) {
+        const submissionCount = round._count?.submissions ?? 0;
+        if (round.id && submissionCount > 0) {
+            if (!window.confirm(`Warning: This round currently has ${submissionCount} submissions.\nThe deletion will PERMANENTLY DELETE all submissions and examiner assignments.\nAre you sure to delete?`)) {
                 return;
             }
         }
@@ -186,7 +198,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const onSubmit = async (data: EventFormValues) => {
         setIsLoading(true);
         try {
-            const payload = {
+            const payload: OrganizerEventPayload = {
                 ...data,
                 registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
                 startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
@@ -210,17 +222,18 @@ export default function EventForm({ initialData }: EventFormProps) {
             };
 
             if (isEdit && initialData?.id) {
-                await axiosClient.put(`/organizer/events/${initialData.id}`, payload);
+                await updateOrganizerEvent(initialData.id, payload);
                 enqueueSnackbar("Event updated successfully", { variant: "success" });
                 router.push(`/organizer/events/${initialData.id}`);
             } else {
-                const res = await axiosClient.post("/organizer/events", payload);
+                const event = await createOrganizerEvent(payload);
                 enqueueSnackbar("Event created successfully", { variant: "success" });
-                router.push(`/organizer/events/${res.data.data.id}`);
+                router.push(`/organizer/events/${event.id}`);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Event form error", error);
-            const errData = error.response?.data?.errors || error.response?.data?.message;
+            const apiError = error as { response?: { data?: { errors?: string[]; message?: string } } };
+            const errData = apiError.response?.data?.errors || apiError.response?.data?.message;
             let errorMessage = "Failed to save event";
             
             if (Array.isArray(errData)) {
@@ -246,7 +259,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-8 pb-32" suppressHydrationWarning>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-32" suppressHydrationWarning>
                 
                 {/* GENERAL INFORMATION */}
                 <motion.div custom={0} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">

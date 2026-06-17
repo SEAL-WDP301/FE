@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
 import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
+import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 
@@ -48,13 +49,11 @@ export default function LoginPage() {
       // Update global user state
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
-      // Redirect based on role
       const role = res.data?.data?.user?.role;
-      if (role === "admin" || role === "organizer") {
-        router.push("/organizer/events");
-      } else {
-        router.push("/home");
-      }
+      const redirectTo = getSafeRedirectPath(
+        new URLSearchParams(window.location.search).get("redirect")
+      );
+      router.push(redirectTo ?? getRoleHomePath(role));
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)
@@ -143,4 +142,9 @@ export default function LoginPage() {
       </div>
     </AuthCard>
   );
+}
+
+function getSafeRedirectPath(path: string | null) {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
+  return path;
 }

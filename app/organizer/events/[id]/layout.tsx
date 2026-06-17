@@ -11,7 +11,8 @@ import {
   Settings,
   ArrowLeft,
   GraduationCap,
-  FileText
+  FileText,
+  ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export default function EventDashboardLayout({
     { name: "Mentors & Judges", href: `${baseUrl}/staff`, icon: GraduationCap },
     { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
     { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
+
     { name: "Settings", href: `${baseUrl}/settings`, icon: Settings },
   ];
 

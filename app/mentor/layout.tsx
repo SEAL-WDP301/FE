@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { MentorSidebar } from "./_components/mentor-sidebar";
 import { Topbar } from "@/components/layout/dashboard/topbar";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 interface MentorLayoutProps {
     children: React.ReactNode;
@@ -12,6 +13,7 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
+        <RoleGuard allowedRoles={["stakeholder"]}>
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
                 <MentorSidebar
@@ -29,5 +31,6 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
 
             </div>
         </div>
+        </RoleGuard>
     );
 }
