@@ -41,13 +41,11 @@ const navItems = [
         label: "Feedback",
         href: "/mentor/feedback",
         icon: MessageSquareText,
-        badge: "7",
     },
     {
         label: "Submissions Review",
         href: "/mentor/submissions",
         icon: FileCheck2,
-        badge: "4",
     },
     {
         label: "Announcements",

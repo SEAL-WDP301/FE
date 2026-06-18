@@ -1,6 +1,9 @@
 import { cn } from "@/lib/utils";
 
-import type { FeedbackPriority, RiskLevel, SessionStatus, TeamStatus } from "../mock-data";
+export type RiskLevel = "Low" | "Medium" | "High";
+export type TeamStatus = "On Track" | "Need Support" | "At Risk" | "Inactive";
+export type SessionStatus = "Scheduled" | "Completed" | "Missed" | "Cancelled";
+export type FeedbackPriority = "Low" | "Medium" | "High" | "Critical";
 
 const riskStyles: Record<RiskLevel, string> = {
     Low: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
