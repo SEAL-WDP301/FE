@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
 import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { TeamDetailsDialog } from "./team-details-dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamsTab({ event }: { event: any }) {
