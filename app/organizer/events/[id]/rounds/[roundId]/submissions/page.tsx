@@ -11,8 +11,8 @@ import { Download, Loader2, ExternalLink } from "lucide-react";
 export default function EventSubmissionsPage() {
   const params = useParams();
   const eventId = params.id as string;
+  const roundId = params.roundId as string;
   const [selectedTrackId, setSelectedTrackId] = useState<number | "">("");
-  const [selectedRoundId, setSelectedRoundId] = useState<number | "">("");
 
   // Fetch event to get tracks and rounds for filters
   const { data: event } = useQuery({
@@ -25,12 +25,12 @@ export default function EventSubmissionsPage() {
 
   // Fetch Submissions
   const { data: submissions, isLoading } = useQuery({
-    queryKey: ["organizerSubmissions", eventId, selectedTrackId, selectedRoundId],
+    queryKey: ["organizerSubmissions", eventId, selectedTrackId, roundId],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedTrackId) params.append("trackId", selectedTrackId.toString());
-      if (selectedRoundId) params.append("roundId", selectedRoundId.toString());
-      const res = await axiosClient.get(`/organizer/events/${eventId}/submissions?${params.toString()}`);
+      const queryParams = new URLSearchParams();
+      if (selectedTrackId) queryParams.append("trackId", selectedTrackId.toString());
+      if (roundId) queryParams.append("roundId", roundId);
+      const res = await axiosClient.get(`/organizer/events/${eventId}/submissions?${queryParams.toString()}`);
       return res.data.data;
     },
   });
@@ -57,7 +57,6 @@ export default function EventSubmissionsPage() {
             value={selectedTrackId}
             onChange={(e) => {
               setSelectedTrackId(e.target.value ? Number(e.target.value) : "");
-              setSelectedRoundId("");
             }}
             className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"
           >
@@ -65,19 +64,6 @@ export default function EventSubmissionsPage() {
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {event?.tracks?.map((track: any) => (
               <option key={track.id} value={track.id}>{track.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedRoundId}
-            onChange={(e) => setSelectedRoundId(e.target.value ? Number(e.target.value) : "")}
-            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"
-            disabled={!selectedTrackId}
-          >
-            <option value="">All Rounds</option>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {event?.tracks?.find((t: any) => t.id === selectedTrackId)?.rounds?.map((round: any) => (
-              <option key={round.id} value={round.id}>{round.name}</option>
             ))}
           </select>
         </div>
