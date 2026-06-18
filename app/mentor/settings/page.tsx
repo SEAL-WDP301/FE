@@ -1,78 +1,91 @@
-import { Camera, Lock, Mail, ShieldCheck } from "lucide-react";
+"use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { enqueueSnackbar } from "notistack";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getMentorProfile, updateMentorProfile } from "@/lib/api/mentor.api";
 
 import { MentorPageHeader } from "../_components/mentor-page-header";
-import { mentorProfile } from "../mock-data";
+import { MentorErrorState, MentorLoadingState } from "../_components/mentor-query-state";
 
 export default function MentorSettingsPage() {
-    return (
-        <div className="mx-auto max-w-[1200px] space-y-6">
-            <MentorPageHeader title="Mentor Settings" subtitle="Manage profile, expertise, availability, notifications, and account security." />
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
+  const [form, setForm] = useState({ jobTitle: "", organization: "", experience: "", achievements: "", bio: "" });
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-                <main className="space-y-5">
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Profile Settings</h2>
-                        <div className="mt-5 flex flex-col gap-5 md:flex-row">
-                            <div>
-                                <Avatar className="h-24 w-24 border border-orange-500/25"><AvatarFallback className="text-2xl">{mentorProfile.initials}</AvatarFallback></Avatar>
-                                <Button variant="soft" className="mt-4 rounded-2xl"><Camera className="h-4 w-4" />Upload</Button>
-                            </div>
-                            <div className="grid flex-1 gap-4 md:grid-cols-2">
-                                <Input defaultValue={mentorProfile.name} className="h-11 rounded-2xl border-border bg-muted/40" />
-                                <Input defaultValue={mentorProfile.email} className="h-11 rounded-2xl border-border bg-muted/40" />
-                                <Textarea defaultValue="Mentor focused on scalable backend systems and practical architecture." className="min-h-28 rounded-2xl border-border bg-muted/40 md:col-span-2" />
-                            </div>
-                        </div>
-                    </GlassCard>
+  useEffect(() => {
+    if (!query.data) return;
+    const profile = query.data.stakeholderProfile;
+    // Initialize the editable form after the profile query resolves.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm({
+      jobTitle: profile?.jobTitle || "",
+      organization: profile?.organization || profile?.organizationName || "",
+      experience: profile?.experience || "",
+      achievements: profile?.achievements || "",
+      bio: profile?.bio || "",
+    });
+  }, [query.data]);
 
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Expertise Areas</h2>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {mentorProfile.expertise.map((tag) => <Badge key={tag}>{tag}</Badge>)}
-                            {["Fintech", "Education", "DevOps"].map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}
-                        </div>
-                    </GlassCard>
+  const mutation = useMutation({
+    mutationFn: updateMentorProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mentorProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      enqueueSnackbar("Profile updated successfully", { variant: "success" });
+    },
+    onError: () => enqueueSnackbar("Failed to update profile", { variant: "error" }),
+  });
 
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Availability Schedule</h2>
-                        <div className="mt-5 grid gap-3 md:grid-cols-2">
-                            {["Monday 7PM - 10PM", "Wednesday 8PM - 10PM", "Friday 7PM - 9PM", "Saturday 2PM - 5PM"].map((slot) => (
-                                <div key={slot} className="rounded-2xl border border-border bg-muted/40 p-4 text-sm text-foreground">{slot}</div>
-                            ))}
-                        </div>
-                    </GlassCard>
-                </main>
+  if (query.isLoading) return <MentorLoadingState />;
+  if (query.isError || !query.data) return <MentorErrorState />;
 
-                <aside className="space-y-5">
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Notification Settings</h2>
-                        <div className="mt-4 space-y-3">
-                            {["Email notifications", "Session reminders", "Team alerts"].map((item) => (
-                                <div key={item} className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 p-3">
-                                    <span className="text-sm text-foreground">{item}</span>
-                                    <span className="h-6 w-11 rounded-full bg-orange-500/25 p-0.5"><span className="block h-5 w-5 translate-x-5 rounded-full bg-orange-400" /></span>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
+  const avatarUrl = query.data.avatarUrl || query.data.avatar_url || undefined;
+  const initial = query.data.name?.charAt(0).toUpperCase() || "?";
 
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Account Settings</h2>
-                        <div className="mt-4 grid gap-3">
-                            <Button variant="outline" className="justify-start rounded-2xl border-border bg-muted/40"><Lock className="h-4 w-4" />Change Password</Button>
-                            <Button variant="outline" className="justify-start rounded-2xl border-border bg-muted/40"><ShieldCheck className="h-4 w-4" />Security Settings</Button>
-                            <Button variant="outline" className="justify-start rounded-2xl border-border bg-muted/40"><Mail className="h-4 w-4" />Linked Accounts</Button>
-                        </div>
-                    </GlassCard>
-                </aside>
-            </div>
+  return (
+    <div className="mx-auto max-w-[1000px] space-y-6">
+      <MentorPageHeader title="Mentor Settings" subtitle="Update the stakeholder profile stored by the backend." />
+      <GlassCard className="rounded-[24px] bg-card p-6">
+        <div className="flex flex-col gap-6 md:flex-row">
+          <Avatar className="h-24 w-24">
+            {avatarUrl ? <AvatarImage src={avatarUrl} alt={query.data.name || "Mentor"} /> : null}
+            <AvatarFallback className="text-2xl">{initial}</AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 gap-4 md:grid-cols-2">
+            <Input value={query.data.name || ""} disabled aria-label="Name" />
+            <Input value={query.data.email} disabled aria-label="Email" />
+            {(["jobTitle", "organization", "experience", "achievements"] as const).map((field) => (
+              <Input
+                key={field}
+                value={form[field]}
+                placeholder={field}
+                onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.value }))}
+              />
+            ))}
+            <Textarea
+              value={form.bio}
+              placeholder="Biography"
+              className="min-h-32 md:col-span-2"
+              onChange={(event) => setForm((current) => ({ ...current, bio: event.target.value }))}
+            />
+            <Button
+              variant="orange"
+              className="md:col-span-2"
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate(form)}
+            >
+              {mutation.isPending ? "Saving..." : "Save profile"}
+            </Button>
+          </div>
         </div>
-    );
+      </GlassCard>
+    </div>
+  );
 }

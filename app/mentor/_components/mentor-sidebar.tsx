@@ -14,8 +14,6 @@ import {
     Video,
 } from "lucide-react";
 
-import { ThemeToggle } from "@/components/layout/dashboard/theme-toggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Logo from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
@@ -41,13 +39,11 @@ const navItems = [
         label: "Feedback",
         href: "/mentor/feedback",
         icon: MessageSquareText,
-        badge: "7",
     },
     {
         label: "Submissions Review",
         href: "/mentor/submissions",
         icon: FileCheck2,
-        badge: "4",
     },
     {
         label: "Announcements",
@@ -123,22 +119,7 @@ export function MentorSidebar({
                                 <Icon className="h-5 w-5 shrink-0" />
 
                                 {!collapsed && (
-                                    <>
-                                        <span className="flex-1 truncate">{item.label}</span>
-
-                                        {item.badge ? (
-                                            <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-black">
-                                                {item.badge}
-                                            </span>
-                                        ) : null}
-                                    </>
-                                )}
-
-                                {/* Badge when collapsed */}
-                                {collapsed && item.badge && (
-                                    <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-black">
-                                        {item.badge}
-                                    </span>
+                                    <span className="flex-1 truncate">{item.label}</span>
                                 )}
                             </Link>
                         );

@@ -1,82 +1,67 @@
-import { Filter, MessageSquarePlus, Search, Video } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
-
+import { getAssignedMentorTeams, getMentorProfile } from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "../_components/mentor-page-header";
-import { ProgressBar } from "../_components/progress-bar";
-import { RiskBadge, TeamStatusBadge } from "../_components/status-badges";
-import { teams } from "../mock-data";
+import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "../_components/mentor-query-state";
+
+function initials(name: string) {
+  return name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
 
 export default function MentorTeamsPage() {
-    return (
-        <div className="mx-auto max-w-[1500px] space-y-6">
-            <MentorPageHeader title="My Teams" subtitle="Search, filter, and support your assigned hackathon teams." />
+  const [search, setSearch] = useState("");
+  const query = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
+  const teams = getAssignedMentorTeams(query.data);
+  const filteredTeams = useMemo(() => {
+    const value = search.trim().toLowerCase();
+    return value ? teams.filter((team) =>
+      [team.name, team.event?.name, team.track?.name, team.leader?.name, team.leader?.email]
+        .some((field) => field?.toLowerCase().includes(value))
+    ) : teams;
+  }, [search, teams]);
 
-            <GlassCard className="rounded-[22px] bg-card p-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="relative xl:max-w-md xl:flex-1">
-                        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Search team, event, leader..." className="h-11 rounded-2xl border-border bg-muted/40 pl-11" />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {["Event", "Round", "Status", "Risk Level"].map((filter) => (
-                            <Button key={filter} variant="outline" className="rounded-2xl border-border bg-muted/40">
-                                <Filter className="h-4 w-4" />
-                                {filter}
-                            </Button>
-                        ))}
-                    </div>
-                </div>
-            </GlassCard>
+  if (query.isLoading) return <MentorLoadingState />;
+  if (query.isError) return <MentorErrorState />;
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {teams.map((team) => (
-                    <GlassCard key={team.name} className="rounded-[24px] bg-card p-5 hover:-translate-y-1">
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-14 w-14 border border-orange-500/25">
-                                    <AvatarFallback>{team.avatar}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-foreground">{team.name}</h2>
-                                    <p className="text-sm text-muted-foreground">{team.project}</p>
-                                </div>
-                            </div>
-                            <RiskBadge risk={team.risk} />
-                        </div>
-
-                        <div className="mt-5 space-y-2 text-sm text-muted-foreground">
-                            <p>Event: <span className="text-foreground">{team.event}</span></p>
-                            <p>Leader: <span className="text-foreground">{team.leader}</span></p>
-                            <p>Members: <span className="text-foreground">{team.members}</span></p>
-                            <p>Last activity: <span className="text-foreground">{team.lastActivity}</span></p>
-                        </div>
-
-                        <div className="mt-5">
-                            <div className="mb-2 flex justify-between text-sm">
-                                <TeamStatusBadge status={team.status} />
-                                <span className="font-semibold text-primary">{team.progress}%</span>
-                            </div>
-                            <ProgressBar value={team.progress} />
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap gap-2">
-                            <Button variant="orange" size="sm" className="rounded-xl">View Team</Button>
-                            <Button variant="soft" size="sm" className="rounded-xl">
-                                <MessageSquarePlus className="h-4 w-4" />
-                                Add Feedback
-                            </Button>
-                            <Button variant="ghost" size="sm" className="rounded-xl text-primary hover:bg-orange-500/10">
-                                <Video className="h-4 w-4" />
-                                Schedule
-                            </Button>
-                        </div>
-                    </GlassCard>
-                ))}
-            </section>
+  return (
+    <div className="mx-auto max-w-[1500px] space-y-6">
+      <MentorPageHeader title="My Teams" subtitle="Teams currently assigned to your stakeholder account." />
+      <GlassCard className="rounded-[22px] bg-card p-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search team, event, track, leader..." className="h-11 rounded-2xl pl-11" />
         </div>
-    );
+      </GlassCard>
+      {filteredTeams.length === 0 ? (
+        <MentorEmptyState title="No assigned teams" description="No team assignment returned by the current user profile." />
+      ) : (
+        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredTeams.map((team) => (
+            <GlassCard key={team.id} className="rounded-[24px] bg-card p-5">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-14 w-14"><AvatarFallback>{initials(team.name)}</AvatarFallback></Avatar>
+                <div><h2 className="text-lg font-semibold">{team.name}</h2><p className="text-sm text-muted-foreground">{team.track?.name || "No track"}</p></div>
+              </div>
+              <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+                <p>Event: <span className="text-foreground">{team.event?.name || "N/A"}</span></p>
+                <p>Leader: <span className="text-foreground">{team.leader?.name || team.leader?.email || "N/A"}</span></p>
+                <p>Members: <span className="text-foreground">{team.members?.length || 0}</span></p>
+                <p>Status: <span className="capitalize text-foreground">{team.status || "N/A"}</span></p>
+              </div>
+              <Button asChild variant="orange" size="sm" className="mt-5 rounded-xl"><Link href={`/mentor/team-detail?teamId=${team.id}`}>View Team</Link></Button>
+            </GlassCard>
+          ))}
+        </section>
+      )}
+    </div>
+  );
 }
