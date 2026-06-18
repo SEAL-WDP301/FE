@@ -22,7 +22,7 @@ interface UserProfile {
 const roleHomePath: Record<AppRole, string> = {
   admin: "/organizer/events",
   organizer: "/organizer/events",
-  student: "/student/dashboard",
+  student: "/home",
   stakeholder: "/mentor",
   judge: "/judge/dashboard",
 };

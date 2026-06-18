@@ -128,10 +128,12 @@ export default function LoginPage() {
               Google
             </Button>
           </a>
-          <Button variant="authSecondary" size="auth" type="button" className="font-medium">
-            <span className="size-4 rounded-full border-[0.4rem] border-white" />
-            GitHub
-          </Button>
+          <a href="http://localhost:3000/api/auth/github" className="block w-full">
+            <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
+              <span className="size-4 rounded-full border-[0.4rem] border-white" />
+              GitHub
+            </Button>
+          </a>
         </div>
 
         <AuthFooterLink
