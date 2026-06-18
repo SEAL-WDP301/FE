@@ -293,7 +293,19 @@ export default function TeamsTab({ event }: { event: any }) {
                                         {team.members?.length || 0} / {team.track?.maxMembersPerTeam || '∞'}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {team.mentorAssignments?.[0]?.mentor?.name || <span className="text-muted-foreground italic">None</span>}
+                                        {team.mentorAssignments && team.mentorAssignments.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {team.mentorAssignments.map((ma: any) => (
+                                                    <span key={ma.mentorId} className="px-2 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded text-xs font-semibold whitespace-nowrap">
+                                                        {ma.mentor?.name || 'Unknown'}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="px-2 py-1 bg-muted border border-border text-muted-foreground rounded text-xs font-medium whitespace-nowrap">
+                                                Unassigned
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">
                                         {team.createdAt ? new Date(team.createdAt).toLocaleDateString() : 'N/A'}

@@ -30,7 +30,7 @@ export default function EventDashboardLayout({
     { name: "Overview", href: `${baseUrl}/overview`, icon: LayoutDashboard },
     { name: "Tracks & Rounds", href: `${baseUrl}/rounds`, icon: GitMerge },
     { name: "Teams", href: `${baseUrl}/teams`, icon: Users },
-    { name: "Mentors & Judges", href: `${baseUrl}/staff`, icon: GraduationCap },
+    { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
     { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
     { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
 
