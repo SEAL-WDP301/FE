@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Plus, GraduationCap, Trash2, Loader2, Search, Target, LayoutDashboard, ChevronRight, Eye } from "lucide-react";
-import { TeamDetailsDialog } from "../components/team-details-dialog";
+import { TeamDetailsDialog } from "../../../components/team-details-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

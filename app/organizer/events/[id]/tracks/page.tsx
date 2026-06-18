@@ -486,27 +486,23 @@ export default function EventRoundsPage() {
         </div>
       </div>
 
-      {!canModifyStructure && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-400">
-          Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open.
-        </div>
-      )}
-
       <GlassCard className="rounded-[24px] p-6">
         <SectionHeader
           title="Event Rounds"
           description={`${rounds.length} configured round${rounds.length === 1 ? "" : "s"}`}
           action={
-            <Button
-              type="button"
-              size="sm"
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
-              disabled={!canModifyStructure || saveStructureMutation.isPending}
-              onClick={openCreateRound}
-            >
-              <Plus className="h-4 w-4" />
-              Add Round
-            </Button>
+            <div title={!canModifyStructure ? "Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open." : undefined}>
+              <Button
+                type="button"
+                size="sm"
+                className="gap-2 bg-blue-600 hover:bg-blue-700"
+                disabled={!canModifyStructure || saveStructureMutation.isPending}
+                onClick={openCreateRound}
+              >
+                <Plus className="h-4 w-4" />
+                Add Round
+              </Button>
+            </div>
           }
         />
 
@@ -577,7 +573,10 @@ export default function EventRoundsPage() {
                         </select>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
+                        <div 
+                          className="flex justify-end gap-2"
+                          title={!canModifyStructure ? "Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open." : undefined}
+                        >
                           <Button
                             type="button"
                             variant="outline"
@@ -616,16 +615,18 @@ export default function EventRoundsPage() {
           title="Event Tracks"
           description={`${tracks.length} configured track${tracks.length === 1 ? "" : "s"}`}
           action={
-            <Button
-              type="button"
-              size="sm"
-              className="gap-2 bg-orange-600 hover:bg-orange-700"
-              disabled={!canModifyStructure || saveStructureMutation.isPending}
-              onClick={openCreateTrack}
-            >
-              <Plus className="h-4 w-4" />
-              Add Track
-            </Button>
+            <div title={!canModifyStructure ? "Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open." : undefined}>
+              <Button
+                type="button"
+                size="sm"
+                className="gap-2 bg-orange-600 hover:bg-orange-700"
+                disabled={!canModifyStructure || saveStructureMutation.isPending}
+                onClick={openCreateTrack}
+              >
+                <Plus className="h-4 w-4" />
+                Add Track
+              </Button>
+            </div>
           }
         />
 
@@ -643,7 +644,10 @@ export default function EventRoundsPage() {
                       {track.description || "No description provided."}
                     </p>
                   </div>
-                  <div className="flex shrink-0 gap-1">
+                  <div 
+                    className="flex shrink-0 gap-1"
+                    title={!canModifyStructure ? "Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open." : undefined}
+                  >
                     <Button
                       type="button"
                       variant="outline"

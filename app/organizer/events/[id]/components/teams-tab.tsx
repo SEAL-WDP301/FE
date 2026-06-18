@@ -9,9 +9,14 @@ import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } fro
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TeamDetailsDialog } from "./team-details-dialog";
 
+import { useParams } from "next/navigation";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamsTab({ event }: { event: any }) {
     const queryClient = useQueryClient();
+    const params = useParams();
+    const roundId = params?.roundId as string | undefined;
+    
     const [selectedTrackId, setSelectedTrackId] = useState<number | "all">("all");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
@@ -24,18 +29,21 @@ export default function TeamsTab({ event }: { event: any }) {
     const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
 
 
-    // Fetch Teams for the selected track
+    // Fetch Teams for the selected track and round
     const { data: teams, isLoading } = useQuery({
-        queryKey: ['organizerTeams', event.id, selectedTrackId],
+        queryKey: ['organizerTeams', event.id, selectedTrackId, roundId],
         queryFn: async () => {
-            const url = selectedTrackId === "all" 
-                ? `/organizer/teams/events/${event.id}` 
-                : `/organizer/teams/events/${event.id}?trackId=${selectedTrackId}`;
-            const res = await axiosClient.get(url);
+            let url = `/organizer/teams/events/${event.id}?`;
+            if (selectedTrackId !== "all") url += `trackId=${selectedTrackId}&`;
+            if (roundId) url += `roundId=${roundId}&`;
+            
+            const finalUrl = url.endsWith('?') ? url.slice(0, -1) : url;
+            const res = await axiosClient.get(finalUrl);
             return res.data.data;
         },
         enabled: true,
     });
+
 
 
     // Update Team Status Mutation
@@ -48,12 +56,12 @@ export default function TeamsTab({ event }: { event: any }) {
         },
         onSuccess: () => {
             enqueueSnackbar('Team status updated successfully', { variant: 'success' });
-            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId, roundId] });
             setTeamToEliminate(null);
             setEliminationReason("");
             // Update selected team details if open
             if (selectedTeamForDetails) {
-                queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
+                queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId, roundId] });
             }
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

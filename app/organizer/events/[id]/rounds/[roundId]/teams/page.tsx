@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import TeamsTab from "../components/teams-tab";
+import TeamsTab from "../../../components/teams-tab";
 
 export default function EventTeamsPage() {
   const params = useParams();

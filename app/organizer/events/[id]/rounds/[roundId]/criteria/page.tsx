@@ -254,12 +254,6 @@ export default function EventCriteriaPage() {
         </Button>
       </div>
 
-      {!canManageRubrics && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-400">
-          Rubrics are read-only because this event is <strong>{event.status}</strong>. Only draft events can add, edit, or delete grading criteria.
-        </div>
-      )}
-
       {!hasRequiredConfiguration && (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
           At least one round and one track must be configured before a rubric can be added.
@@ -366,7 +360,10 @@ export default function EventCriteriaPage() {
                         <td className="px-4 py-4 text-center">{rubric.maxScore}</td>
                         <td className="px-4 py-4 text-center">{rubric.weight}</td>
                         <td className="px-4 py-4">
-                          <div className="flex justify-end gap-2">
+                          <div 
+                            className="flex justify-end gap-2"
+                            title={!canManageRubrics ? `Rubrics are read-only because this event is ${event.status}. Only draft events can add, edit, or delete grading criteria.` : undefined}
+                          >
                             <Button
                               type="button"
                               variant="outline"
@@ -540,12 +537,13 @@ export default function EventCriteriaPage() {
               </div>
             )}
 
-            <Button
-              type="button"
-              className="w-full"
-              disabled={!canSubmit}
-              onClick={() => saveRubricMutation.mutate()}
-            >
+            <div title={!canManageRubrics ? `Rubrics are read-only because this event is ${event.status}. Only draft events can add, edit, or delete grading criteria.` : undefined}>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!canSubmit}
+                onClick={() => saveRubricMutation.mutate()}
+              >
               {saveRubricMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : editingRubricId ? (
@@ -555,6 +553,7 @@ export default function EventCriteriaPage() {
               )}
               {editingRubricId ? "Update Rubric" : "Add Rubric"}
             </Button>
+            </div>
 
             {!rubricDraft.roundId || !rubricDraft.trackId ? (
               <p className="text-center text-xs text-amber-600 dark:text-amber-400">
