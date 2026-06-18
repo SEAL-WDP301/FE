@@ -20,6 +20,7 @@ export interface OrganizerRoundInput {
   submissionDeadline?: string;
   maxFileSizeMb?: number;
   isTrackSpecific: boolean;
+  trackId?: number | null;
 }
 
 export interface OrganizerEventPayload {
@@ -48,6 +49,9 @@ export interface OrganizerTrack extends OrganizerTrackInput {
 
 export interface OrganizerRound extends OrganizerRoundInput {
   id: number;
+  status?: "not_started" | "open" | "closed" | "results_published" | string;
+  startDate?: string;
+  track?: OrganizerTrack | null;
   _count?: {
     submissions?: number;
   };
@@ -55,6 +59,10 @@ export interface OrganizerRound extends OrganizerRoundInput {
 
 export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds"> {
   id: number;
+  icons?: Array<{
+    id?: number;
+    url: string;
+  }>;
   tracks?: OrganizerTrack[];
   rounds?: OrganizerRound[];
   _count?: {
