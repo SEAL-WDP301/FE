@@ -22,8 +22,6 @@ export default function TeamsTab({ event }: { event: any }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
 
-    const [isAssignMentorOpen, setIsAssignMentorOpen] = useState(false);
-    const [selectedMentorUser, setSelectedMentorUser] = useState<number | "">("");
 
     // Fetch Teams for the selected track
     const { data: teams, isLoading } = useQuery({
@@ -38,15 +36,6 @@ export default function TeamsTab({ event }: { event: any }) {
         enabled: true,
     });
 
-    // Fetch Users for mentor assignment
-    const { data: users, isLoading: isLoadingUsers } = useQuery({
-        queryKey: ["allUsers"],
-        queryFn: async () => {
-            const res = await axiosClient.get(`/users`);
-            return res.data.data;
-        },
-        enabled: isAssignMentorOpen,
-    });
 
     // Update Team Status Mutation
     const updateStatusMutation = useMutation({
@@ -72,39 +61,7 @@ export default function TeamsTab({ event }: { event: any }) {
         }
     });
 
-    // Assign Mentor Mutation
-    const assignMentorMutation = useMutation({
-        mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-            const res = await axiosClient.post(`/organizer/stakeholders/teams/${teamId}/mentors`, { stakeholderId });
-            return res.data;
-        },
-        onSuccess: () => {
-            enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });
-            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
-            setIsAssignMentorOpen(false);
-            setSelectedMentorUser("");
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (error: any) => {
-            enqueueSnackbar(error.response?.data?.message || 'Failed to assign mentor', { variant: 'error' });
-        }
-    });
 
-    // Unassign Mentor Mutation
-    const unassignMentorMutation = useMutation({
-        mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-            const res = await axiosClient.delete(`/organizer/stakeholders/teams/${teamId}/mentors/${stakeholderId}`);
-            return res.data;
-        },
-        onSuccess: () => {
-            enqueueSnackbar('Mentor unassigned successfully', { variant: 'success' });
-            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId] });
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (error: any) => {
-            enqueueSnackbar(error.response?.data?.message || 'Failed to unassign mentor', { variant: 'error' });
-        }
-    });
 
     const handleUpdateStatus = (teamId: number, status: string) => {
         if (status === 'rejected' || status === 'disqualified') {
@@ -410,186 +367,13 @@ export default function TeamsTab({ event }: { event: any }) {
                 </div>
             )}
 
-            {/* Team Details Dialog */}
-            <Dialog open={!!selectedTeamForDetails} onOpenChange={(open) => {
-                if(!open) {
-                    setSelectedTeamForDetails(null);
-                    setIsAssignMentorOpen(false);
-                }
-            }}>
-                <DialogContent className="sm:max-w-[700px] bg-card border-border max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl flex items-center gap-2">
-                            Team: <span className="text-blue-500">{currentTeamDetails?.name}</span>
-                            {currentTeamDetails?.status && (
-                                <span className="ml-2">
-                                    {getStatusBadge(currentTeamDetails.status)}
-                                </span>
-                            )}
-                        </DialogTitle>
-                        <DialogDescription>
-                            Review team members, registration details, and assign mentors.
-                        </DialogDescription>
-                    </DialogHeader>
-                    
-                    <div className="mt-4 space-y-6">
-                        {/* Leader */}
-                        <div className="p-4 border border-amber-500/30 rounded-lg bg-amber-500/5 relative overflow-hidden">
-                            <div className="absolute -top-4 -right-4 p-2 opacity-10">
-                                <Crown className="w-24 h-24 text-amber-500" />
-                            </div>
-                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                <Crown className="w-4 h-4" />
-                                Team Leader
-                            </h4>
-                            <div className="flex justify-between items-start relative z-10">
-                                <div>
-                                    <p className="font-semibold text-foreground text-base">{currentTeamDetails?.leader?.name || 'Unknown'}</p>
-                                    <p className="text-sm text-muted-foreground">{currentTeamDetails?.leader?.email}</p>
-                                    {currentTeamDetails?.leader?.studentProfile && (
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            Code: {currentTeamDetails.leader.studentProfile.studentCode} • 
-                                            {currentTeamDetails.leader.studentProfile.universityName && ` ${currentTeamDetails.leader.studentProfile.universityName}`}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="text-right mt-1">
-                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold shadow-sm">Accepted</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Members */}
-                        <div className="p-4 border border-border rounded-lg bg-muted/20">
-                            {(() => {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const otherMembers = currentTeamDetails?.members?.filter((m: any) => m.role !== 'leader') || [];
-                                return (
-                                    <>
-                                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
-                                            Members 
-                                            <span className="bg-muted px-2 py-0.5 rounded-full text-foreground">
-                                                {otherMembers.length}
-                                            </span>
-                                        </h4>
-                                        
-                                        {otherMembers.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground italic">No other members yet.</p>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                                {otherMembers.map((member: any) => (
-                                                    <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
-                                                        <div>
-                                                            <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
-                                                            <p className="text-sm text-muted-foreground">{member.user?.email}</p>
-                                                            {member.user?.studentProfile && (
-                                                                <p className="text-xs text-muted-foreground mt-1">
-                                                                    Code: {member.user.studentProfile.studentCode} • 
-                                                                    {member.user.studentProfile.universityName && ` ${member.user.studentProfile.universityName}`}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-right">
-                                                            {member.status === 'pending' ? (
-                                                                <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold whitespace-nowrap">
-                                                                    Invitation Pending
-                                                                </span>
-                                                            ) : member.status === 'accepted' ? (
-                                                                <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">
-                                                                    Accepted
-                                                                </span>
-                                                            ) : (
-                                                                <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">
-                                                                    Rejected
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </>
-                                );
-                            })()}
-                        </div>
-
-                        {/* Mentors */}
-                        <div className="p-4 border border-blue-500/20 rounded-lg bg-blue-500/5">
-                             <div className="flex justify-between items-center mb-3">
-                                <h4 className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-1.5">
-                                    <Users className="w-4 h-4" />
-                                    Mentors
-                                </h4>
-                                {!isAssignMentorOpen && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      className="h-7 text-xs gap-1 border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
-                                      onClick={() => setIsAssignMentorOpen(true)}
-                                    >
-                                        <UserPlus className="w-3 h-3" /> Assign Mentor
-                                    </Button>
-                                )}
-                             </div>
-
-                             {isAssignMentorOpen && (
-                                 <div className="mb-4 p-3 border border-border rounded bg-background flex flex-col gap-2">
-                                     <div className="text-xs font-medium text-foreground">Select a Stakeholder to Assign as Mentor</div>
-                                     <select
-                                        value={selectedMentorUser}
-                                        onChange={(e) => setSelectedMentorUser(e.target.value ? Number(e.target.value) : "")}
-                                        className="w-full bg-muted border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2"
-                                     >
-                                        <option value="">-- Choose Stakeholder --</option>
-                                        {isLoadingUsers ? (
-                                            <option disabled>Loading...</option>
-                                        ) : users?.filter((u: any) => u.role === 'stakeholder').map((u: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-                                            <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                                        ))}
-                                     </select>
-                                     <div className="flex justify-end gap-2 mt-1">
-                                         <Button size="sm" variant="ghost" onClick={() => setIsAssignMentorOpen(false)}>Cancel</Button>
-                                         <Button 
-                                            size="sm" 
-                                            disabled={!selectedMentorUser || assignMentorMutation.isPending}
-                                            onClick={() => assignMentorMutation.mutate({ teamId: currentTeamDetails.id, stakeholderId: Number(selectedMentorUser) })}
-                                         >
-                                            {assignMentorMutation.isPending ? "Assigning..." : "Assign"}
-                                         </Button>
-                                     </div>
-                                 </div>
-                             )}
-
-                             {currentTeamDetails?.mentorAssignments?.length === 0 ? (
-                                 <p className="text-sm text-muted-foreground italic">No mentors assigned.</p>
-                             ) : (
-                                 <div className="space-y-2">
-                                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                     {currentTeamDetails?.mentorAssignments?.map((assignment: any) => (
-                                         <div key={assignment.mentorId} className="flex justify-between items-center py-2 border-t border-border/50 first:border-0 first:pt-0">
-                                            <div>
-                                                <p className="font-semibold text-foreground text-sm">{assignment.mentor?.name || 'Unknown User'}</p>
-                                                <p className="text-xs text-muted-foreground">{assignment.mentor?.email}</p>
-                                            </div>
-                                            <Button 
-                                                size="sm" 
-                                                variant="ghost" 
-                                                className="h-8 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 px-2"
-                                                onClick={() => unassignMentorMutation.mutate({ teamId: currentTeamDetails.id, stakeholderId: assignment.mentorId })}
-                                                disabled={unassignMentorMutation.isPending}
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
-                                            </Button>
-                                         </div>
-                                     ))}
-                                 </div>
-                             )}
-                        </div>
-
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {/* Team Details Dialog Extracted */}
+            <TeamDetailsDialog
+                isOpen={!!selectedTeamForDetails}
+                onClose={() => setSelectedTeamForDetails(null)}
+                team={currentTeamDetails}
+                eventId={event.id}
+            />
 
             {/* Bulk Delete Confirmation Dialog */}
             <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>

@@ -6,7 +6,8 @@ import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Plus, GraduationCap, Trash2, Loader2, Search, Target, LayoutDashboard, ChevronRight } from "lucide-react";
+import { Plus, GraduationCap, Trash2, Loader2, Search, Target, LayoutDashboard, ChevronRight, Eye } from "lucide-react";
+import { TeamDetailsDialog } from "../components/team-details-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -29,6 +30,7 @@ export default function EventStakeholdersPage() {
   const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTeamIdForDetails, setSelectedTeamIdForDetails] = useState<number | null>(null);
 
   // Queries
   const { data: event } = useQuery({
@@ -167,6 +169,8 @@ export default function EventStakeholdersPage() {
     t.status === 'approved' && 
     (!t.mentorAssignments || t.mentorAssignments.length === 0)
   ) || [];
+
+  const currentTeamDetails = teams?.find((t: any) => t.id === selectedTeamIdForDetails);
 
   return (
     <div className="space-y-6">
@@ -357,12 +361,20 @@ export default function EventStakeholdersPage() {
                         <p className="font-medium">{ma.team?.name}</p>
                         <p className="text-xs text-muted-foreground">Track: {ma.team?.track?.name}</p>
                       </div>
-                      <Button 
-                        variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                        onClick={() => unassignMentorMutation.mutate({ stakeholderId: drawerUser.id, teamId: ma.teamId })}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" size="sm" className="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                          onClick={() => setSelectedTeamIdForDetails(ma.teamId)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                          onClick={() => unassignMentorMutation.mutate({ stakeholderId: drawerUser.id, teamId: ma.teamId })}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -543,6 +555,13 @@ export default function EventStakeholdersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <TeamDetailsDialog 
+        isOpen={!!selectedTeamIdForDetails}
+        onClose={() => setSelectedTeamIdForDetails(null)}
+        team={currentTeamDetails}
+        eventId={eventId}
+      />
     </div>
   );
 }
