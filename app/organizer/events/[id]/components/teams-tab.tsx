@@ -75,7 +75,7 @@ export default function TeamsTab({ event }: { event: any }) {
     // Assign Mentor Mutation
     const assignMentorMutation = useMutation({
         mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-            const res = await axiosClient.post(`/organizer/teams/${teamId}/mentors`, { stakeholderId });
+            const res = await axiosClient.post(`/organizer/stakeholders/teams/${teamId}/mentors`, { stakeholderId });
             return res.data;
         },
         onSuccess: () => {
@@ -93,7 +93,7 @@ export default function TeamsTab({ event }: { event: any }) {
     // Unassign Mentor Mutation
     const unassignMentorMutation = useMutation({
         mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-            const res = await axiosClient.delete(`/organizer/teams/${teamId}/mentors/${stakeholderId}`);
+            const res = await axiosClient.delete(`/organizer/stakeholders/teams/${teamId}/mentors/${stakeholderId}`);
             return res.data;
         },
         onSuccess: () => {

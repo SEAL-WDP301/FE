@@ -42,7 +42,7 @@ export default function EventStakeholdersPage() {
   const { data: stakeholders, isLoading: isLoadingStaff } = useQuery({
     queryKey: ["organizerStakeholders", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/events/${eventId}/stakeholders`);
+      const res = await axiosClient.get(`/organizer/stakeholders/events/${eventId}`);
       return res.data.data;
     },
   });
@@ -162,7 +162,11 @@ export default function EventStakeholdersPage() {
     });
   };
 
-  const filteredTeams = teams?.filter((t: any) => t.trackId === selectedTrack) || [];
+  const filteredTeams = teams?.filter((t: any) => 
+    t.trackId === selectedTrack && 
+    t.status === 'approved' && 
+    (!t.mentorAssignments || t.mentorAssignments.length === 0)
+  ) || [];
 
   return (
     <div className="space-y-6">
@@ -511,7 +515,7 @@ export default function EventStakeholdersPage() {
                   </button>
                 </label>
                 <div className="space-y-2 max-h-[150px] overflow-y-auto border border-border rounded-lg p-2">
-                  {filteredTeams.length === 0 && <p className="text-sm text-muted-foreground p-2">No teams in this track.</p>}
+                  {filteredTeams.length === 0 && <p className="text-sm text-muted-foreground p-2">No satisfying teams in this track.</p>}
                   {filteredTeams.map((team: any) => (
                     <label key={team.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
                       <input 
