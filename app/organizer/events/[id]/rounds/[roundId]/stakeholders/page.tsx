@@ -16,6 +16,7 @@ import { enqueueSnackbar } from "notistack";
 export default function EventStakeholdersPage() {
   const params = useParams();
   const eventId = params.id as string;
+  const roundId = params.roundId as string;
   const queryClient = useQueryClient();
 
   // Modals state
@@ -25,18 +26,19 @@ export default function EventStakeholdersPage() {
 
   // Form state
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<number | "">("");
-  const [selectedRound, setSelectedRound] = useState<number | "">("");
   const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [selectedTeamIdForDetails, setSelectedTeamIdForDetails] = useState<number | null>(null);
 
   // Queries
   const { data: event } = useQuery({
     queryKey: ["organizerEvent", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/events/${eventId}`);
+      const res = await axiosClient.get(`/public/events/${eventId}`);
       return res.data.data;
     },
   });
@@ -57,27 +59,34 @@ export default function EventStakeholdersPage() {
     },
   });
 
-  // Categorize stakeholders
-  const mentors = stakeholders?.filter((s: any) => s.mentorAssignments?.length > 0) || [];
-  const judges = stakeholders?.filter((s: any) => s.judgeAssignments?.length > 0) || [];
-  const available = stakeholders?.filter((s: any) => !s.mentorAssignments?.length && !s.judgeAssignments?.length) || [];
+  // Categorize stakeholders based on current round
+  const mentors = stakeholders?.filter((s: any) => 
+    s.mentorAssignments?.some((ma: any) => ma.team?.teamRounds?.some((tr: any) => tr.roundId === Number(roundId)))
+  ) || [];
+  const judges = stakeholders?.filter((s: any) => 
+    s.judgeAssignments?.some((ja: any) => ja.roundId === Number(roundId))
+  ) || [];
+  const available = stakeholders?.filter((s: any) => 
+    !s.mentorAssignments?.some((ma: any) => ma.team?.teamRounds?.some((tr: any) => tr.roundId === Number(roundId))) && 
+    !s.judgeAssignments?.some((ja: any) => ja.roundId === Number(roundId))
+  ) || [];
 
   // Filter for search inside modal
   const filteredModalUsers = stakeholders?.filter((u: any) => 
-    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    u.name?.toLowerCase().includes(modalSearchQuery.toLowerCase()) || 
+    u.email?.toLowerCase().includes(modalSearchQuery.toLowerCase())
   ) || [];
 
-  const roundObj = event?.rounds?.find((r: any) => r.id === selectedRound);
+  const roundObj = event?.rounds?.find((r: any) => r.id === Number(roundId));
 
   // Mutations
   const assignJudgeMutation = useMutation({
-    mutationFn: async (data: { stakeholderId: number, roundId: number, trackIds?: number[] }) => {
-      const res = await axiosClient.post(`/organizer/events/${eventId}/judges`, data);
+    mutationFn: async (data: { stakeholderIds: number[], roundId: number, trackIds?: number[] }) => {
+      const res = await axiosClient.post(`/organizer/stakeholders/events/${eventId}/judges`, data);
       return res.data;
     },
     onSuccess: () => {
-      enqueueSnackbar('Judge assigned successfully', { variant: 'success' });
+      enqueueSnackbar('Judges assigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
       setIsJudgeModalOpen(false);
       resetForms();
@@ -89,10 +98,10 @@ export default function EventStakeholdersPage() {
 
   const unassignJudgeMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
-      const res = await axiosClient.delete(`/organizer/events/${eventId}/judges/${assignmentId}`);
+      const res = await axiosClient.delete(`/organizer/stakeholders/judges/${assignmentId}`);
       return res.data;
     },
-    onSuccess: (_data, assignmentId) => {
+    onSuccess: () => {
       enqueueSnackbar('Judge unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
       if (drawerUser) {
@@ -107,13 +116,8 @@ export default function EventStakeholdersPage() {
 
   const assignMentorMutation = useMutation({
     mutationFn: async (data: { stakeholderId: number, teamIds: number[] }) => {
-      return Promise.all(
-        data.teamIds.map((teamId) =>
-          axiosClient.post(`/organizer/teams/${teamId}/mentors`, {
-            stakeholderId: data.stakeholderId,
-          })
-        )
-      );
+      const res = await axiosClient.post(`/organizer/teams/events/${eventId}/mentors/bulk-assign`, data);
+      return res.data;
     },
     onSuccess: () => {
       enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });
@@ -128,7 +132,7 @@ export default function EventStakeholdersPage() {
 
   const unassignMentorMutation = useMutation({
     mutationFn: async (data: { stakeholderId: number, teamId: number }) => {
-      const res = await axiosClient.delete(`/organizer/teams/${data.teamId}/mentors/${data.stakeholderId}`);
+      const res = await axiosClient.delete(`/organizer/stakeholders/teams/${data.teamId}/mentors/${data.stakeholderId}`);
       return res.data;
     },
     onSuccess: (data, variables) => {
@@ -146,17 +150,18 @@ export default function EventStakeholdersPage() {
 
   const resetForms = () => {
     setSelectedUser(null);
+    setSelectedUsers([]);
     setSelectedTrack("");
-    setSelectedRound("");
     setSelectedTrackIds([]);
     setSelectedTeamIds([]);
+    setModalSearchQuery("");
   };
 
   const handleAssignJudge = () => {
-    if (!selectedUser || !selectedRound) return;
+    if (selectedUsers.length === 0) return;
     assignJudgeMutation.mutate({
-      stakeholderId: selectedUser,
-      roundId: Number(selectedRound),
+      stakeholderIds: selectedUsers,
+      roundId: Number(roundId),
       trackIds: roundObj?.isTrackSpecific ? selectedTrackIds : [],
     });
   };
@@ -172,6 +177,7 @@ export default function EventStakeholdersPage() {
   const filteredTeams = teams?.filter((t: any) => 
     t.trackId === selectedTrack && 
     t.status === 'approved' && 
+    t.teamRounds?.some((tr: any) => tr.roundId === Number(roundId)) &&
     (!t.mentorAssignments || t.mentorAssignments.length === 0)
   ) || [];
 
@@ -424,29 +430,47 @@ export default function EventStakeholdersPage() {
 
           <div className="space-y-4 mt-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Stakeholder</label>
-              <select
-                value={selectedUser || ""}
-                onChange={(e) => setSelectedUser(Number(e.target.value))}
-                className="w-full bg-background border border-border text-foreground text-sm rounded-lg p-2.5"
-              >
-                <option value="">Choose...</option>
-                {filteredModalUsers?.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
-              </select>
-            </div>
-
-            <div>
-               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Round</label>
-               <select
-                value={selectedRound}
-                onChange={(e) => { setSelectedRound(Number(e.target.value)); setSelectedTrackIds([]); }}
-                className="w-full bg-background border border-border text-foreground text-sm rounded-lg p-2.5"
-               >
-                 <option value="">Choose a round...</option>
-                 {event?.rounds?.map((round: any) => (
-                   <option key={round.id} value={round.id}>{round.name}</option>
-                 ))}
-               </select>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Stakeholders</label>
+              <div className="space-y-2 border border-border rounded-lg p-2">
+                <input 
+                  type="text" 
+                  placeholder="Search by name or email..." 
+                  className="w-full bg-muted/30 border border-border rounded p-2 text-sm mb-2 outline-none focus:border-blue-500"
+                  value={modalSearchQuery}
+                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                />
+                <div className="max-h-[150px] overflow-y-auto space-y-1">
+                  <label className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer border-b border-border mb-1 pb-2">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-border bg-background"
+                      checked={selectedUsers.length === filteredModalUsers?.length && filteredModalUsers?.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedUsers(filteredModalUsers?.map((u: any) => u.id) || []);
+                        else setSelectedUsers([]);
+                      }}
+                    />
+                    <span className="text-sm font-semibold">Select All</span>
+                  </label>
+                  {filteredModalUsers?.map((u: any) => (
+                    <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-border bg-background"
+                        checked={selectedUsers.includes(u.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedUsers([...selectedUsers, u.id]);
+                          else setSelectedUsers(selectedUsers.filter(id => id !== u.id));
+                        }}
+                      />
+                      <span className="text-sm">{u.name} <span className="text-muted-foreground text-xs">({u.email})</span></span>
+                    </label>
+                  ))}
+                  {filteredModalUsers?.length === 0 && (
+                    <div className="text-sm text-muted-foreground p-2 text-center">No stakeholders found.</div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {roundObj && roundObj.isTrackSpecific && (
@@ -473,8 +497,8 @@ export default function EventStakeholdersPage() {
 
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setIsJudgeModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleAssignJudge} disabled={!selectedUser || !selectedRound || assignJudgeMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
-                {assignJudgeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Assign Judge"}
+              <Button onClick={handleAssignJudge} disabled={selectedUsers.length === 0 || assignJudgeMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+                {assignJudgeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : `Assign ${selectedUsers.length > 0 ? selectedUsers.length : ''} Judges to ${roundObj?.name || 'Round'}`}
               </Button>
             </div>
           </div>
@@ -492,6 +516,13 @@ export default function EventStakeholdersPage() {
           <div className="space-y-4 mt-4">
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Stakeholder</label>
+              <input 
+                type="text" 
+                placeholder="Search by name or email..." 
+                className="w-full bg-background border border-border rounded-lg p-2.5 text-sm mb-2 outline-none focus:border-blue-500"
+                value={modalSearchQuery}
+                onChange={(e) => setModalSearchQuery(e.target.value)}
+              />
               <select
                 value={selectedUser || ""}
                 onChange={(e) => setSelectedUser(Number(e.target.value))}
@@ -510,9 +541,18 @@ export default function EventStakeholdersPage() {
                 className="w-full bg-background border border-border text-foreground text-sm rounded-lg p-2.5"
                >
                  <option value="">Select a track...</option>
-                 {event?.tracks?.map((track: any) => (
-                   <option key={track.id} value={track.id}>{track.name}</option>
-                 ))}
+                 {event?.tracks?.map((track: any) => {
+                   const availableCount = teams?.filter((t: any) => 
+                     t.trackId === track.id && 
+                     t.status === 'approved' && 
+                     (!t.mentorAssignments || t.mentorAssignments.length === 0)
+                   ).length || 0;
+                   return (
+                     <option key={track.id} value={track.id} disabled={availableCount === 0}>
+                       {track.name} {availableCount === 0 ? "(No teams available)" : `(${availableCount} available)`}
+                     </option>
+                   );
+                 })}
                </select>
             </div>
 
@@ -531,6 +571,9 @@ export default function EventStakeholdersPage() {
                     Select All
                   </button>
                 </label>
+                <div className="mb-2 rounded-lg border border-blue-500/20 bg-blue-500/10 p-2.5 text-xs text-blue-600 dark:text-blue-400">
+                  Only <strong>approved teams</strong> that do not currently have an assigned mentor are shown here.
+                </div>
                 <div className="space-y-2 max-h-[150px] overflow-y-auto border border-border rounded-lg p-2">
                   {filteredTeams.length === 0 && <p className="text-sm text-muted-foreground p-2">No satisfying teams in this track.</p>}
                   {filteredTeams.map((team: any) => (
