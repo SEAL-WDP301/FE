@@ -8,6 +8,7 @@ import { PanelLeftOpen, Loader2, AlertCircle } from "lucide-react";
 import { useSnackbar } from "notistack";
 
 import { TeamListPanel } from "./components/team-list-pannel";
+import { TeamSelectorBar } from "./components/team-selector-bar";
 import { TeamHeader } from "./components/team-header";
 import { RoundTabs } from "./components/round-tabs";
 import { SubmissionContentCard } from "./components/submission-content-card";
@@ -210,7 +211,7 @@ export default function EvaluationPage() {
           Evaluation
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {selectedEvent?.name} — chọn round, chọn team, xem bài và chấm theo rubric.
+          {selectedEvent?.name} — chọn round, chọn team ở cột trái (hoặc dropdown trên mobile), xem bài và chấm theo rubric.
         </p>
       </div>
 
@@ -218,6 +219,13 @@ export default function EvaluationPage() {
         rounds={eventRounds}
         selectedRoundId={selectedRoundId}
         onSelectRound={handleSelectRound}
+      />
+
+      <TeamSelectorBar
+        teams={roundSubmissions}
+        selectedSubmissionId={selectedSubmissionId}
+        onSelectSubmission={setSelectedSubmissionId}
+        isLoading={submissionsLoading}
       />
 
       <div className="mt-2 flex h-[calc(100vh-220px)] gap-5 overflow-hidden">

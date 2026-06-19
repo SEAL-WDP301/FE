@@ -24,12 +24,9 @@ export interface JudgeAssignedEvent {
 export interface JudgeRoundSubmission {
   submissionId: number;
   id: number;
-  teamId: number;
   teamName: string;
+  anonymousIndex?: number;
   track: { id: number; name: string };
-  githubUrl?: string | null;
-  assignedRepoUrl?: string | null;
-  university?: string | null;
   status: string;
   submittedAt?: string | null;
   scoringStatus: JudgeScoringStatus;
@@ -62,12 +59,9 @@ export interface JudgeSubmissionDetail {
   description?: string | null;
   submittedAt?: string | null;
   team: {
-    id: number;
     name: string;
-    githubRepoUrl?: string | null;
+    anonymousIndex?: number;
     track: { id: number; name: string };
-    leader?: { id: number; name: string; email: string };
-    members?: Array<{ user: { id: number; name: string; email: string } }>;
   };
   round: {
     id: number;

@@ -67,9 +67,14 @@ export function TeamListPanel({
       <GlassCard className="flex h-[calc(100vh-180px)] w-[340px] flex-col overflow-hidden">
         <div className="shrink-0 border-b border-white/10 p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Teams · {teams.length}
+          <div className="mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
+              Chọn team
+            </p>
+            <h3 className="text-sm font-semibold text-foreground">
+              {teams.length} bài nộp (ẩn danh)
             </h3>
+          </div>
 
             <Button
               size="icon"
@@ -88,7 +93,7 @@ export function TeamListPanel({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search teams..."
+              placeholder="Tìm Team 1, Team 2..."
               className="pl-10"
             />
           </div>
@@ -120,7 +125,7 @@ export function TeamListPanel({
             <p className="p-4 text-sm text-muted-foreground">Loading teams...</p>
           ) : filteredTeams.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              No submissions in this round yet.
+              Chưa có submission trong round này. BE chỉ liệt kê team đã nộp bài.
             </p>
           ) : (
             filteredTeams.map((team) => {
@@ -141,11 +146,11 @@ export function TeamListPanel({
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 font-bold text-black">
-                      {team.teamName
-                        .split(" ")
-                        .map((word) => word[0])
-                        .join("")
-                        .slice(0, 2)}
+                      {team.anonymousIndex != null
+                        ? `T${team.anonymousIndex}`
+                        : team.teamName.match(/^Team\s+(\d+)$/i)
+                          ? `T${team.teamName.match(/^Team\s+(\d+)$/i)![1]}`
+                          : team.teamName.slice(0, 2).toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -153,7 +158,7 @@ export function TeamListPanel({
                         <div className="min-w-0">
                           <h4 className="font-semibold truncate">{team.teamName}</h4>
                           <p className="text-xs text-muted-foreground truncate">
-                            {team.university || team.track?.name}
+                            {team.track?.name}
                           </p>
                         </div>
 
