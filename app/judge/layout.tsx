@@ -13,7 +13,7 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
-        <RoleGuard allowedRoles={["judge"]}>
+        <RoleGuard allowedRoles={["judge", "stakeholder", "admin"]}>
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
                 <JudgeSidebar
