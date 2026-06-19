@@ -68,6 +68,7 @@ export default function SubmissionsPage() {
   const currentActiveRound = workspaceData?.currentActiveRound;
   const latestSubmission = workspaceData?.latestSubmission;
   const isLeader = workspaceData?.role === "leader";
+  const assignedRepoUrl = workspaceData?.team?.githubRepoUrl as string | undefined;
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
   const isDeadlinePassed = currentActiveRound?.submissionDeadline 
@@ -77,10 +78,12 @@ export default function SubmissionsPage() {
   // Sync initial state if there's a past submission
   useEffect(() => {
     if (latestSubmission) {
-      setGithubUrl(latestSubmission.githubUrl || "");
+      setGithubUrl(latestSubmission.githubUrl || assignedRepoUrl || "");
       setDescription(latestSubmission.description || "");
+    } else if (assignedRepoUrl) {
+      setGithubUrl(assignedRepoUrl);
     }
-  }, [latestSubmission]);
+  }, [latestSubmission, assignedRepoUrl]);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -147,8 +150,8 @@ export default function SubmissionsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file && !githubUrl && !latestSubmission) {
-      enqueueSnackbar("Please provide a file or GitHub URL", { variant: "warning" });
+    if (!file && !githubUrl && !assignedRepoUrl && !latestSubmission) {
+      enqueueSnackbar("Please provide a file or use your assigned GitHub repository", { variant: "warning" });
       return;
     }
     submitMutation.mutate();
@@ -210,6 +213,28 @@ export default function SubmissionsPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {assignedRepoUrl && (
+        <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
+          <div className="flex items-start gap-3">
+            <FaGithub className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <h4 className="font-semibold">Assigned Team Repository</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Push your project code to this repository. When you submit, this link is used automatically for judging.
+              </p>
+              <a
+                href={assignedRepoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-orange-500 hover:underline break-all mt-2 inline-block"
+              >
+                {assignedRepoUrl}
+              </a>
+            </div>
+          </div>
+        </GlassCard>
       )}
 
       {/* Main Form Area */}
@@ -287,11 +312,11 @@ export default function SubmissionsPage() {
                   GitHub Repository URL
                 </label>
                 <Input 
-                  placeholder={isLeader ? "https://github.com/your-username/repo" : "No GitHub URL provided"} 
+                  placeholder={assignedRepoUrl ? "Using assigned team repository" : isLeader ? "https://github.com/your-username/repo" : "No GitHub URL provided"} 
                   className="bg-background border-border h-12"
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
-                  disabled={isDeadlinePassed || !isLeader}
+                  disabled={isDeadlinePassed || !isLeader || Boolean(assignedRepoUrl)}
                 />
               </div>
 
