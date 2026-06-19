@@ -92,7 +92,7 @@ export default function EventStakeholdersPage() {
       const res = await axiosClient.delete(`/organizer/events/${eventId}/judges/${assignmentId}`);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, assignmentId) => {
       enqueueSnackbar('Judge unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
       if (drawerUser) {
@@ -107,8 +107,13 @@ export default function EventStakeholdersPage() {
 
   const assignMentorMutation = useMutation({
     mutationFn: async (data: { stakeholderId: number, teamIds: number[] }) => {
-      const res = await axiosClient.post(`/organizer/teams/events/${eventId}/mentors/bulk-assign`, data);
-      return res.data;
+      return Promise.all(
+        data.teamIds.map((teamId) =>
+          axiosClient.post(`/organizer/teams/${teamId}/mentors`, {
+            stakeholderId: data.stakeholderId,
+          })
+        )
+      );
     },
     onSuccess: () => {
       enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });

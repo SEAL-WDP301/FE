@@ -6,18 +6,35 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { getAssignedMentorTeams, getMentorNotifications, getMentorProfile } from "@/lib/api/mentor.api";
+import {
+  getMentorNotifications,
+  getMentorProfile,
+  getMentorTeams,
+} from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "./_components/mentor-page-header";
 import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "./_components/mentor-query-state";
 
 export default function MentorDashboardPage() {
   const profileQuery = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
+  const teamsQuery = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
   const notificationsQuery = useQuery({ queryKey: ["userNotifications"], queryFn: getMentorNotifications });
 
-  if (profileQuery.isLoading) return <MentorLoadingState />;
-  if (profileQuery.isError) return <MentorErrorState />;
+  if (
+    profileQuery.isLoading ||
+    teamsQuery.isLoading ||
+    notificationsQuery.isLoading
+  ) {
+    return <MentorLoadingState />;
+  }
+  if (
+    profileQuery.isError ||
+    teamsQuery.isError ||
+    notificationsQuery.isError
+  ) {
+    return <MentorErrorState />;
+  }
 
-  const teams = getAssignedMentorTeams(profileQuery.data);
+  const teams = teamsQuery.data || [];
   const notifications = notificationsQuery.data || [];
   const stats = [
     { label: "Assigned teams", value: teams.length, icon: UsersRound },
@@ -46,9 +63,9 @@ export default function MentorDashboardPage() {
           <h2 className="text-lg font-semibold">Assigned teams</h2>
           <div className="mt-5 space-y-3">
             {teams.length === 0 ? (
-              <MentorEmptyState title="No teams assigned" description="An organizer must assign this stakeholder account to a team." />
+              <MentorEmptyState title="No teams assigned" description="An organizer must assign this mentor account to a team." />
             ) : teams.map((team) => (
-              <Link key={team.id} href={`/mentor/team-detail?teamId=${team.id}`} className="block rounded-2xl border border-border bg-muted/40 p-4 hover:border-orange-500/40">
+              <Link key={team.id} href={`/mentor/teams/${team.id}`} className="block rounded-2xl border border-border bg-muted/40 p-4 hover:border-orange-500/40">
                 <p className="font-semibold">{team.name}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{team.event?.name || "Event unavailable"} · {team.track?.name || "Track unavailable"}</p>
               </Link>
@@ -64,7 +81,9 @@ export default function MentorDashboardPage() {
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.content}</p>
               </div>
             ))}
-            {!notificationsQuery.isLoading && notifications.length === 0 ? <p className="text-sm text-muted-foreground">No notifications.</p> : null}
+            {notifications.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No notifications.</p>
+            ) : null}
           </div>
         </GlassCard>
       </div>

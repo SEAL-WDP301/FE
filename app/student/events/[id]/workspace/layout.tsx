@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, FileText, Calendar, UserCheck, LayoutDashboard } from "lucide-react";
+import {
+  Users,
+  FileText,
+  Calendar,
+  UserCheck,
+  LayoutDashboard,
+  ScrollText,
+} from "lucide-react";
 import HomeHeader from "@/components/layout/dashboard/home-header";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
@@ -29,12 +36,19 @@ export default function TrackWorkspaceLayout({
   const eventName = workspaceData?.team?.event?.name || "Event";
   const teamName = workspaceData?.team?.name || "Team";
   const currentActiveRound = workspaceData?.currentActiveRound;
+  const isLeader = workspaceData?.role === "leader";
+
+  const roleTab = workspaceData
+    ? isLeader
+      ? { name: "Submissions", href: `${basePath}/submissions`, icon: FileText }
+      : { name: "Competition Rules", href: `${basePath}/rules`, icon: ScrollText }
+    : null;
 
   const tabs = [
     { name: "Overview", href: basePath, icon: LayoutDashboard },
     { name: "My Team", href: `${basePath}/my-team`, icon: Users },
     { name: "Mentor", href: `${basePath}/mentor`, icon: UserCheck },
-    { name: "Submissions", href: `${basePath}/submissions`, icon: FileText },
+    ...(roleTab ? [roleTab] : []),
     { name: "Schedule", href: `${basePath}/schedule`, icon: Calendar },
   ];
 

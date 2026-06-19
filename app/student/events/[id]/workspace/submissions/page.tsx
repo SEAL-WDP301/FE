@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -21,6 +20,14 @@ import {
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useSnackbar } from "notistack";
+import { isAxiosError } from "axios";
+
+interface SubmissionHistoryEntry {
+  action: string;
+  timestamp: string;
+  userName?: string;
+  fileName?: string;
+}
 
 function useCountdown(targetDate: string | null) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
@@ -50,6 +57,7 @@ function useCountdown(targetDate: string | null) {
 export default function SubmissionsPage() {
   const params = useParams();
   const eventId = Number(params.id);
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -77,10 +85,18 @@ export default function SubmissionsPage() {
   // Sync initial state if there's a past submission
   useEffect(() => {
     if (latestSubmission) {
+      // Initialize the editable form after the workspace query resolves.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGithubUrl(latestSubmission.githubUrl || "");
       setDescription(latestSubmission.description || "");
     }
   }, [latestSubmission]);
+
+  useEffect(() => {
+    if (!isLoading && workspaceData && !isLeader) {
+      router.replace(`/student/events/${eventId}/workspace/rules`);
+    }
+  }, [eventId, isLeader, isLoading, router, workspaceData]);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -100,8 +116,8 @@ export default function SubmissionsPage() {
       queryClient.invalidateQueries({ queryKey: ["workspace", eventId] });
       setFile(null); // Clear file after successful upload
     },
-    onError: (err: any) => {
-      const responseData = err?.response?.data;
+    onError: (error: unknown) => {
+      const responseData = isAxiosError(error) ? error.response?.data : undefined;
       if (responseData?.errors && Array.isArray(responseData.errors)) {
         responseData.errors.forEach((e: string) => enqueueSnackbar(e, { variant: "error" }));
       } else {
@@ -155,6 +171,14 @@ export default function SubmissionsPage() {
   };
 
   if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!isLeader) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -360,7 +384,7 @@ export default function SubmissionsPage() {
             {latestSubmission?.history && Array.isArray(latestSubmission.history) && latestSubmission.history.length > 0 ? (
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
-                  {latestSubmission.history.slice().reverse().slice(0, 5).map((log: any, index: number) => {
+                  {(latestSubmission.history as SubmissionHistoryEntry[]).slice().reverse().slice(0, 5).map((log, index) => {
                     const isLatest = index === 0;
                     return (
                       <div key={index} className="relative flex gap-4 text-sm">
@@ -397,7 +421,7 @@ export default function SubmissionsPage() {
                         <DialogTitle>Full Audit History</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-4 mt-4">
-                        {latestSubmission.history.slice().reverse().map((log: any, index: number) => (
+                        {(latestSubmission.history as SubmissionHistoryEntry[]).slice().reverse().map((log, index) => (
                           <div key={index} className="flex gap-3 text-sm border-b border-border/50 pb-4 last:border-0 last:pb-0">
                             <div className="mt-1">
                               <div className={`h-2 w-2 rounded-full ${log.action === "created" ? "bg-green-500" : "bg-orange-500"}`} />
