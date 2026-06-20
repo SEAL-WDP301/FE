@@ -53,11 +53,14 @@ function getApiMessage(error: unknown, fallback: string) {
 export default function EventCriteriaPage() {
   const params = useParams();
   const eventId = params.id as string;
+  const currentRoundId = params.roundId as string;
   const queryClient = useQueryClient();
 
-  const [roundFilter, setRoundFilter] = useState("all");
   const [trackFilter, setTrackFilter] = useState("all");
-  const [rubricDraft, setRubricDraft] = useState<RubricDraft>(emptyRubric);
+  const [rubricDraft, setRubricDraft] = useState<RubricDraft>(() => ({
+    ...emptyRubric(),
+    roundId: currentRoundId,
+  }));
   const [editingRubricId, setEditingRubricId] = useState<number | null>(null);
 
   const eventQuery = useQuery({
@@ -93,16 +96,19 @@ export default function EventCriteriaPage() {
   );
 
   const rubrics = useMemo(() => rubricsQuery.data || [], [rubricsQuery.data]);
+  
+  const currentRound = roundById.get(Number(currentRoundId));
+  const isTrackSpecific = currentRound?.isTrackSpecific ?? false;
+
   const filteredRubrics = useMemo(
     () =>
       rubrics.filter((rubric) => {
-        const matchesRound =
-          roundFilter === "all" || String(rubric.roundId) === roundFilter;
+        const matchesRound = String(rubric.roundId) === currentRoundId;
         const matchesTrack =
           trackFilter === "all" || String(rubric.trackId) === trackFilter;
         return matchesRound && matchesTrack;
       }),
-    [roundFilter, rubrics, trackFilter]
+    [currentRoundId, rubrics, trackFilter]
   );
 
   const selectedScopeWeight = useMemo(() => {
@@ -122,16 +128,15 @@ export default function EventCriteriaPage() {
 
   const resetForm = () => {
     setEditingRubricId(null);
-    setRubricDraft(emptyRubric());
+    setRubricDraft({ ...emptyRubric(), roundId: currentRoundId });
   };
 
   const saveRubricMutation = useMutation({
     mutationFn: async () => {
-      if (!isRoundNotStarted(rubricDraft.roundId)) {
+      if (!isRoundNotStarted(currentRoundId)) {
         throw new Error("Can only manage criteria for rounds that have not started yet.");
       }
-      if (!rubricDraft.roundId) throw new Error("Round is required.");
-      if (!rubricDraft.trackId) throw new Error("Track is required.");
+      if (isTrackSpecific && !rubricDraft.trackId) throw new Error("Track is required for track-specific rounds.");
       if (!rubricDraft.name.trim()) throw new Error("Criterion name is required.");
 
       const maxScore = Number(rubricDraft.maxScore);
@@ -149,8 +154,8 @@ export default function EventCriteriaPage() {
         description: rubricDraft.description.trim() || undefined,
         maxScore,
         weight,
-        roundId: Number(rubricDraft.roundId),
-        trackId: Number(rubricDraft.trackId),
+        roundId: Number(currentRoundId),
+        trackId: isTrackSpecific && rubricDraft.trackId ? Number(rubricDraft.trackId) : null,
       };
 
       return editingRubricId
@@ -186,17 +191,10 @@ export default function EventCriteriaPage() {
   });
 
   const startEditRubric = (rubric: OrganizerRubric) => {
-    if (!rubric.trackId) {
-      enqueueSnackbar("This rubric has no track and cannot be edited in the required format.", {
-        variant: "warning",
-      });
-      return;
-    }
-
     setEditingRubricId(rubric.id);
     setRubricDraft({
-      roundId: String(rubric.roundId),
-      trackId: String(rubric.trackId),
+      roundId: currentRoundId,
+      trackId: rubric.trackId ? String(rubric.trackId) : "",
       name: rubric.name,
       description: rubric.description || "",
       maxScore: rubric.maxScore,
@@ -220,11 +218,13 @@ export default function EventCriteriaPage() {
     );
   }
 
-  const hasRequiredConfiguration = rounds.length > 0 && tracks.length > 0;
+  const hasRequiredConfiguration = rounds.length > 0;
+  
+  const isTrackValid = !isTrackSpecific || Boolean(rubricDraft.trackId);
   const canSubmit =
-    Boolean(rubricDraft.roundId) &&
-    isRoundNotStarted(rubricDraft.roundId) &&
+    isRoundNotStarted(currentRoundId) &&
     Boolean(rubricDraft.name.trim()) &&
+    isTrackValid &&
     !saveRubricMutation.isPending;
 
   return (
@@ -239,7 +239,7 @@ export default function EventCriteriaPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Grading Criteria</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add, edit, and delete rubrics for {event.name}. Every rubric must belong to a round and a track.
+            Add, edit, and delete rubrics for Round {currentRound?.roundNumber}: {currentRound?.name}.
           </p>
         </div>
 
@@ -274,21 +274,7 @@ export default function EventCriteriaPage() {
               </p>
             </div>
 
-            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[440px]">
-              <Field label="Filter by round">
-                <select
-                  value={roundFilter}
-                  onChange={(event) => setRoundFilter(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                >
-                  <option value="all">All rounds</option>
-                  {rounds.map((round) => (
-                    <option key={round.id} value={round.id}>
-                      Round {round.roundNumber}: {round.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+            <div className="grid w-full grid-cols-1 gap-3 lg:w-auto lg:min-w-[220px]">
 
               <Field label="Filter by track">
                 <select
@@ -430,53 +416,34 @@ export default function EventCriteriaPage() {
           </div>
 
           <div className="space-y-4">
-            <Field label="Round *">
-              <select
-                value={rubricDraft.roundId}
-                disabled={false}
-                onChange={(event) =>
-                  setRubricDraft((draft) => ({
-                    ...draft,
-                    roundId: event.target.value,
-                  }))
-                }
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Select round</option>
-                {rounds.map((round) => (
-                  <option key={round.id} value={round.id}>
-                    Round {round.roundNumber}: {round.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Track *">
-              <select
-                value={rubricDraft.trackId}
-                disabled={!isRoundNotStarted(rubricDraft.roundId)}
-                onChange={(event) =>
-                  setRubricDraft((draft) => ({
-                    ...draft,
-                    trackId: event.target.value,
-                  }))
-                }
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Select track</option>
-                {tracks.map((track) => (
-                  <option key={track.id} value={track.id}>
-                    {track.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            {isTrackSpecific && (
+              <Field label="Track *">
+                <select
+                  value={rubricDraft.trackId}
+                  disabled={!isRoundNotStarted(currentRoundId)}
+                  onChange={(event) =>
+                    setRubricDraft((draft) => ({
+                      ...draft,
+                      trackId: event.target.value,
+                    }))
+                  }
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">Select track</option>
+                  {tracks.map((track) => (
+                    <option key={track.id} value={track.id}>
+                      {track.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
             <Field label="Rubric name *">
               <Input
                 value={rubricDraft.name}
                 placeholder="Technical Implementation"
-                disabled={!isRoundNotStarted(rubricDraft.roundId)}
+                disabled={!isRoundNotStarted(currentRoundId)}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -491,7 +458,7 @@ export default function EventCriteriaPage() {
                 value={rubricDraft.description}
                 className="min-h-24 resize-none"
                 placeholder="Describe what judges should evaluate."
-                disabled={!isRoundNotStarted(rubricDraft.roundId)}
+                disabled={!isRoundNotStarted(currentRoundId)}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -507,7 +474,7 @@ export default function EventCriteriaPage() {
                   type="number"
                   min={1}
                   value={rubricDraft.maxScore}
-                  disabled={!isRoundNotStarted(rubricDraft.roundId)}
+                  disabled={!isRoundNotStarted(currentRoundId)}
                   onChange={(event) =>
                     setRubricDraft((draft) => ({
                       ...draft,
@@ -523,7 +490,7 @@ export default function EventCriteriaPage() {
                   min={0.01}
                   step="0.01"
                   value={rubricDraft.weight}
-                  disabled={!isRoundNotStarted(rubricDraft.roundId)}
+                  disabled={!isRoundNotStarted(currentRoundId)}
                   onChange={(event) =>
                     setRubricDraft((draft) => ({
                       ...draft,
@@ -544,7 +511,7 @@ export default function EventCriteriaPage() {
             <div title={
               event?.status === "closed" 
                 ? "Cannot manage grading criteria for closed events."
-                : rubricDraft.roundId && !isRoundNotStarted(rubricDraft.roundId) 
+                : !isRoundNotStarted(currentRoundId) 
                   ? "Criteria can only be modified for rounds that have not started yet." 
                   : undefined
             }>
@@ -565,9 +532,9 @@ export default function EventCriteriaPage() {
             </Button>
             </div>
 
-            {!rubricDraft.roundId || !rubricDraft.trackId ? (
+            {!isTrackValid ? (
               <p className="text-center text-xs text-amber-600 dark:text-amber-400">
-                Select both a round and a track to enable this action.
+                Please select a track for this round to enable this action.
               </p>
             ) : null}
           </div>
