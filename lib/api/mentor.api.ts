@@ -58,6 +58,48 @@ export interface UserNotification {
   createdAt: string;
 }
 
+export interface MentorRound {
+  id: number;
+  name: string;
+  roundNumber?: number;
+  status?: string;
+  submissionDeadline?: string | null;
+}
+
+export interface MentorFeedback {
+  id: number;
+  mentorId?: number;
+  teamId?: number;
+  submissionId?: number;
+  roundId?: number;
+  content: string;
+  status?: string;
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  team?: Pick<MentorTeam, "id" | "name" | "event" | "track">;
+  submission?: Omit<MentorSubmission, "feedback">;
+}
+
+export interface MentorSubmission {
+  id: number;
+  teamId: number;
+  roundId: number;
+  status?: string;
+  submissionType?: string;
+  fileUrl?: string | null;
+  githubUrl?: string | null;
+  demoUrl?: string | null;
+  slideUrl?: string | null;
+  description?: string | null;
+  submittedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  team?: MentorTeam;
+  round?: MentorRound;
+  feedback?: MentorFeedback | null;
+}
+
 function unwrapData<T>(response: { data?: { data?: T } }) {
   return response.data?.data as T;
 }
@@ -77,6 +119,36 @@ export async function updateMentorProfile(
 ) {
   const response = await axiosClient.put("/users/profile/stakeholder", payload);
   return unwrapData<MentorProfile>(response);
+}
+
+export async function getMentorTeams() {
+  const response = await axiosClient.get("/mentor/teams");
+  return unwrapData<MentorTeam[]>(response) || [];
+}
+
+export async function getMentorTeam(teamId: string | number) {
+  const response = await axiosClient.get(`/mentor/teams/${teamId}`);
+  return unwrapData<MentorTeam>(response);
+}
+
+export async function getMentorTeamSubmissions(teamId: string | number) {
+  const response = await axiosClient.get(`/mentor/teams/${teamId}/submissions`);
+  return unwrapData<MentorSubmission[]>(response) || [];
+}
+
+export async function getMentorSubmissions() {
+  const response = await axiosClient.get("/mentor/submissions");
+  return unwrapData<MentorSubmission[]>(response) || [];
+}
+
+export async function getMentorSubmission(submissionId: string | number) {
+  const response = await axiosClient.get(`/mentor/submissions/${submissionId}`);
+  return unwrapData<MentorSubmission>(response);
+}
+
+export async function getMentorFeedback() {
+  const response = await axiosClient.get("/mentor/feedback");
+  return unwrapData<MentorFeedback[]>(response) || [];
 }
 
 export function getAssignedMentorTeams(profile?: MentorProfile | null) {

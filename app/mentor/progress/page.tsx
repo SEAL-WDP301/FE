@@ -7,17 +7,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAssignedMentorTeams, getMentorProfile } from "@/lib/api/mentor.api";
+import { getMentorTeams } from "@/lib/api/mentor.api";
 
 import { MentorPageHeader } from "../_components/mentor-page-header";
 import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "../_components/mentor-query-state";
 
 export default function TeamProgressPage() {
-  const query = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
+  const query = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
   if (query.isLoading) return <MentorLoadingState />;
   if (query.isError) return <MentorErrorState />;
 
-  const teams = getAssignedMentorTeams(query.data);
+  const teams = query.data || [];
   return (
     <div className="mx-auto max-w-[1500px] space-y-6">
       <MentorPageHeader title="Team Progress" subtitle="Backend team status for teams assigned to you." />
@@ -41,7 +41,7 @@ export default function TeamProgressPage() {
                   <TableCell className="capitalize">{team.status || "N/A"}</TableCell>
                   <TableCell>
                     <Button asChild variant="ghost" size="sm">
-                      <Link href={`/mentor/team-detail?teamId=${team.id}`}><Eye className="h-4 w-4" />View</Link>
+                      <Link href={`/mentor/teams/${team.id}`}><Eye className="h-4 w-4" />View</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
