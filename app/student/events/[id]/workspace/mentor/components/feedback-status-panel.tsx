@@ -9,9 +9,10 @@ type FeedbackStatusPanelProps = {
         label: string;
         value: string;
     }>;
+    resolvedProgress: number;
 };
 
-export function FeedbackStatusPanel({ stats }: FeedbackStatusPanelProps) {
+export function FeedbackStatusPanel({ stats, resolvedProgress }: FeedbackStatusPanelProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-5">
@@ -51,10 +52,13 @@ export function FeedbackStatusPanel({ stats }: FeedbackStatusPanelProps) {
             <div className="mt-5">
                 <div className="mb-2 flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Resolved progress</span>
-                    <span className="font-semibold text-orange-300">67%</span>
+                    <span className="font-semibold text-orange-300">{resolvedProgress}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full w-[67%] rounded-full bg-gradient-to-r from-[#ff8a3d] to-[#f37021]" />
+                    <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#ff8a3d] to-[#f37021]"
+                        style={{ width: `${resolvedProgress}%` }}
+                    />
                 </div>
             </div>
         </GlassCard>

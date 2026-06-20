@@ -1,18 +1,33 @@
-import { CheckCircle2, CornerDownRight, MessageSquareText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
-
-import { mentor, type FeedbackItem } from "../mock-data";
+import type {
+    StudentWorkspaceFeedback,
+    StudentWorkspaceMentor,
+} from "@/lib/api/mentor.api";
 
 type FeedbackThreadCardProps = {
-    items: FeedbackItem[];
+    items: StudentWorkspaceFeedback[];
+    mentor?: StudentWorkspaceMentor | null;
 };
 
-export function FeedbackThreadCard({ items }: FeedbackThreadCardProps) {
+function initials(name?: string | null) {
+    return (name || "M")
+        .split(/\s+/)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+}
+
+function formatDate(value?: string | null) {
+    return value ? new Date(value).toLocaleString() : "Time unavailable";
+}
+
+export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6">
@@ -25,12 +40,26 @@ export function FeedbackThreadCard({ items }: FeedbackThreadCardProps) {
             </div>
 
             <div className="space-y-4">
+                {items.length === 0 ? (
+                    <div className="flex min-h-40 flex-col items-center justify-center rounded-[22px] border border-dashed border-border text-center">
+                        <MessageSquareText className="h-7 w-7 text-muted-foreground" />
+                        <p className="mt-3 font-medium">No mentor feedback yet</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Published feedback from the backend will appear here.
+                        </p>
+                    </div>
+                ) : null}
                 {items.map((item) => {
-                    const unresolved = item.state === "unresolved";
+                    const feedbackMentor = item.mentor || mentor;
+                    const unresolved = item.status !== "published" && item.status !== "resolved";
+                    const avatarUrl =
+                        feedbackMentor?.avatarUrl ||
+                        feedbackMentor?.avatar_url ||
+                        undefined;
 
                     return (
                         <div
-                            key={`${item.category}-${item.timestamp}`}
+                            key={item.id}
                             className={cn(
                                 "rounded-[22px] border bg-white/[0.035] p-4",
                                 unresolved ? "border-orange-500/25 shadow-[0_0_30px_rgba(243,112,33,0.08)]" : "border-border"
@@ -38,59 +67,44 @@ export function FeedbackThreadCard({ items }: FeedbackThreadCardProps) {
                         >
                             <div className="flex gap-3">
                                 <Avatar className="h-11 w-11 border border-orange-500/25">
+                                    {avatarUrl ? (
+                                        <AvatarImage
+                                            src={avatarUrl}
+                                            alt={feedbackMentor?.name || "Mentor"}
+                                        />
+                                    ) : null}
                                     <AvatarFallback>
-                                        {mentor.initials}
+                                        {initials(feedbackMentor?.name)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="font-semibold text-foreground">
-                                                {mentor.name}
+                                                {feedbackMentor?.name || "Assigned Mentor"}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                {item.timestamp} · {item.related}
+                                                {formatDate(
+                                                    item.publishedAt ||
+                                                        item.updatedAt ||
+                                                        item.createdAt
+                                                )}
+                                                {item.submission?.round?.name
+                                                    ? ` · ${item.submission.round.name}`
+                                                    : ""}
                                             </p>
                                         </div>
 
                                         <div className="flex flex-wrap gap-2">
                                             <Badge variant={unresolved ? "warning" : "success"}>
-                                                {unresolved ? "Unresolved" : "Resolved"}
-                                            </Badge>
-                                            <Badge variant="outline">
-                                                {item.category}
+                                                {item.status || "Feedback"}
                                             </Badge>
                                         </div>
                                     </div>
 
                                     <p className="mt-4 text-sm leading-6 text-foreground/90">
-                                        {item.text}
+                                        {item.content}
                                     </p>
-
-                                    <div className="mt-4 rounded-2xl border border-border bg-white/[0.035] p-3">
-                                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                                            <CornerDownRight className="h-4 w-4" />
-                                            Team Reply
-                                        </div>
-                                        <p className="text-sm leading-6 text-foreground/85">
-                                            {item.reply}
-                                        </p>
-                                    </div>
-
-                                    <div className="mt-4 flex flex-wrap gap-2">
-                                        <Button variant="soft" size="sm" className="rounded-xl">
-                                            <MessageSquareText className="h-4 w-4" />
-                                            Reply
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="rounded-xl text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200"
-                                        >
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            Mark Resolved
-                                        </Button>
-                                    </div>
                                 </div>
                             </div>
                         </div>

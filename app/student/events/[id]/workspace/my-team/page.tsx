@@ -1,7 +1,9 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
@@ -35,6 +37,7 @@ import { MemberListItem } from "./components/member-list-item";
 import { PendingInvitesTable } from "./components/pending-invites-table";
 
 export default function TeamMembersPage() {
+    const router = useRouter();
     const params = useParams();
     const eventId = params.id as string;
     const queryClient = useQueryClient();
@@ -91,14 +94,14 @@ export default function TeamMembersPage() {
     }
 
     const teamInfo = studentStatus?.teamInfo;
-    
+
     if (!teamInfo || !teamInfo.team) {
         return (
             <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
                 <UsersRound className="h-16 w-16 text-muted-foreground opacity-50 mb-4" />
                 <h2 className="text-2xl font-bold text-foreground">No Team Found</h2>
                 <p className="mt-2 text-muted-foreground max-w-md">
-                    You haven't joined or created a team for this event yet, or your team registration was rejected.
+                    You haven&apos;t joined or created a team for this event yet, or your team registration was rejected.
                 </p>
             </div>
         );
@@ -108,8 +111,10 @@ export default function TeamMembersPage() {
     const isLeader = teamInfo.role === "leader";
     const isEventActive = event?.status === "active";
     const members = team.members || [];
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeMembers = members.filter((m: any) => m.status === "accepted");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingMembers = members.filter((m: any) => m.status === "pending");
 
     // Prepare data for inviting a new member
@@ -123,7 +128,7 @@ export default function TeamMembersPage() {
         const currentEmails = activeMembers
             .filter((m: any) => m.role === "member")
             .map((m: any) => m.user.email);
-            
+
         const pendingEmails = pendingMembers.map((m: any) => m.user.email);
 
         const newEmails = [...currentEmails, ...pendingEmails, inviteEmail.trim()];
@@ -137,8 +142,8 @@ export default function TeamMembersPage() {
 
     // Filter active members
     const filteredMembers = activeMembers.filter((m: any) => {
-        const nameMatch = m.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          m.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        const nameMatch = m.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            m.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
         const roleMatch = roleFilter === "All" || m.role?.toLowerCase() === roleFilter.toLowerCase();
         return nameMatch && roleMatch;
     });
@@ -175,7 +180,7 @@ export default function TeamMembersPage() {
                                         <GraduationCap className="h-5 w-5 text-blue-500" />
                                     )}
                                 </div>
-                                <div>
+                                <div onClick={() => router.push(`/student/events/${eventId}/workspace/mentor`)} className="cursor-pointer">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-0.5">Team Mentor</p>
                                     <p className="text-sm font-medium text-foreground">{team.mentorAssignments[0].mentor?.name}</p>
                                 </div>
@@ -190,10 +195,10 @@ export default function TeamMembersPage() {
                         </Badge>
                         {isLeader ? (
                             <Dialog open={isInviteDialogOpen} onOpenChange={(open) => isEventActive && setIsInviteDialogOpen(open)}>
-                                <DialogTrigger 
+                                <DialogTrigger
                                     render={
-                                        <Button 
-                                            variant="orange" 
+                                        <Button
+                                            variant="orange"
                                             className="rounded-xl px-5 shadow-[0_0_15px_rgba(243,112,33,0.3)]"
                                             disabled={!isEventActive}
                                             title={!isEventActive ? "Team roster is locked after the event starts." : "Invite a new member"}
@@ -233,8 +238,8 @@ export default function TeamMembersPage() {
                                                 Student must have a registered account.
                                             </p>
                                         </label>
-                                        <Button 
-                                            variant="orange" 
+                                        <Button
+                                            variant="orange"
                                             className="w-full rounded-xl mt-4 h-12 text-base font-semibold"
                                             onClick={handleSendInvite}
                                             disabled={updateTeamMutation.isPending}
@@ -291,9 +296,9 @@ export default function TeamMembersPage() {
                     </h3>
                     <div className="space-y-3">
                         {filteredMembers.map((member: any) => (
-                            <MemberListItem 
-                                key={member.id} 
-                                member={member} 
+                            <MemberListItem
+                                key={member.id}
+                                member={member}
                                 teamInfo={teamInfo}
                                 isCurrentUserLeader={isLeader}
                                 currentUserId={studentStatus?.individualRegistration?.userId}
@@ -316,9 +321,9 @@ export default function TeamMembersPage() {
                                 {pendingMembers.length}
                             </Badge>
                         </h3>
-                        <PendingInvitesTable 
-                            invites={pendingMembers} 
-                            isCurrentUserLeader={isLeader} 
+                        <PendingInvitesTable
+                            invites={pendingMembers}
+                            isCurrentUserLeader={isLeader}
                             team={team}
                             isEventActive={isEventActive}
                         />
