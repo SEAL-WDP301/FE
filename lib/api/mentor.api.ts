@@ -100,6 +100,60 @@ export interface MentorSubmission {
   feedback?: MentorFeedback | null;
 }
 
+export interface StudentWorkspaceMentor {
+  id?: number;
+  name?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
+  stakeholderProfile?: {
+    jobTitle?: string | null;
+    organization?: string | null;
+    organizationName?: string | null;
+    experience?: string | null;
+    achievements?: string | null;
+    bio?: string | null;
+  } | null;
+}
+
+export interface StudentWorkspaceFeedback {
+  id: number;
+  content: string;
+  status?: string;
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  mentor?: StudentWorkspaceMentor | null;
+  submission?: {
+    id?: number;
+    round?: {
+      id?: number;
+      name?: string;
+    } | null;
+  } | null;
+}
+
+export interface StudentMentorWorkspaceData {
+  team?: {
+    id?: number;
+    name?: string;
+    mentorAssignments?: Array<{
+      id?: number;
+      mentor?: StudentWorkspaceMentor | null;
+    }>;
+  } | null;
+  currentActiveRound?: {
+    id?: number;
+    name?: string;
+  } | null;
+  latestSubmission?: {
+    id?: number;
+    feedback?: StudentWorkspaceFeedback | null;
+  } | null;
+  feedback?: StudentWorkspaceFeedback[];
+  mentorFeedback?: StudentWorkspaceFeedback[];
+}
+
 function unwrapData<T>(response: { data?: { data?: T } }) {
   return response.data?.data as T;
 }
@@ -149,6 +203,34 @@ export async function getMentorSubmission(submissionId: string | number) {
 export async function getMentorFeedback() {
   const response = await axiosClient.get("/mentor/feedback");
   return unwrapData<MentorFeedback[]>(response) || [];
+}
+
+export async function getStudentMentorWorkspace(eventId: string | number) {
+  const response = await axiosClient.get<{
+    data: StudentMentorWorkspaceData;
+  }>("/student/teams/my-team/workspace", {
+    params: { eventId },
+  });
+  return response.data.data;
+}
+
+export async function getStudentAssignedMentor(eventId: string | number) {
+  const response = await axiosClient.get<{
+    data?: {
+      teamInfo?: {
+        team?: {
+          mentorAssignments?: Array<{
+            id?: number;
+            mentor?: StudentWorkspaceMentor | null;
+          }>;
+        } | null;
+      } | null;
+    };
+  }>(`/student/teams/status/${eventId}`);
+
+  return (
+    response.data?.data?.teamInfo?.team?.mentorAssignments?.[0]?.mentor || null
+  );
 }
 
 export function getAssignedMentorTeams(profile?: MentorProfile | null) {

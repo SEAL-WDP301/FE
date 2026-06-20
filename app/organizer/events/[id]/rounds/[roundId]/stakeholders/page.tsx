@@ -101,7 +101,7 @@ export default function EventStakeholdersPage() {
       const res = await axiosClient.delete(`/organizer/stakeholders/judges/${assignmentId}`);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, assignmentId) => {
       enqueueSnackbar('Judge unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
       if (drawerUser) {

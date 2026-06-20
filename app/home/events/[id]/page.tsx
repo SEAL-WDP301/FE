@@ -4,8 +4,19 @@ import { useQuery } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock, BellRing } from 'lucide-react';
+import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock, BellRing, GraduationCap, Mail } from 'lucide-react';
+import { getStudentAssignedMentor } from '@/lib/api/mentor.api';
+
+function getInitials(name?: string | null) {
+  return (name || 'M')
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -49,6 +60,18 @@ export default function EventDetailPage() {
       return res.data.data;
     },
     enabled: !!user && user.role === 'student',
+  });
+
+  const teamStatus = studentInfo?.teamInfo?.team?.status;
+  const hasApprovedTeam =
+    !!studentInfo?.teamInfo?.team &&
+    teamStatus === 'approved';
+
+  const { data: assignedMentor, isLoading: isMentorLoading } = useQuery({
+    queryKey: ['studentAssignedMentor', eventId],
+    queryFn: () => getStudentAssignedMentor(eventId),
+    enabled: !!user && user.role === 'student' && hasApprovedTeam,
+    retry: false,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,6 +275,69 @@ export default function EventDetailPage() {
                 You have {eventPendingInvitations.length} pending team invitation(s) for this event. 
                 Please check your notifications bell on the header to accept or reject them.
               </span>
+            </div>
+          </div>
+        )}
+
+        {user?.role === 'student' && hasApprovedTeam && (
+          <div className="mb-12">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-lg">
+              <div className="mb-5 flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-orange-500" />
+                <h2 className="text-lg font-semibold text-foreground">Your Mentor</h2>
+              </div>
+
+              {isMentorLoading ? (
+                <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+              ) : assignedMentor ? (
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16 border border-orange-500/30">
+                      {assignedMentor.avatarUrl || assignedMentor.avatar_url ? (
+                        <AvatarImage
+                          src={assignedMentor.avatarUrl || assignedMentor.avatar_url || undefined}
+                          alt={assignedMentor.name || 'Assigned mentor'}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-lg">
+                        {getInitials(assignedMentor.name)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div>
+                      <p className="text-lg font-semibold text-foreground">
+                        {assignedMentor.name || 'Assigned Mentor'}
+                      </p>
+                      <p className="mt-1 text-sm text-orange-500">
+                        {assignedMentor.stakeholderProfile?.jobTitle || 'Event Mentor'}
+                        {assignedMentor.stakeholderProfile?.organization ||
+                        assignedMentor.stakeholderProfile?.organizationName
+                          ? ` · ${
+                              assignedMentor.stakeholderProfile.organization ||
+                              assignedMentor.stakeholderProfile.organizationName
+                            }`
+                          : ''}
+                      </p>
+                      {assignedMentor.email ? (
+                        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          {assignedMentor.email}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <Button asChild variant="outline">
+                    <Link href={`/student/events/${eventId}/workspace/mentor`}>
+                      Open Mentor Workspace
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No mentor has been assigned to your team yet.
+                </p>
+              )}
             </div>
           </div>
         )}
