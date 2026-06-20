@@ -60,16 +60,17 @@ export default function RoundWorkspaceLayout({
   const avatarUrl = typeof user?.avatarUrl === 'string' ? user.avatarUrl.trim() : '';
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 min-h-[calc(100vh-8rem)]">
-      {/* Expandable Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: isSidebarExpanded ? 280 : 80 }}
-        className="relative flex flex-col shrink-0 rounded-2xl border border-border bg-card shadow-sm transition-all duration-300"
-      >
+    <div className="flex flex-col md:flex-row gap-6 min-h-[calc(100vh-8rem)] items-start">
+      {/* Expandable Sidebar Wrapper */}
+      <div className="sticky top-20 h-[calc(100vh-6rem)] shrink-0 z-10">
+        <motion.aside
+          initial={false}
+          animate={{ width: isSidebarExpanded ? 280 : 80 }}
+          className="relative flex flex-col h-full rounded-2xl border border-border bg-card shadow-sm transition-all duration-300"
+        >
         <button
           onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-          className="absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-md hover:bg-muted text-muted-foreground hover:text-foreground"
+          className="absolute -right-3 top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-md hover:bg-muted text-muted-foreground hover:text-foreground"
         >
           {isSidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
@@ -80,7 +81,7 @@ export default function RoundWorkspaceLayout({
           </span>
         </div>
 
-        <nav className="flex-1 space-y-2 p-4">
+        <nav className="flex-1 overflow-y-auto no-scrollbar space-y-2 p-4">
           {roundNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -146,6 +147,7 @@ export default function RoundWorkspaceLayout({
           </button>
         </div>
       </motion.aside>
+      </div>
 
       {/* Round Content */}
       <div className="flex-1 min-w-0 animate-in fade-in duration-500">

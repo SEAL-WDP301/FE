@@ -23,6 +23,9 @@ export default function EventDashboardLayout({
   const roundId = params.roundId as string | undefined;
   const baseUrl = `/organizer/events/${eventId}`;
 
+  const currentTabMatch = pathname.match(/\/rounds\/\d+\/(teams|stakeholders|submissions|criteria)/);
+  const currentTab = currentTabMatch ? currentTabMatch[1] : "teams";
+
   const navItems = [
     { name: "Overview", href: `${baseUrl}/overview`, icon: LayoutDashboard },
     { name: "Tracks & Rounds", href: `${baseUrl}/tracks`, icon: GitMerge },
@@ -106,7 +109,7 @@ export default function EventDashboardLayout({
                     return (
                       <div key={round.id} className="flex items-center gap-2 shrink-0">
                         <Link
-                          href={`${baseUrl}/rounds/${round.id}/teams`}
+                          href={`${baseUrl}/rounds/${round.id}/${currentTab}`}
                           className={cn(
                             "relative px-4 py-1.5 text-sm font-semibold transition-all duration-300 rounded-full border shadow-sm flex items-center gap-2 group",
                             isRoundActive
@@ -136,8 +139,8 @@ export default function EventDashboardLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-background to-muted/20">
-        <div className="p-6 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+      <main className="flex-1 bg-gradient-to-br from-background to-muted/20">
+        <div className="p-6 md:p-8 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>

@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { Edit2, Loader2, Plus, RefreshCcw, Save, Trash2, X } from "lucide-react";
+import { Edit2, Loader2, Plus, RefreshCcw, Save, Trash2, X, Info, AlignLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,13 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   createOrganizerRubric,
   deleteOrganizerRubric,
@@ -332,10 +339,32 @@ export default function EventCriteriaPage() {
                         className="border-t border-border bg-background/40 align-top"
                       >
                         <td className="px-4 py-4">
-                          <div className="font-semibold">{rubric.name}</div>
-                          <div className="mt-1 max-w-md line-clamp-2 text-xs text-muted-foreground">
-                            {rubric.description || "No description"}
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{rubric.name}</span>
+                            {rubric.description && (
+                              <Dialog>
+                                <DialogTrigger className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-blue-500 transition-colors" title="View description">
+                                  <AlignLeft className="h-3.5 w-3.5" />
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[500px]">
+                                  <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2">
+                                      <AlignLeft className="h-5 w-5 text-blue-500" />
+                                      {rubric.name}
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  <div className="mt-4 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed bg-muted/30 p-4 rounded-xl border border-border">
+                                    {rubric.description}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
                           </div>
+                          {!rubric.description && (
+                            <div className="mt-1 text-xs text-muted-foreground italic">
+                              No description
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-4">
                           {round ? `Round ${round.roundNumber}: ${round.name}` : "Unknown"}

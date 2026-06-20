@@ -9,7 +9,7 @@ export default function OrganizerLayout({
 }) {
     return (
         <RoleGuard allowedRoles={["admin", "organizer"]}>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <div className="h-screen overflow-hidden bg-background text-foreground flex flex-col">
             <HomeHeader />
             <ProfileChecker />
             <main className="flex-1 overflow-y-auto w-full">
