@@ -76,7 +76,12 @@ export default function EventCriteriaPage() {
     [event?.rounds]
   );
   const tracks = useMemo(() => event?.tracks || [], [event?.tracks]);
-  const canManageRubrics = event?.status === "draft";
+  const isRoundNotStarted = (id: string | number | null | undefined) => {
+    if (event?.status === "closed") return false;
+    if (!id) return true; // If no round is selected, allow inputs to be active
+    const round = roundById.get(Number(id));
+    return !round || round.status === "not_started";
+  };
 
   const roundById = useMemo(
     () => new Map(rounds.map((round) => [round.id, round])),
@@ -122,8 +127,8 @@ export default function EventCriteriaPage() {
 
   const saveRubricMutation = useMutation({
     mutationFn: async () => {
-      if (!canManageRubrics) {
-        throw new Error("Only draft events can manage grading criteria.");
+      if (!isRoundNotStarted(rubricDraft.roundId)) {
+        throw new Error("Can only manage criteria for rounds that have not started yet.");
       }
       if (!rubricDraft.roundId) throw new Error("Round is required.");
       if (!rubricDraft.trackId) throw new Error("Track is required.");
@@ -217,9 +222,8 @@ export default function EventCriteriaPage() {
 
   const hasRequiredConfiguration = rounds.length > 0 && tracks.length > 0;
   const canSubmit =
-    canManageRubrics &&
     Boolean(rubricDraft.roundId) &&
-    Boolean(rubricDraft.trackId) &&
+    isRoundNotStarted(rubricDraft.roundId) &&
     Boolean(rubricDraft.name.trim()) &&
     !saveRubricMutation.isPending;
 
@@ -362,14 +366,14 @@ export default function EventCriteriaPage() {
                         <td className="px-4 py-4">
                           <div 
                             className="flex justify-end gap-2"
-                            title={!canManageRubrics ? `Rubrics are read-only because this event is ${event.status}. Only draft events can add, edit, or delete grading criteria.` : undefined}
+                            title={event?.status === "closed" ? "Read-only: Event is closed." : !isRoundNotStarted(rubric.roundId) ? "Read-only: This round has already started." : undefined}
                           >
                             <Button
                               type="button"
                               variant="outline"
                               size="icon-sm"
                               title="Edit rubric"
-                              disabled={!canManageRubrics}
+                              disabled={!isRoundNotStarted(rubric.roundId)}
                               onClick={() => startEditRubric(rubric)}
                             >
                               <Edit2 className="h-4 w-4" />
@@ -380,7 +384,7 @@ export default function EventCriteriaPage() {
                               size="icon-sm"
                               title="Delete rubric"
                               disabled={
-                                !canManageRubrics || deleteRubricMutation.isPending
+                                !isRoundNotStarted(rubric.roundId) || deleteRubricMutation.isPending
                               }
                               onClick={() => {
                                 if (window.confirm(`Delete rubric "${rubric.name}"?`)) {
@@ -429,7 +433,7 @@ export default function EventCriteriaPage() {
             <Field label="Round *">
               <select
                 value={rubricDraft.roundId}
-                disabled={!canManageRubrics}
+                disabled={false}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -450,7 +454,7 @@ export default function EventCriteriaPage() {
             <Field label="Track *">
               <select
                 value={rubricDraft.trackId}
-                disabled={!canManageRubrics}
+                disabled={!isRoundNotStarted(rubricDraft.roundId)}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -472,7 +476,7 @@ export default function EventCriteriaPage() {
               <Input
                 value={rubricDraft.name}
                 placeholder="Technical Implementation"
-                disabled={!canManageRubrics}
+                disabled={!isRoundNotStarted(rubricDraft.roundId)}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -487,7 +491,7 @@ export default function EventCriteriaPage() {
                 value={rubricDraft.description}
                 className="min-h-24 resize-none"
                 placeholder="Describe what judges should evaluate."
-                disabled={!canManageRubrics}
+                disabled={!isRoundNotStarted(rubricDraft.roundId)}
                 onChange={(event) =>
                   setRubricDraft((draft) => ({
                     ...draft,
@@ -503,7 +507,7 @@ export default function EventCriteriaPage() {
                   type="number"
                   min={1}
                   value={rubricDraft.maxScore}
-                  disabled={!canManageRubrics}
+                  disabled={!isRoundNotStarted(rubricDraft.roundId)}
                   onChange={(event) =>
                     setRubricDraft((draft) => ({
                       ...draft,
@@ -519,7 +523,7 @@ export default function EventCriteriaPage() {
                   min={0.01}
                   step="0.01"
                   value={rubricDraft.weight}
-                  disabled={!canManageRubrics}
+                  disabled={!isRoundNotStarted(rubricDraft.roundId)}
                   onChange={(event) =>
                     setRubricDraft((draft) => ({
                       ...draft,
@@ -537,7 +541,13 @@ export default function EventCriteriaPage() {
               </div>
             )}
 
-            <div title={!canManageRubrics ? `Rubrics are read-only because this event is ${event.status}. Only draft events can add, edit, or delete grading criteria.` : undefined}>
+            <div title={
+              event?.status === "closed" 
+                ? "Cannot manage grading criteria for closed events."
+                : rubricDraft.roundId && !isRoundNotStarted(rubricDraft.roundId) 
+                  ? "Criteria can only be modified for rounds that have not started yet." 
+                  : undefined
+            }>
               <Button
                 type="button"
                 className="w-full"
