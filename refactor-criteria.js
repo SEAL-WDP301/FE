@@ -1,4 +1,7 @@
-"use client";
+const fs = require('fs');
+const path = require('path');
+
+const fileContent = `"use client";
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
@@ -214,7 +217,7 @@ export default function EventCriteriaPage() {
   const bulkDeleteMutation = useMutation({
     mutationFn: () => bulkDeleteOrganizerRubrics(eventId, selectedIds),
     onSuccess: () => {
-      enqueueSnackbar(`Successfully deleted ${selectedIds.length} rubrics`, { variant: "success" });
+      enqueueSnackbar(\`Successfully deleted \${selectedIds.length} rubrics\`, { variant: "success" });
       setSelectedIds([]);
       setIsConfirmDeleteModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["organizerRubrics", eventId] });
@@ -299,12 +302,12 @@ export default function EventCriteriaPage() {
           </Button>
           <Button
             type="button"
-            className="shrink-0"
-            disabled={event?.status === "closed" || !currentRound || !isRoundNotStarted(currentRound.id)}
-            onClick={() => { setEditingRubricId(null); setIsAddEditModalOpen(true); }}
+            variant="outline"
+            disabled={rubricsQuery.isFetching}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["organizerRubrics", eventId] })}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Rubric
+            <RefreshCcw className={cn("mr-2 h-4 w-4", rubricsQuery.isFetching && "animate-spin")} />
+            Refresh
           </Button>
         </div>
       </div>
@@ -342,12 +345,22 @@ export default function EventCriteriaPage() {
               {selectedIds.length > 0 && (
                 <Button 
                   variant="destructive" 
+                  className="mr-3" 
                   onClick={() => setIsConfirmDeleteModalOpen(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Selected ({selectedIds.length})
                 </Button>
               )}
+              <Button
+                type="button"
+                className="shrink-0"
+                disabled={event?.status === "closed" || !currentRound || !isRoundNotStarted(currentRound.id)}
+                onClick={() => { setEditingRubricId(null); setIsAddEditModalOpen(true); }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Rubric
+              </Button>
             </div>
           </div>
         </div>
@@ -428,7 +441,7 @@ export default function EventCriteriaPage() {
                             <div className="mt-1 text-xs text-muted-foreground italic">No description</div>
                           )}
                         </td>
-                        <td className="px-4 py-4">{round ? `Round ${round.roundNumber}: ${round.name}` : "Unknown"}</td>
+                        <td className="px-4 py-4">{round ? \`Round \${round.roundNumber}: \${round.name}\` : "Unknown"}</td>
                         <td className="px-4 py-4">
                           {track ? <Badge variant="outline">{track.name}</Badge> : <Badge variant="secondary">All tracks</Badge>}
                         </td>
@@ -453,7 +466,7 @@ export default function EventCriteriaPage() {
                               title="Delete rubric"
                               disabled={!isRoundNotStarted(rubric.roundId) || deleteRubricMutation.isPending}
                               onClick={() => {
-                                if (window.confirm(`Delete rubric "${rubric.name}"?`)) {
+                                if (window.confirm(\`Delete rubric "\${rubric.name}"?\`)) {
                                   deleteRubricMutation.mutate(rubric.id);
                                 }
                               }}
@@ -638,3 +651,6 @@ function Field({
     </div>
   );
 }
+`;
+
+fs.writeFileSync(path.join(__dirname, 'app/organizer/events/[id]/rounds/[roundId]/criteria/page.tsx'), fileContent);

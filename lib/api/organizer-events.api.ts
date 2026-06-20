@@ -159,6 +159,14 @@ export async function createOrganizerRubric(
   return unwrapData<OrganizerRubric>(res);
 }
 
+export async function bulkCreateOrganizerRubrics(
+  eventId: string | number,
+  payload: { rubrics: OrganizerRubricPayload[] }
+) {
+  const res = await axiosClient.post(`/organizer/events/${eventId}/rubrics/bulk`, payload);
+  return unwrapData<OrganizerRubric[]>(res);
+}
+
 export async function updateOrganizerRubric(
   eventId: string | number,
   rubricId: string | number,
@@ -176,4 +184,13 @@ export async function deleteOrganizerRubric(
   rubricId: string | number
 ) {
   await axiosClient.delete(`/organizer/events/${eventId}/rubrics/${rubricId}`);
+}
+
+export async function bulkDeleteOrganizerRubrics(
+  eventId: string | number,
+  rubricIds: number[]
+) {
+  await axiosClient.delete(`/organizer/events/${eventId}/rubrics/bulk`, {
+    data: { rubricIds },
+  });
 }
