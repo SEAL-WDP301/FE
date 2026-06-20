@@ -227,7 +227,6 @@ export default function EventRoundsPage() {
       id: round.id,
       roundNumber: round.roundNumber,
       name: round.name,
-      trackId: round.trackId ? String(round.trackId) : "",
       submissionType: round.submissionType,
       submissionDeadline: toDateTimeInput(round.submissionDeadline),
       maxFileSizeMb: round.maxFileSizeMb ?? 20,
@@ -259,12 +258,7 @@ export default function EventRoundsPage() {
       });
       return;
     }
-    if (roundDraft.isTrackSpecific && !roundDraft.trackId) {
-      enqueueSnackbar("Track is required for a track-specific round.", {
-        variant: "warning",
-      });
-      return;
-    }
+
     if (
       rounds.some(
         (round) =>
@@ -289,10 +283,6 @@ export default function EventRoundsPage() {
         : undefined,
       maxFileSizeMb,
       isTrackSpecific: roundDraft.isTrackSpecific,
-      trackId:
-        roundDraft.isTrackSpecific && roundDraft.trackId
-          ? Number(roundDraft.trackId)
-          : null,
     };
 
     const nextRounds = roundDraft.id
@@ -532,13 +522,9 @@ export default function EventRoundsPage() {
                       </td>
                       <td className="px-5 py-4">
                         {round.isTrackSpecific ? (
-                          track ? (
-                            <Badge variant="outline">{track.name}</Badge>
-                          ) : (
-                            <Badge variant="destructive">Missing track</Badge>
-                          )
+                          <Badge variant="secondary">Track-specific</Badge>
                         ) : (
-                          <Badge variant="outline">All tracks</Badge>
+                          <Badge variant="outline">All tracks combined</Badge>
                         )}
                       </td>
                       <td className="px-5 py-4 text-xs">
@@ -805,26 +791,7 @@ function RoundDialog({
             />
           </Field>
 
-          <Field label="Track">
-            <select
-              value={draft.trackId}
-              disabled={!draft.isTrackSpecific}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  trackId: event.target.value,
-                }))
-              }
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Select track</option>
-              {tracks.map((track) => (
-                <option key={track.id} value={track.id}>
-                  {track.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+
 
           <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-4 text-sm md:col-span-2">
             <input
@@ -834,7 +801,6 @@ function RoundDialog({
                 setDraft((current) => ({
                   ...current,
                   isTrackSpecific: event.target.checked,
-                  trackId: event.target.checked ? current.trackId : "",
                 }))
               }
               className="h-4 w-4"

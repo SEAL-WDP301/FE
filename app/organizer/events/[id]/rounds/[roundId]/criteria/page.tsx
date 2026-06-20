@@ -354,7 +354,7 @@ export default function EventCriteriaPage() {
                           {track ? (
                             <Badge variant="outline">{track.name}</Badge>
                           ) : (
-                            <Badge variant="destructive">Missing track</Badge>
+                            <Badge variant="secondary">All tracks</Badge>
                           )}
                         </td>
                         <td className="px-4 py-4 text-center">{rubric.maxScore}</td>
