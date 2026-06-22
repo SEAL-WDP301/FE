@@ -52,7 +52,7 @@ export default function Logo({
       {showText && !collapsed && (
         <div className="leading-tight transition-all duration-300">
           <h1
-            className={cn(`${current.title} font-bold tracking-tight text-white`)}
+            className={cn(`${current.title} font-bold tracking-tight text-foreground`)}
           >
             SEAL
           </h1>

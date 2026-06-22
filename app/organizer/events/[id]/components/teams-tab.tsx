@@ -5,14 +5,39 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
-import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, Loader2, ShieldX } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TeamDetailsDialog } from "./team-details-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
 import { useParams } from "next/navigation";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function TeamsTab({ event }: { event: any }) {
+interface OrganizerTeam {
+    id: number;
+    name: string;
+    status: string;
+    createdAt?: string;
+    eliminationReason?: string;
+    leader?: {
+        name?: string;
+        email?: string;
+        avatarUrl?: string;
+        avatar_url?: string;
+    };
+    members?: unknown[];
+    track?: {
+        id?: number;
+        name?: string;
+        maxMembersPerTeam?: number;
+    };
+    mentorAssignments?: Array<{
+        mentorId: number;
+        mentor?: { name?: string };
+    }>;
+}
+
+export default function TeamsTab({ event }: { event: OrganizerEvent }) {
     const queryClient = useQueryClient();
     const params = useParams();
     const roundId = params?.roundId as string | undefined;
@@ -25,12 +50,11 @@ export default function TeamsTab({ event }: { event: any }) {
 
     const [eliminationReason, setEliminationReason] = useState("");
     const [teamToEliminate, setTeamToEliminate] = useState<number | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
+    const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<OrganizerTeam | null>(null);
 
 
     // Fetch Teams for the selected track and round
-    const { data: teams, isLoading } = useQuery({
+    const { data: teams, isLoading } = useQuery<OrganizerTeam[]>({
         queryKey: ['organizerTeams', event.id, selectedTrackId, roundId],
         queryFn: async () => {
             let url = `/organizer/teams/events/${event.id}?`;
@@ -39,7 +63,7 @@ export default function TeamsTab({ event }: { event: any }) {
             
             const finalUrl = url.endsWith('?') ? url.slice(0, -1) : url;
             const res = await axiosClient.get(finalUrl);
-            return res.data.data;
+            return res.data.data as OrganizerTeam[];
         },
         enabled: true,
     });
@@ -91,11 +115,11 @@ export default function TeamsTab({ event }: { event: any }) {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'pending': return <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-md text-xs font-semibold">Pending</span>;
-            case 'approved': return <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold">Approved</span>;
-            case 'rejected': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Rejected</span>;
-            case 'disqualified': return <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-semibold">Disqualified</span>;
-            default: return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-xs font-semibold">{status}</span>;
+            case 'pending': return <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400"><span className="size-1.5 rounded-full bg-amber-400" />Pending</span>;
+            case 'approved': return <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-400"><span className="size-1.5 rounded-full bg-green-400" />Approved</span>;
+            case 'rejected': return <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400"><span className="size-1.5 rounded-full bg-red-400" />Rejected</span>;
+            case 'disqualified': return <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400"><span className="size-1.5 rounded-full bg-red-400" />Disqualified</span>;
+            default: return <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{status}</span>;
         }
     };
 
@@ -117,16 +141,16 @@ export default function TeamsTab({ event }: { event: any }) {
     });
 
     // Filter teams locally based on status and search term
-    const filteredTeams = teams?.filter((team: any) => {
+    const filteredTeams = teams?.filter((team) => {
         const matchesStatus = selectedStatus === "all" || team.status === selectedStatus;
         const matchesSearch = !searchTerm || team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              team.leader?.email.toLowerCase().includes(searchTerm.toLowerCase());
+                              (team.leader?.email ?? "").toLowerCase().includes(searchTerm.toLowerCase());
         return matchesStatus && matchesSearch;
     }) || [];
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-            setSelectedTeamIds(filteredTeams.map((t: any) => t.id));
+            setSelectedTeamIds(filteredTeams.map((team) => team.id));
         } else {
             setSelectedTeamIds([]);
         }
@@ -141,25 +165,24 @@ export default function TeamsTab({ event }: { event: any }) {
     };
 
     // Update selected team from updated cache
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const currentTeamDetails = teams?.find((t: any) => t.id === selectedTeamForDetails?.id) || selectedTeamForDetails;
+    const currentTeamDetails = teams?.find((team) => team.id === selectedTeamForDetails?.id) || selectedTeamForDetails;
 
     return (
-        <div className="bg-card border border-border rounded-xl flex flex-col min-h-[500px]">
+        <div className="flex min-h-[560px] flex-col overflow-hidden rounded-[26px] border border-border bg-card/80 shadow-[0_24px_70px_rgba(80,45,15,.1)] backdrop-blur-2xl transition-colors duration-300 dark:shadow-[0_28px_80px_rgba(0,0,0,.32)]">
             {/* Header & Controls */}
-            <div className="p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-5 border-b border-border p-5 sm:p-7 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold text-foreground">Team Management</h3>
-                    <p className="text-muted-foreground text-sm">Review and approve teams registered for the tracks.</p>
+                    <h3 className="text-lg font-semibold tracking-tight text-foreground">Team Management</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Review and approve teams registered for the tracks.</p>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-2.5">
                     {/* Bulk Delete Button */}
                     {selectedTeamIds.length > 0 && (
                         <Button 
                             variant="destructive" 
                             size="sm"
-                            className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-xl bg-red-500 text-white hover:bg-red-600"
                             onClick={() => setIsBulkDeleteOpen(true)}
                         >
                             <Trash2 className="h-4 w-4" />
@@ -171,7 +194,7 @@ export default function TeamsTab({ event }: { event: any }) {
                     <select 
                         value={selectedStatus} 
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                        className="h-10 rounded-xl border border-input bg-background/70 px-3 text-sm text-foreground outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/10"
                     >
                         <option value="all">All Statuses</option>
                         <option value="pending">Pending</option>
@@ -184,37 +207,36 @@ export default function TeamsTab({ event }: { event: any }) {
                     <select 
                         value={selectedTrackId} 
                         onChange={(e) => setSelectedTrackId(e.target.value === "all" ? "all" : Number(e.target.value))}
-                        className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                        className="h-10 rounded-xl border border-input bg-background/70 px-3 text-sm text-foreground outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/10"
                     >
                         <option value="all">All Tracks</option>
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {event.tracks?.map((track: any) => (
+                        {event.tracks?.map((track) => (
                             <option key={track.id} value={track.id}>{track.name}</option>
                         ))}
                     </select>
 
-                    <div className="relative">
+                    <div className="relative min-w-[220px] flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <input 
                             type="text" 
                             placeholder="Search teams..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            className="h-10 w-full rounded-xl border border-input bg-background/70 pl-9 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/10"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Table Area */}
-            <div className="flex-1 p-0 overflow-x-auto">
-                <table className="w-full text-sm text-left text-muted-foreground">
-                    <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+            <div className="flex-1 overflow-x-auto">
+                <table className="w-full min-w-[1080px] text-left text-sm text-muted-foreground">
+                    <thead className="bg-muted/55 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                         <tr>
-                            <th className="px-6 py-4 font-semibold w-12 text-center">
+                            <th className="w-12 px-6 py-4 text-center font-semibold">
                                 <input 
                                     type="checkbox" 
-                                    className="rounded border-border"
+                                    className="size-4 rounded border-border accent-[#F37021]"
                                     checked={filteredTeams.length > 0 && selectedTeamIds.length === filteredTeams.length}
                                     onChange={handleSelectAll}
                                 />
@@ -231,44 +253,59 @@ export default function TeamsTab({ event }: { event: any }) {
                     <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={8} className="px-6 py-12 text-center">
-                                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                                <td colSpan={8} className="px-6 py-16 text-center">
+                                    <Loader2 className="mx-auto size-6 animate-spin text-orange-500" />
                                 </td>
                             </tr>
                         ) : filteredTeams && filteredTeams.length > 0 ? (
-                            filteredTeams.map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-                                <tr key={team.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                            filteredTeams.map((team) => (
+                                <tr key={team.id} className="border-b border-border transition-colors duration-200 hover:bg-orange-500/[0.055]">
                                     <td className="px-6 py-4 text-center">
                                         <input 
                                             type="checkbox" 
-                                            className="rounded border-border"
+                                            className="size-4 rounded border-border accent-[#F37021]"
                                             checked={selectedTeamIds.includes(team.id)}
                                             onChange={(e) => handleSelectTeam(team.id, e.target.checked)}
                                         />
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-foreground">
-                                        {team.name}
-                                        {selectedTrackId === "all" && team.track && (
-                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{team.track.name}</div>
+                                    <td className="px-6 py-5 font-medium text-foreground">
+                                        <div>{team.name}</div>
+                                        {team.track && (
+                                            <span className="mt-1.5 inline-flex rounded-md border border-orange-500/15 bg-orange-500/[0.07] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-orange-400/80">
+                                                {team.track.name}
+                                            </span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {team.leader?.name || team.leader?.email}
+                                        <div className="flex items-center gap-2.5">
+                                            <Avatar className="size-8 border border-border">
+                                                {(team.leader?.avatarUrl || team.leader?.avatar_url) && (
+                                                    <AvatarImage src={team.leader.avatarUrl || team.leader.avatar_url} alt="" />
+                                                )}
+                                                <AvatarFallback className="bg-muted text-[11px] text-foreground">
+                                                    {(team.leader?.name || team.leader?.email || "?").charAt(0).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span className="max-w-[150px] truncate text-foreground/80">
+                                                {team.leader?.name || team.leader?.email}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {team.members?.length || 0} / {team.track?.maxMembersPerTeam || '∞'}
+                                        <span className="font-medium text-foreground/80">{team.members?.length || 0}</span>
+                                        <span className="text-muted-foreground"> / {team.track?.maxMembersPerTeam || '∞'}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         {team.mentorAssignments && team.mentorAssignments.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
-                                                {team.mentorAssignments.map((ma: any) => (
-                                                    <span key={ma.mentorId} className="px-2 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded text-xs font-semibold whitespace-nowrap">
+                                                {team.mentorAssignments.map((ma) => (
+                                                    <span key={ma.mentorId} className="whitespace-nowrap rounded-full border border-orange-500/15 bg-orange-500/[0.07] px-2.5 py-1 text-xs font-medium text-orange-300">
                                                         {ma.mentor?.name || 'Unknown'}
                                                     </span>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <span className="px-2 py-1 bg-muted border border-border text-muted-foreground rounded text-xs font-medium whitespace-nowrap">
+                                            <span className="whitespace-nowrap rounded-full border border-border bg-muted/70 px-2.5 py-1 text-xs text-muted-foreground">
                                                 Unassigned
                                             </span>
                                         )}
@@ -283,7 +320,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                         <Button 
                                             size="sm" 
                                             variant="ghost" 
-                                            className="text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 px-2"
+                                            className="rounded-xl px-2 text-muted-foreground hover:bg-muted hover:text-foreground"
                                             onClick={() => setSelectedTeamForDetails(team)}
                                         >
                                             <Eye className="h-4 w-4" />
@@ -293,7 +330,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                                 <Button 
                                                     size="sm" 
                                                     variant="outline" 
-                                                    className="border-green-500/30 text-green-500 hover:bg-green-500/10"
+                                                    className="rounded-xl border-green-500/20 text-green-400 hover:bg-green-500/10 hover:text-green-300"
                                                     onClick={() => handleUpdateStatus(team.id, 'approved')}
                                                     disabled={updateStatusMutation.isPending}
                                                 >
@@ -302,7 +339,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                                 <Button 
                                                     size="sm" 
                                                     variant="outline" 
-                                                    className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                                    className="rounded-xl border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                                     onClick={() => handleUpdateStatus(team.id, 'rejected')}
                                                     disabled={updateStatusMutation.isPending}
                                                 >
@@ -314,11 +351,11 @@ export default function TeamsTab({ event }: { event: any }) {
                                             <Button 
                                                 size="sm" 
                                                 variant="outline" 
-                                                className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                                className="rounded-xl border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                                 onClick={() => handleUpdateStatus(team.id, 'disqualified')}
                                                 disabled={updateStatusMutation.isPending}
                                             >
-                                                <Trash2 className="h-4 w-4 mr-1" /> Disqualify
+                                                <ShieldX className="mr-1 h-4 w-4" /> Disqualify
                                             </Button>
                                         )}
                                         {(team.status === 'rejected' || team.status === 'disqualified') && (
@@ -331,7 +368,7 @@ export default function TeamsTab({ event }: { event: any }) {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                                <td colSpan={8} className="px-6 py-16 text-center text-muted-foreground">
                                     No teams found matching your filters.
                                 </td>
                             </tr>
@@ -396,7 +433,7 @@ export default function TeamsTab({ event }: { event: any }) {
                     
                     <div className="bg-muted/50 p-3 rounded-md max-h-[150px] overflow-y-auto text-foreground text-sm mt-4">
                         <ul className="list-disc pl-4 space-y-1">
-                            {teams?.filter((t: any) => selectedTeamIds.includes(t.id)).map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                            {teams?.filter((team) => selectedTeamIds.includes(team.id)).map((team) => (
                                 <li key={team.id}>
                                     <span className="font-semibold">{team.name}</span>
                                     {team.track && <span className="text-muted-foreground ml-1">({team.track.name})</span>}

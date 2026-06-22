@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -60,20 +62,20 @@ export default function EventStakeholdersPage() {
   });
 
   // Categorize stakeholders based on current round
-  const mentors = stakeholders?.filter((s: any) => 
+  const mentors = stakeholders?.filter((s: any) =>
     s.mentorAssignments?.some((ma: any) => ma.team?.teamRounds?.some((tr: any) => tr.roundId === Number(roundId)))
   ) || [];
-  const judges = stakeholders?.filter((s: any) => 
+  const judges = stakeholders?.filter((s: any) =>
     s.judgeAssignments?.some((ja: any) => ja.roundId === Number(roundId))
   ) || [];
-  const available = stakeholders?.filter((s: any) => 
-    !s.mentorAssignments?.some((ma: any) => ma.team?.teamRounds?.some((tr: any) => tr.roundId === Number(roundId))) && 
+  const available = stakeholders?.filter((s: any) =>
+    !s.mentorAssignments?.some((ma: any) => ma.team?.teamRounds?.some((tr: any) => tr.roundId === Number(roundId))) &&
     !s.judgeAssignments?.some((ja: any) => ja.roundId === Number(roundId))
   ) || [];
 
   // Filter for search inside modal
-  const filteredModalUsers = stakeholders?.filter((u: any) => 
-    u.name?.toLowerCase().includes(modalSearchQuery.toLowerCase()) || 
+  const filteredModalUsers = stakeholders?.filter((u: any) =>
+    u.name?.toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
     u.email?.toLowerCase().includes(modalSearchQuery.toLowerCase())
   ) || [];
 
@@ -105,8 +107,8 @@ export default function EventStakeholdersPage() {
       enqueueSnackbar('Judge unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
       if (drawerUser) {
-          const updatedUser = { ...drawerUser, judgeAssignments: drawerUser.judgeAssignments.filter((ja: any) => ja.id !== assignmentId) };
-          setDrawerUser(updatedUser);
+        const updatedUser = { ...drawerUser, judgeAssignments: drawerUser.judgeAssignments.filter((ja: any) => ja.id !== assignmentId) };
+        setDrawerUser(updatedUser);
       }
     },
     onError: (error: any) => {
@@ -125,6 +127,7 @@ export default function EventStakeholdersPage() {
       setIsMentorModalOpen(false);
       resetForms();
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       enqueueSnackbar(error.response?.data?.message || 'Failed to assign mentor', { variant: 'error' });
     }
@@ -174,9 +177,9 @@ export default function EventStakeholdersPage() {
     });
   };
 
-  const filteredTeams = teams?.filter((t: any) => 
-    t.trackId === selectedTrack && 
-    t.status === 'approved' && 
+  const filteredTeams = teams?.filter((t: any) =>
+    t.trackId === selectedTrack &&
+    t.status === 'approved' &&
     t.teamRounds?.some((tr: any) => tr.roundId === Number(roundId)) &&
     (!t.mentorAssignments || t.mentorAssignments.length === 0)
   ) || [];
@@ -193,14 +196,14 @@ export default function EventStakeholdersPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button 
+          <Button
             className="gap-2 bg-amber-600 hover:bg-amber-700"
             onClick={() => { resetForms(); setIsMentorModalOpen(true); }}
           >
             <Plus className="h-4 w-4" />
             Assign Mentor
           </Button>
-          <Button 
+          <Button
             className="gap-2 bg-blue-600 hover:bg-blue-700"
             onClick={() => { resetForms(); setIsJudgeModalOpen(true); }}
           >
@@ -346,7 +349,7 @@ export default function EventStakeholdersPage() {
             <SheetTitle className="text-2xl">{drawerUser?.name}</SheetTitle>
             <SheetDescription>{drawerUser?.email}</SheetDescription>
           </SheetHeader>
-          
+
           <div className="space-y-6">
             {/* Profile Info */}
             <div className="bg-muted/30 p-4 rounded-xl border border-border">
@@ -373,13 +376,13 @@ export default function EventStakeholdersPage() {
                         <p className="text-xs text-muted-foreground">Track: {ma.team?.track?.name}</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button 
+                        <Button
                           variant="ghost" size="sm" className="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
                           onClick={() => setSelectedTeamIdForDetails(ma.teamId)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
+                        <Button
                           variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                           onClick={() => unassignMentorMutation.mutate({ stakeholderId: drawerUser.id, teamId: ma.teamId })}
                         >
@@ -405,7 +408,7 @@ export default function EventStakeholdersPage() {
                         <p className="font-medium">Round: {ja.round?.name}</p>
                         <p className="text-xs text-muted-foreground">{ja.track ? `Track: ${ja.track.name}` : 'All Tracks'}</p>
                       </div>
-                      <Button 
+                      <Button
                         variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                         onClick={() => unassignJudgeMutation.mutate(ja.id)}
                       >
@@ -432,17 +435,17 @@ export default function EventStakeholdersPage() {
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Stakeholders</label>
               <div className="space-y-2 border border-border rounded-lg p-2">
-                <input 
-                  type="text" 
-                  placeholder="Search by name or email..." 
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
                   className="w-full bg-muted/30 border border-border rounded p-2 text-sm mb-2 outline-none focus:border-blue-500"
                   value={modalSearchQuery}
                   onChange={(e) => setModalSearchQuery(e.target.value)}
                 />
                 <div className="max-h-[150px] overflow-y-auto space-y-1">
                   <label className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer border-b border-border mb-1 pb-2">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="rounded border-border bg-background"
                       checked={selectedUsers.length === filteredModalUsers?.length && filteredModalUsers?.length > 0}
                       onChange={(e) => {
@@ -454,8 +457,8 @@ export default function EventStakeholdersPage() {
                   </label>
                   {filteredModalUsers?.map((u: any) => (
                     <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-border bg-background"
                         checked={selectedUsers.includes(u.id)}
                         onChange={(e) => {
@@ -479,8 +482,8 @@ export default function EventStakeholdersPage() {
                 <div className="space-y-2 max-h-[150px] overflow-y-auto border border-border rounded-lg p-2">
                   {event?.tracks?.map((track: any) => (
                     <label key={track.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-border bg-background"
                         checked={selectedTrackIds.includes(track.id)}
                         onChange={(e) => {
@@ -516,9 +519,9 @@ export default function EventStakeholdersPage() {
           <div className="space-y-4 mt-4">
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Select Stakeholder</label>
-              <input 
-                type="text" 
-                placeholder="Search by name or email..." 
+              <input
+                type="text"
+                placeholder="Search by name or email..."
                 className="w-full bg-background border border-border rounded-lg p-2.5 text-sm mb-2 outline-none focus:border-blue-500"
                 value={modalSearchQuery}
                 onChange={(e) => setModalSearchQuery(e.target.value)}
@@ -534,34 +537,34 @@ export default function EventStakeholdersPage() {
             </div>
 
             <div>
-               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Filter by Track</label>
-               <select
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Filter by Track</label>
+              <select
                 value={selectedTrack}
                 onChange={(e) => { setSelectedTrack(Number(e.target.value)); setSelectedTeamIds([]); }}
                 className="w-full bg-background border border-border text-foreground text-sm rounded-lg p-2.5"
-               >
-                 <option value="">Select a track...</option>
-                 {event?.tracks?.map((track: any) => {
-                   const availableCount = teams?.filter((t: any) => 
-                     t.trackId === track.id && 
-                     t.status === 'approved' && 
-                     (!t.mentorAssignments || t.mentorAssignments.length === 0)
-                   ).length || 0;
-                   return (
-                     <option key={track.id} value={track.id} disabled={availableCount === 0}>
-                       {track.name} {availableCount === 0 ? "(No teams available)" : `(${availableCount} available)`}
-                     </option>
-                   );
-                 })}
-               </select>
+              >
+                <option value="">Select a track...</option>
+                {event?.tracks?.map((track: any) => {
+                  const availableCount = teams?.filter((t: any) =>
+                    t.trackId === track.id &&
+                    t.status === 'approved' &&
+                    (!t.mentorAssignments || t.mentorAssignments.length === 0)
+                  ).length || 0;
+                  return (
+                    <option key={track.id} value={track.id} disabled={availableCount === 0}>
+                      {track.name} {availableCount === 0 ? "(No teams available)" : `(${availableCount} available)`}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
 
             {selectedTrack !== "" && (
               <div>
                 <label className="text-xs font-semibold flex justify-between text-muted-foreground uppercase mb-1">
                   <span>Select Teams</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="text-blue-500 hover:underline"
                     onClick={() => {
                       if (selectedTeamIds.length === filteredTeams.length) setSelectedTeamIds([]);
@@ -578,8 +581,8 @@ export default function EventStakeholdersPage() {
                   {filteredTeams.length === 0 && <p className="text-sm text-muted-foreground p-2">No satisfying teams in this track.</p>}
                   {filteredTeams.map((team: any) => (
                     <label key={team.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-border bg-background"
                         checked={selectedTeamIds.includes(team.id)}
                         onChange={(e) => {
@@ -604,7 +607,7 @@ export default function EventStakeholdersPage() {
         </DialogContent>
       </Dialog>
 
-      <TeamDetailsDialog 
+      <TeamDetailsDialog
         isOpen={!!selectedTeamIdForDetails}
         onClose={() => setSelectedTeamIdForDetails(null)}
         team={currentTeamDetails}

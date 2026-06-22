@@ -205,6 +205,46 @@ export async function getMentorFeedback() {
   return unwrapData<MentorFeedback[]>(response) || [];
 }
 
+export async function createMentorSubmissionFeedback(
+  submissionId: string | number,
+  payload: {
+    content: string;
+    status?: string;
+  }
+) {
+  const response = await axiosClient.post(
+    `/mentor/submissions/${submissionId}/feedback`,
+    payload
+  );
+  return unwrapData<MentorFeedback>(response);
+}
+
+export async function updateMentorFeedback(
+  feedbackId: string | number,
+  payload: {
+    content?: string;
+    status?: string;
+  }
+) {
+  const response = await axiosClient.patch(`/mentor/feedback/${feedbackId}`, payload);
+  return unwrapData<MentorFeedback>(response);
+}
+
+export async function deleteMentorFeedback(feedbackId: string | number) {
+  await axiosClient.delete(`/mentor/feedback/${feedbackId}`);
+}
+
+export async function getStudentMyTeamFeedback(params?: {
+  eventId?: string | number;
+  roundId?: string | number;
+  status?: string;
+}) {
+  const response = await axiosClient.get("/student/teams/my-team/feedback", {
+    params,
+  });
+  return unwrapData<StudentWorkspaceFeedback[]>(response) || [];
+}
+
 export async function getStudentMentorWorkspace(eventId: string | number) {
   const response = await axiosClient.get<{
     data: StudentMentorWorkspaceData;

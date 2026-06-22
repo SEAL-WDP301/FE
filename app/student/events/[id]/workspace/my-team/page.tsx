@@ -3,7 +3,9 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
@@ -15,7 +17,6 @@ import {
     UserPlus,
     UsersRound,
     Crown,
-    LogOut,
     Check,
     GraduationCap
 } from "lucide-react";
@@ -37,7 +38,6 @@ import { MemberListItem } from "./components/member-list-item";
 import { PendingInvitesTable } from "./components/pending-invites-table";
 
 export default function TeamMembersPage() {
-    const router = useRouter();
     const params = useParams();
     const eventId = params.id as string;
     const queryClient = useQueryClient();
@@ -66,7 +66,6 @@ export default function TeamMembersPage() {
     });
 
     const updateTeamMutation = useMutation({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mutationFn: async (data: any) => {
             return axiosClient.put(`/student/teams/register/team/${eventId}`, data);
         },
@@ -76,7 +75,6 @@ export default function TeamMembersPage() {
             setIsInviteDialogOpen(false);
             setInviteEmail("");
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
             const message = error.response?.data?.message || 'Failed to update team';
             enqueueSnackbar(message, { variant: 'error' });
@@ -112,9 +110,7 @@ export default function TeamMembersPage() {
     const isEventActive = event?.status === "active";
     const members = team.members || [];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeMembers = members.filter((m: any) => m.status === "accepted");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingMembers = members.filter((m: any) => m.status === "pending");
 
     // Prepare data for inviting a new member
@@ -140,7 +136,6 @@ export default function TeamMembersPage() {
         });
     };
 
-    // Filter active members
     const filteredMembers = activeMembers.filter((m: any) => {
         const nameMatch = m.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             m.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -175,15 +170,22 @@ export default function TeamMembersPage() {
                             <div className="mt-5 flex items-center gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/20 w-fit pr-6">
                                 <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                                     {team.mentorAssignments[0].mentor?.avatarUrl ? (
-                                        <img src={team.mentorAssignments[0].mentor.avatarUrl} alt={team.mentorAssignments[0].mentor.name} className="h-full w-full rounded-full object-cover" />
+                                        <Image
+                                            src={team.mentorAssignments[0].mentor.avatarUrl}
+                                            alt={team.mentorAssignments[0].mentor.name}
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full rounded-full object-cover"
+                                            unoptimized
+                                        />
                                     ) : (
                                         <GraduationCap className="h-5 w-5 text-blue-500" />
                                     )}
                                 </div>
-                                <div onClick={() => router.push(`/student/events/${eventId}/workspace/mentor`)} className="cursor-pointer">
+                                <Link href={`/student/events/${eventId}/workspace/mentor`} className="cursor-pointer">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-0.5">Team Mentor</p>
                                     <p className="text-sm font-medium text-foreground">{team.mentorAssignments[0].mentor?.name}</p>
-                                </div>
+                                </Link>
                             </div>
                         )}
                     </div>

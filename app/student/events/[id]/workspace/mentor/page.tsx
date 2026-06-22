@@ -7,6 +7,7 @@ import { Loader2, UserRoundX } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import {
   getStudentAssignedMentor,
+  getStudentMyTeamFeedback,
   getStudentMentorWorkspace,
 } from "@/lib/api/mentor.api";
 import { FeedbackStatusPanel } from "./components/feedback-status-panel";
@@ -25,8 +26,12 @@ export default function MentorWorkspacePage() {
     queryKey: ["studentAssignedMentor", eventId],
     queryFn: () => getStudentAssignedMentor(eventId),
   });
+  const teamFeedbackQuery = useQuery({
+    queryKey: ["studentMyTeamFeedback", eventId],
+    queryFn: () => getStudentMyTeamFeedback({ eventId }),
+  });
 
-  if (workspaceQuery.isLoading || mentorQuery.isLoading) {
+  if (workspaceQuery.isLoading || mentorQuery.isLoading || teamFeedbackQuery.isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -34,7 +39,12 @@ export default function MentorWorkspacePage() {
     );
   }
 
-  if (workspaceQuery.isError || mentorQuery.isError || !workspaceQuery.data) {
+  if (
+    workspaceQuery.isError ||
+    mentorQuery.isError ||
+    teamFeedbackQuery.isError ||
+    !workspaceQuery.data
+  ) {
     return (
       <GlassCard className="rounded-[24px] p-10 text-center">
         <p className="font-semibold">Unable to load mentor workspace.</p>
@@ -46,6 +56,7 @@ export default function MentorWorkspacePage() {
   const mentor =
     mentorQuery.data || data.team?.mentorAssignments?.[0]?.mentor || null;
   const feedbackItems = [
+    ...(teamFeedbackQuery.data || []),
     ...(data.feedback || []),
     ...(data.mentorFeedback || []),
     ...(data.latestSubmission?.feedback ? [data.latestSubmission.feedback] : []),

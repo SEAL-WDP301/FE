@@ -1,6 +1,6 @@
-import HomeHeader from "@/components/layout/dashboard/home-header";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { ProfileChecker } from "@/components/layout/public/profile-checker";
+import { OrganizerShell } from "./organizer-shell";
 
 export default function OrganizerLayout({
     children,
@@ -9,13 +9,10 @@ export default function OrganizerLayout({
 }) {
     return (
         <RoleGuard allowedRoles={["admin", "organizer"]}>
-        <div className="h-screen overflow-hidden bg-background text-foreground flex flex-col">
-            <HomeHeader />
+          <OrganizerShell>
             <ProfileChecker />
-            <main className="flex-1 overflow-y-auto w-full">
-                {children}
-            </main>
-        </div>
+            {children}
+          </OrganizerShell>
         </RoleGuard>
     );
 }
