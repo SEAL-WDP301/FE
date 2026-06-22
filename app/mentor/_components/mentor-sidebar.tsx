@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
     ChartNoAxesCombined,
     ChevronLeft,
+    ClipboardCheck,
     FileCheck2,
     LayoutDashboard,
     Megaphone,
@@ -26,6 +27,11 @@ interface MentorSidebarProps {
 
 const navItems = [
     { label: "Dashboard", href: "/mentor", icon: LayoutDashboard },
+    {
+        label: "Judge Evaluation",
+        href: "/judge/evalution",
+        icon: ClipboardCheck,
+    },
     { label: "My Teams", href: "/mentor/teams", icon: UsersRound },
     {
         label: "Team Progress",
