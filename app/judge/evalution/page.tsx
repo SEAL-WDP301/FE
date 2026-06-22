@@ -182,7 +182,14 @@ export default function EvaluationPage() {
     [router, selectedEvent],
   );
 
-  const roundClosed = submissionDetail?.round.status === "closed";
+  const roundStatus = submissionDetail?.round.status;
+  const submissionDeadline = submissionDetail?.round.submissionDeadline;
+  const scoringLocked =
+    !roundStatus ||
+    roundStatus === "results_published" ||
+    roundStatus === "not_started" ||
+    (roundStatus === "open" &&
+      (!submissionDeadline || new Date(submissionDeadline) > new Date()));
 
   if (eventsLoading) {
     return (
@@ -269,7 +276,7 @@ export default function EvaluationPage() {
                 <JudgeCommentsCard
                   value={overallComment}
                   onChange={setOverallComment}
-                  disabled={roundClosed || saveMutation.isPending}
+                  disabled={scoringLocked || saveMutation.isPending}
                 />
 
                 <div>
@@ -280,7 +287,7 @@ export default function EvaluationPage() {
                         rubrics={submissionDetail?.rubrics ?? []}
                         scores={scores}
                         comments={comments}
-                        disabled={roundClosed || saveMutation.isPending}
+                        disabled={scoringLocked || saveMutation.isPending}
                         onScoreChange={(id, value) =>
                           setScores((prev) => ({ ...prev, [id]: value }))
                         }
@@ -297,7 +304,7 @@ export default function EvaluationPage() {
                         scoringStatus={submissionDetail?.scoringStatus}
                         weightedScore={submissionDetail?.weightedScore}
                         isSaving={saveMutation.isPending}
-                        disabled={roundClosed}
+                        disabled={scoringLocked}
                         onSaveDraft={() => saveMutation.mutate()}
                         onSubmit={() => saveMutation.mutate()}
                       />
