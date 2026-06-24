@@ -24,15 +24,15 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   const { data: stakeholders, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["organizerStakeholders", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/stakeholders/events/${eventId}`);
+      const res = await axiosClient.get(`/organizer/assignments/events/${eventId}`);
       return res.data.data;
     },
     enabled: isOpen,
   });
 
   const assignMentorMutation = useMutation({
-    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-      const res = await axiosClient.post(`/organizer/stakeholders/teams/${teamId}/mentors`, { stakeholderId });
+    mutationFn: async (stakeholderId: number) => {
+      const res = await axiosClient.post(`/organizer/assignments/teams/${team.id}/mentors`, { stakeholderId });
       return res.data;
     },
     onSuccess: () => {
@@ -48,8 +48,8 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   });
 
   const unassignMentorMutation = useMutation({
-    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-      const res = await axiosClient.delete(`/organizer/stakeholders/teams/${teamId}/mentors/${stakeholderId}`);
+    mutationFn: async (stakeholderId: number) => {
+      const res = await axiosClient.delete(`/organizer/assignments/teams/${team.id}/mentors/${stakeholderId}`);
       return res.data;
     },
     onSuccess: () => {

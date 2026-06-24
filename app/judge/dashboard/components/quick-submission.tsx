@@ -12,7 +12,7 @@ export function QuickSubmission() {
 
   const focus =
     pendingSubmissions[0] ??
-    submissions.find((item) => item.githubUrl || item.assignedRepoUrl) ??
+    submissions.find((item) => item.assignedRepoUrl) ??
     submissions[0];
 
   if (isLoading) {

@@ -46,9 +46,10 @@ export default function EventStakeholdersPage() {
   const { data: stakeholders, isLoading: isLoadingStaff } = useQuery({
     queryKey: ["organizerStakeholders", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/stakeholders/events/${eventId}`);
+      const res = await axiosClient.get(`/organizer/assignments/events/${eventId}`);
       return res.data.data;
     },
+    enabled: !!eventId,
   });
 
   const { data: teams } = useQuery({
@@ -82,7 +83,7 @@ export default function EventStakeholdersPage() {
   // Mutations
   const assignJudgeMutation = useMutation({
     mutationFn: async (data: { stakeholderIds: number[], roundId: number, trackIds?: number[] }) => {
-      const res = await axiosClient.post(`/organizer/stakeholders/events/${eventId}/judges`, data);
+      const res = await axiosClient.post(`/organizer/assignments/events/${eventId}/judges`, data);
       return res.data;
     },
     onSuccess: () => {
@@ -98,7 +99,7 @@ export default function EventStakeholdersPage() {
 
   const unassignJudgeMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
-      const res = await axiosClient.delete(`/organizer/stakeholders/judges/${assignmentId}`);
+      const res = await axiosClient.delete(`/organizer/assignments/judges/${assignmentId}`);
       return res.data;
     },
     onSuccess: (_data, assignmentId) => {
@@ -131,8 +132,8 @@ export default function EventStakeholdersPage() {
   });
 
   const unassignMentorMutation = useMutation({
-    mutationFn: async (data: { stakeholderId: number, teamId: number }) => {
-      const res = await axiosClient.delete(`/organizer/stakeholders/teams/${data.teamId}/mentors/${data.stakeholderId}`);
+    mutationFn: async (data: { teamId: number; stakeholderId: number }) => {
+      const res = await axiosClient.delete(`/organizer/assignments/teams/${data.teamId}/mentors/${data.stakeholderId}`);
       return res.data;
     },
     onSuccess: (data, variables) => {

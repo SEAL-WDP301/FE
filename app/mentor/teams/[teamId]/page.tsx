@@ -142,7 +142,7 @@ export default function MentorTeamDashboard() {
 
   const updateFeedbackMutation = useMutation({
     mutationFn: async ({ submissionId, feedbackId, content }: { submissionId: number, feedbackId: number, content: string }) => {
-      const res = await axiosClient.put(`/mentor/submissions/${submissionId}/feedback/${feedbackId}`, { content });
+      const res = await axiosClient.patch(`/mentor/feedback/${feedbackId}`, { content });
       return res.data;
     },
     onSuccess: () => {
@@ -158,7 +158,7 @@ export default function MentorTeamDashboard() {
 
   const deleteFeedbackMutation = useMutation({
     mutationFn: async ({ submissionId, feedbackId }: { submissionId: number, feedbackId: number }) => {
-      const res = await axiosClient.delete(`/mentor/submissions/${submissionId}/feedback/${feedbackId}`);
+      const res = await axiosClient.delete(`/mentor/feedback/${feedbackId}`);
       return res.data;
     },
     onSuccess: () => {
