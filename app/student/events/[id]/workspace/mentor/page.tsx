@@ -1,8 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, UserRoundX } from "lucide-react";
+import { useEffect } from "react";
+import { useSocket } from "@/lib/hooks/useSocket";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import {
@@ -88,6 +90,25 @@ export default function MentorWorkspacePage() {
     enabled: Number.isFinite(eventId),
     retry: false,
   });
+  const queryClient = useQueryClient();
+  const { socket, isConnected } = useSocket();
+
+  const teamId = workspaceQuery.data?.team?.id;
+
+  useEffect(() => {
+    if (!socket || !teamId) return;
+
+    socket.emit("join_team_room", teamId);
+
+    socket.on("feedback_updated", () => {
+      queryClient.invalidateQueries({ queryKey: ["studentMentorWorkspace", eventId] });
+    });
+
+    return () => {
+      socket.emit("leave_team_room", teamId);
+      socket.off("feedback_updated");
+    };
+  }, [socket, teamId, queryClient, eventId]);
 
   if (workspaceQuery.isLoading) {
     return (
@@ -109,7 +130,6 @@ export default function MentorWorkspacePage() {
   const mentor =
     mentorQuery.data || data.team?.mentorAssignments?.[0]?.mentor || null;
   const feedbackItems = normalizeFeedbackItems(data);
-
   const resolvedCount = feedbackItems.filter(
     (feedback) =>
       feedback.status === "published" || feedback.status === "resolved"
@@ -134,6 +154,7 @@ export default function MentorWorkspacePage() {
       <MentorHeader
         hasMentor={Boolean(mentor)}
         feedbackCount={feedbackItems.length}
+        isConnected={isConnected}
       />
 
       {!mentor ? (

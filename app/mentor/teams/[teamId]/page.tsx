@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ import {
 } from "@/lib/api/mentor.api";
 import { axiosClient } from "@/lib/axios";
 import { MentorPageHeader } from "../../_components/mentor-page-header";
+import { useSocket } from "@/lib/hooks/useSocket";
 import {
   MentorEmptyState,
   MentorErrorState,
@@ -88,6 +89,24 @@ export default function MentorTeamDashboard() {
   
   // To handle multiple submissions, we default to the latest one
   const [activeSubmissionId, setActiveSubmissionId] = useState<number | null>(null);
+
+  const { socket, isConnected } = useSocket();
+
+  useEffect(() => {
+    if (!socket || !teamId) return;
+
+    socket.emit("join_team_room", Number(teamId));
+
+    socket.on("feedback_updated", () => {
+      queryClient.invalidateQueries({ queryKey: ["mentorTeamSubmissions", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["mentorTeam", teamId] });
+    });
+
+    return () => {
+      socket.emit("leave_team_room", Number(teamId));
+      socket.off("feedback_updated");
+    };
+  }, [socket, teamId, queryClient]);
 
   const teamQuery = useQuery({
     queryKey: ["mentorTeam", teamId],
@@ -175,7 +194,17 @@ export default function MentorTeamDashboard() {
   return (
     <div className="mx-auto max-w-[1500px] space-y-6 pb-20 animate-in fade-in duration-500">
       <MentorPageHeader
-        title={team.name}
+        title={
+          <div className="flex items-center gap-3">
+            {team.name}
+            {isConnected && (
+              <div title="Real-time connected" className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </div>
+            )}
+          </div>
+        }
         subtitle="Manage team, review submissions, and provide real-time feedback."
         actions={
           <Button asChild variant="outline" className="rounded-xl">
