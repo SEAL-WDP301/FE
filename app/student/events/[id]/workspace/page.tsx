@@ -341,8 +341,28 @@ export default function WorkspaceOverviewPage() {
               </h2>
             </div>
 
-            <div className="flex-1 space-y-4 flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">No feedback yet.</p>
+            <div className="flex-1 space-y-4">
+              {workspaceData?.mentorFeedbacks && workspaceData.mentorFeedbacks.length > 0 ? (
+                workspaceData.mentorFeedbacks.slice(0, 3).map((feedback: any) => (
+                  <div key={feedback.id} className="rounded-xl border border-border bg-muted/30 p-4 relative group">
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant={feedback.status === "completed" ? "success" : feedback.status === "acknowledged" ? "outline" : "warning"} className="text-[10px] px-1.5 h-5 uppercase tracking-wider">
+                        {feedback.status}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    <p className="text-sm line-clamp-3 text-foreground/90">
+                      {feedback.content}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center py-8">
+                  <p className="text-sm text-muted-foreground">No feedback yet.</p>
+                </div>
+              )}
             </div>
 
             <Link href={`${basePath}/mentor`} className="mt-6 block">

@@ -263,3 +263,8 @@ export function getAssignedMentorTeams(profile?: MentorProfile | null) {
     .map((assignment) => assignment.team)
     .filter((team): team is MentorTeam => Boolean(team));
 }
+
+export async function updateStudentMentorFeedbackStatus(feedbackId: number | string, status: "unread" | "acknowledged" | "completed") {
+  const response = await axiosClient.patch(`/student/teams/my-team/feedbacks/${feedbackId}/status`, { status });
+  return response.data;
+}

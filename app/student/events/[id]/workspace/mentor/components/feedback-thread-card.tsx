@@ -1,12 +1,16 @@
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, CheckCircle2, Circle, Check } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
-import type {
-    StudentWorkspaceFeedback,
-    StudentWorkspaceMentor,
+import {
+    updateStudentMentorFeedbackStatus,
+    type StudentWorkspaceFeedback,
+    type StudentWorkspaceMentor,
 } from "@/lib/api/mentor.api";
 
 type FeedbackThreadCardProps = {
@@ -28,6 +32,26 @@ function formatDate(value?: string | null) {
 }
 
 export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
+    const queryClient = useQueryClient();
+    const params = useParams();
+    const eventId = Number(params.id);
+
+    const updateStatusMutation = useMutation({
+        mutationFn: ({ feedbackId, status }: { feedbackId: number | string, status: "unread" | "acknowledged" | "completed" }) =>
+            updateStudentMentorFeedbackStatus(feedbackId, status),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["studentMentorWorkspace", eventId] });
+        },
+    });
+
+    const handleStatusClick = (feedbackId: number | string, currentStatus: string) => {
+        if (currentStatus === "unread") {
+            updateStatusMutation.mutate({ feedbackId, status: "acknowledged" });
+        } else if (currentStatus === "acknowledged") {
+            updateStatusMutation.mutate({ feedbackId, status: "completed" });
+        }
+    };
+
     return (
         <GlassCard className="rounded-[24px] bg-card p-6 hover:-translate-y-1">
             <div className="mb-6">
@@ -51,11 +75,14 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                 ) : null}
                 {items.map((item) => {
                     const feedbackMentor = item.mentor || mentor;
-                    const unresolved = item.status !== "published" && item.status !== "resolved";
+                    const unresolved = item.status !== "completed" && item.status !== "resolved";
                     const avatarUrl =
                         feedbackMentor?.avatarUrl ||
                         feedbackMentor?.avatar_url ||
                         undefined;
+                    
+                    const isUpdating = updateStatusMutation.isPending && updateStatusMutation.variables?.feedbackId === item.id;
+                    const capitalizedStatus = item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Feedback";
 
                     return (
                         <div
@@ -78,7 +105,7 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
                                             <p className="font-semibold text-foreground">
                                                 {feedbackMentor?.name || "Assigned Mentor"}
@@ -95,10 +122,37 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                                             </p>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2">
-                                            <Badge variant={unresolved ? "warning" : "success"}>
-                                                {item.status || "Feedback"}
-                                            </Badge>
+                                        <div className="flex flex-col items-end gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status:</span>
+                                                <Badge variant={unresolved ? "warning" : "success"}>
+                                                    {capitalizedStatus}
+                                                </Badge>
+                                                {item.status === "unread" && (
+                                                    <Button 
+                                                        size="icon" 
+                                                        variant="ghost"
+                                                        title="Acknowledge feedback"
+                                                        className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                                                        disabled={isUpdating}
+                                                        onClick={() => handleStatusClick(item.id, "unread")}
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {item.status === "acknowledged" && (
+                                                    <Button 
+                                                        size="icon" 
+                                                        variant="ghost"
+                                                        title="Mark as Completed"
+                                                        className="h-6 w-6 rounded-full text-green-500 hover:bg-green-500/10 hover:text-green-600"
+                                                        disabled={isUpdating}
+                                                        onClick={() => handleStatusClick(item.id, "acknowledged")}
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 

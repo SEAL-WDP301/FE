@@ -13,6 +13,7 @@ import {
   Settings,
   UsersRound,
   Video,
+  type LucideIcon,
 } from "lucide-react";
 
 import Logo from "@/components/ui/logo";
@@ -25,7 +26,15 @@ interface MentorSidebarProps {
   setCollapsed: (value: boolean) => void;
 }
 
-const baseNavItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  id?: string;
+  badge?: string;
+}
+
+const baseNavItems: NavItem[] = [
   { label: "Dashboard", href: "/mentor", icon: LayoutDashboard },
   {
     label: "Judge Evaluation",

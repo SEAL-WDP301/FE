@@ -431,8 +431,7 @@ export default function MentorTeamDashboard() {
                                     fb.status === "completed" ? "success" : 
                                     fb.status === "acknowledged" ? "highlight" : "outline"
                                   }>
-                                    {fb.status === "completed" ? "Completed" : 
-                                     fb.status === "acknowledged" ? "Acknowledged" : "Unread"}
+                                    {fb.status ? fb.status.charAt(0).toUpperCase() + fb.status.slice(1).toLowerCase() : "Unread"}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-1">
