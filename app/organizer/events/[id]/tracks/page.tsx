@@ -2,9 +2,9 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
-import { Edit2, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { Edit2, Loader2, Plus, Save, Trash2, PlayCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,6 +138,7 @@ function buildEventPayload(
 
 export default function EventRoundsPage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params.id as string;
   const queryClient = useQueryClient();
 
@@ -227,6 +228,7 @@ export default function EventRoundsPage() {
       id: round.id,
       roundNumber: round.roundNumber,
       name: round.name,
+      trackId: round.trackId ? String(round.trackId) : "",
       submissionType: round.submissionType,
       submissionDeadline: toDateTimeInput(round.submissionDeadline),
       maxFileSizeMb: round.maxFileSizeMb ?? 20,
@@ -513,7 +515,11 @@ export default function EventRoundsPage() {
                 {rounds.map((round) => {
                   const track = tracks.find((item) => item.id === round.trackId);
                   return (
-                    <tr key={round.id} className="border-t border-border">
+                    <tr 
+                      key={round.id} 
+                      className="border-t border-border hover:bg-white/[0.02] cursor-pointer transition-colors"
+                      onClick={() => router.push(`/organizer/events/${eventId}/rounds/${round.id}/teams`)}
+                    >
                       <td className="px-5 py-4">
                         <div className="font-semibold">{round.name}</div>
                         <div className="mt-1 text-xs text-muted-foreground">
@@ -522,7 +528,7 @@ export default function EventRoundsPage() {
                       </td>
                       <td className="px-5 py-4">
                         {round.isTrackSpecific ? (
-                          <Badge variant="secondary">Track-specific</Badge>
+                          <Badge variant="default">Track-specific</Badge>
                         ) : (
                           <Badge variant="outline">All tracks combined</Badge>
                         )}
@@ -540,7 +546,7 @@ export default function EventRoundsPage() {
                           Max {round.maxFileSizeMb ?? 20} MB
                         </div>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <select
                           value={round.status || "not_started"}
                           disabled={updateRoundStatusMutation.isPending}
@@ -558,7 +564,7 @@ export default function EventRoundsPage() {
                           <option value="results_published">Results published</option>
                         </select>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <div 
                           className="flex justify-end gap-2"
                           title={!canModifyStructure ? "Tracks and rounds are read-only. They can only be changed while the event is draft and registration is still open." : undefined}

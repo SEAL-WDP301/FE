@@ -71,7 +71,6 @@ export interface MentorFeedback {
   mentorId?: number;
   teamId?: number;
   submissionId?: number;
-  roundId?: number;
   content: string;
   status?: string;
   publishedAt?: string | null;
@@ -187,7 +186,11 @@ export async function getMentorTeam(teamId: string | number) {
 
 export async function getMentorTeamSubmissions(teamId: string | number) {
   const response = await axiosClient.get(`/mentor/teams/${teamId}/submissions`);
-  return unwrapData<MentorSubmission[]>(response) || [];
+  const data = unwrapData<any[]>(response) || [];
+  return data.map(sub => ({
+    ...sub,
+    feedback: sub.mentorFeedbacks?.[0] || sub.feedback || null,
+  })) as MentorSubmission[];
 }
 
 export async function getMentorSubmissions() {
