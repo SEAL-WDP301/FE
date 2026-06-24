@@ -97,6 +97,7 @@ export interface MentorSubmission {
   team?: MentorTeam;
   round?: MentorRound;
   feedback?: MentorFeedback | null;
+  mentorFeedbacks?: MentorFeedback[];
 }
 
 export interface StudentWorkspaceMentor {
@@ -117,6 +118,9 @@ export interface StudentWorkspaceMentor {
 
 export interface StudentWorkspaceFeedback {
   id: number;
+  mentorId?: number;
+  teamId?: number;
+  submissionId?: number;
   content: string;
   status?: string;
   publishedAt?: string | null;
@@ -147,10 +151,25 @@ export interface StudentMentorWorkspaceData {
   } | null;
   latestSubmission?: {
     id?: number;
+    round?: {
+      id?: number;
+      name?: string;
+    } | null;
     feedback?: StudentWorkspaceFeedback | null;
+    mentorFeedbacks?: StudentWorkspaceFeedback[];
   } | null;
+  submissions?: Array<{
+    id?: number;
+    round?: {
+      id?: number;
+      name?: string;
+    } | null;
+    feedback?: StudentWorkspaceFeedback | null;
+    mentorFeedbacks?: StudentWorkspaceFeedback[];
+  }>;
   feedback?: StudentWorkspaceFeedback[];
   mentorFeedback?: StudentWorkspaceFeedback[];
+  mentorFeedbacks?: StudentWorkspaceFeedback[];
 }
 
 function unwrapData<T>(response: { data?: { data?: T } }) {
@@ -186,8 +205,11 @@ export async function getMentorTeam(teamId: string | number) {
 
 export async function getMentorTeamSubmissions(teamId: string | number) {
   const response = await axiosClient.get(`/mentor/teams/${teamId}/submissions`);
-  const data = unwrapData<any[]>(response) || [];
-  return data.map(sub => ({
+  const data =
+    unwrapData<Array<MentorSubmission & { mentorFeedbacks?: MentorFeedback[] }>>(
+      response
+    ) || [];
+  return data.map((sub) => ({
     ...sub,
     feedback: sub.mentorFeedbacks?.[0] || sub.feedback || null,
   })) as MentorSubmission[];

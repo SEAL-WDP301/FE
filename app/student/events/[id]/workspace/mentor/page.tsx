@@ -8,11 +8,71 @@ import { GlassCard } from "@/components/ui/glass-card";
 import {
   getStudentAssignedMentor,
   getStudentMentorWorkspace,
+  type StudentMentorWorkspaceData,
+  type StudentWorkspaceFeedback,
 } from "@/lib/api/mentor.api";
 import { FeedbackStatusPanel } from "./components/feedback-status-panel";
 import { FeedbackThreadCard } from "./components/feedback-thread-card";
 import { MentorHeader } from "./components/mentor-header";
 import { MentorHeroCard } from "./components/mentor-hero-card";
+
+function getFeedbackTime(feedback: StudentWorkspaceFeedback) {
+  return (
+    feedback.publishedAt ||
+    feedback.updatedAt ||
+    feedback.createdAt ||
+    ""
+  );
+}
+
+function normalizeFeedbackItems(data: StudentMentorWorkspaceData) {
+  const feedbackByKey = new Map<string, StudentWorkspaceFeedback>();
+  const pushFeedback = (
+    feedback?: StudentWorkspaceFeedback | StudentWorkspaceFeedback[] | null,
+    fallbackSubmission?: { id?: number; round?: { id?: number; name?: string } | null }
+  ) => {
+    const items = Array.isArray(feedback) ? feedback : feedback ? [feedback] : [];
+
+    items.forEach((item, index) => {
+      const normalizedItem: StudentWorkspaceFeedback = {
+        ...item,
+        submission: item.submission ||
+          (fallbackSubmission
+            ? {
+                id: fallbackSubmission.id,
+                round: fallbackSubmission.round,
+              }
+            : item.submission),
+      };
+      const key =
+        normalizedItem.id !== undefined
+          ? `id:${normalizedItem.id}`
+          : `fallback:${normalizedItem.submission?.id || "unknown"}:${index}:${normalizedItem.content}`;
+
+      feedbackByKey.set(key, {
+        ...feedbackByKey.get(key),
+        ...normalizedItem,
+      });
+    });
+  };
+
+  pushFeedback(data.feedback);
+  pushFeedback(data.mentorFeedback);
+  pushFeedback(data.mentorFeedbacks);
+  pushFeedback(data.latestSubmission?.feedback, data.latestSubmission || undefined);
+  pushFeedback(data.latestSubmission?.mentorFeedbacks, data.latestSubmission || undefined);
+
+  (data.submissions || []).forEach((submission) => {
+    pushFeedback(submission.feedback, submission);
+    pushFeedback(submission.mentorFeedbacks, submission);
+  });
+
+  return Array.from(feedbackByKey.values()).sort(
+    (left, right) =>
+      new Date(getFeedbackTime(right)).getTime() -
+      new Date(getFeedbackTime(left)).getTime()
+  );
+}
 
 export default function MentorWorkspacePage() {
   const params = useParams();
@@ -20,13 +80,16 @@ export default function MentorWorkspacePage() {
   const workspaceQuery = useQuery({
     queryKey: ["studentMentorWorkspace", eventId],
     queryFn: () => getStudentMentorWorkspace(eventId),
+    enabled: Number.isFinite(eventId),
   });
   const mentorQuery = useQuery({
     queryKey: ["studentAssignedMentor", eventId],
     queryFn: () => getStudentAssignedMentor(eventId),
+    enabled: Number.isFinite(eventId),
+    retry: false,
   });
 
-  if (workspaceQuery.isLoading || mentorQuery.isLoading) {
+  if (workspaceQuery.isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -34,7 +97,7 @@ export default function MentorWorkspacePage() {
     );
   }
 
-  if (workspaceQuery.isError || mentorQuery.isError || !workspaceQuery.data) {
+  if (workspaceQuery.isError || !workspaceQuery.data) {
     return (
       <GlassCard className="rounded-[24px] p-10 text-center">
         <p className="font-semibold">Unable to load mentor workspace.</p>
@@ -45,14 +108,7 @@ export default function MentorWorkspacePage() {
   const data = workspaceQuery.data;
   const mentor =
     mentorQuery.data || data.team?.mentorAssignments?.[0]?.mentor || null;
-  const feedbackItems = [
-    ...(data.feedback || []),
-    ...(data.mentorFeedback || []),
-    ...(data.latestSubmission?.feedback ? [data.latestSubmission.feedback] : []),
-  ].filter(
-    (feedback, index, allFeedback) =>
-      allFeedback.findIndex((item) => item.id === feedback.id) === index
-  );
+  const feedbackItems = normalizeFeedbackItems(data);
 
   const resolvedCount = feedbackItems.filter(
     (feedback) =>
