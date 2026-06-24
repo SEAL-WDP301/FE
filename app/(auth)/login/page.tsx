@@ -53,7 +53,28 @@ export default function LoginPage() {
       const redirectTo = getSafeRedirectPath(
         new URLSearchParams(window.location.search).get("redirect")
       );
-      router.push(redirectTo ?? getRoleHomePath(role));
+
+      if (redirectTo) {
+        router.push(redirectTo);
+        return;
+      }
+
+      if (role === "stakeholder") {
+        try {
+          const judgeRes = await axiosClient.get("/judge/events");
+          const assignedEvents = judgeRes.data?.data ?? [];
+          if (assignedEvents.length > 0) {
+            router.push("/judge/dashboard");
+            return;
+          }
+        } catch {
+          /* fall through to mentor home */
+        }
+        router.push("/mentor");
+        return;
+      }
+
+      router.push(getRoleHomePath(role));
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)
