@@ -35,14 +35,26 @@ export default function EventSubmissionsPage() {
     },
   });
 
+  const currentRound = event?.rounds?.find((r: any) => r.id === Number(roundId));
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
-          <p className="text-muted-foreground mt-1">
-            Review team submissions across all active rounds.
-          </p>
+          <div className="text-muted-foreground mt-2 space-y-1">
+            <p>Review team submissions across all active rounds.</p>
+            {currentRound?.submissionDeadline && (
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                Deadline: {new Date(currentRound.submissionDeadline).toLocaleString()}
+              </p>
+            )}
+            {!currentRound?.submissionDeadline && currentRound && (
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                Deadline: Not set
+              </p>
+            )}
+          </div>
         </div>
         <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">
           <Download className="h-4 w-4" />
