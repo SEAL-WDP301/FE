@@ -13,6 +13,7 @@ import { enqueueSnackbar } from "notistack";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { FloatingTeamChat } from "@/components/floating-team-chat";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Textarea } from "@/components/ui/textarea";
@@ -489,74 +490,7 @@ export default function MentorTeamDashboard() {
       </div>
 
       {/* Floating Chat Component */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-        {isChatOpen ? (
-          <div className="w-[420px] shadow-2xl rounded-t-xl rounded-bl-xl rounded-br-md border border-border bg-card overflow-hidden flex flex-col mb-2 animate-in slide-in-from-bottom-5 duration-300">
-            {/* Chat Header */}
-            <div className="bg-background border-b border-border p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 border border-border">
-                  <AvatarFallback className="text-xs bg-orange-500/10 text-orange-600">{initials(team.name)}</AvatarFallback>
-                </Avatar>
-                <span className="font-semibold text-sm">{team.name}</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Button variant="ghost" size="icon-sm" className="h-7 w-7 hover:text-foreground" onClick={() => setIsChatOpen(false)}>
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon-sm" className="h-7 w-7 hover:text-foreground" onClick={() => setIsChatOpen(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Chat Body */}
-            <div className="h-[500px] bg-muted/10 p-4 flex flex-col overflow-y-auto">
-              <div className="m-auto flex flex-col items-center justify-center">
-                <MessageSquare className="h-10 w-10 text-muted-foreground mb-3 opacity-30" />
-                <p className="text-xs text-muted-foreground text-center">
-                  You are now connected with {team.name}.<br/>Start the discussion!
-                </p>
-              </div>
-            </div>
-
-            {/* Chat Footer */}
-            <div className="p-3 bg-background border-t border-border flex gap-2">
-              <Input 
-                placeholder="Aa" 
-                className="rounded-full bg-muted/50 border-transparent focus-visible:ring-1 focus-visible:ring-orange-500 h-9"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && chatMessage.trim()) {
-                    enqueueSnackbar("Chat system integration pending.", { variant: "info" });
-                    setChatMessage("");
-                  }
-                }}
-              />
-              <Button 
-                variant="ghost" 
-                size="icon-sm" 
-                className="h-9 w-9 text-blue-500 hover:text-blue-600 shrink-0 rounded-full"
-                disabled={!chatMessage.trim()}
-                onClick={() => {
-                  enqueueSnackbar("Chat system integration pending.", { variant: "info" });
-                  setChatMessage("");
-                }}
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button 
-            className="h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(37,99,235,0.4)] bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all animate-bounce hover:animate-none"
-            onClick={() => setIsChatOpen(true)}
-          >
-            <MessageCircle className="h-7 w-7 text-white fill-white/10" />
-          </Button>
-        )}
-      </div>
+      <FloatingTeamChat teamId={Number(teamId)} />
 
     </div>
   );
