@@ -6,6 +6,8 @@ export interface TeamMessage {
   senderId: number;
   content: string;
   createdAt: string;
+  isEdited?: boolean;
+  isDeleted?: boolean;
   sender: {
     id: number;
     name: string;

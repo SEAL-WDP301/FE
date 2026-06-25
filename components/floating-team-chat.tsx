@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, X, Send, User as UserIcon, CheckCircle2 } from "lucide-react";
+import { MessageSquare, X, Send, User as UserIcon, CheckCircle2, MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,11 +21,15 @@ import { useSnackbar } from "notistack";
 
 interface FloatingTeamChatProps {
   teamId: number;
+  inline?: boolean;
+  defaultOpen?: boolean;
 }
 
-export function FloatingTeamChat({ teamId }: FloatingTeamChatProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false }: FloatingTeamChatProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [message, setMessage] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
   const [showTooltip, setShowTooltip] = useState(true);
   const isOpenRef = useRef(isOpen);
   const queryClient = useQueryClient();
@@ -151,13 +161,37 @@ export function FloatingTeamChat({ teamId }: FloatingTeamChatProps) {
       });
     };
 
+    const handleMessageEdited = (updatedMessage: TeamMessage) => {
+      queryClient.setQueryData(["team-messages", teamId], (oldData: any) => {
+        if (!oldData) return oldData;
+        const newPages = oldData.pages.map((page: TeamMessage[]) => 
+          page.map((msg: TeamMessage) => msg.id === updatedMessage.id ? { ...msg, ...updatedMessage } : msg)
+        );
+        return { ...oldData, pages: newPages };
+      });
+    };
+
+    const handleMessageDeleted = (deletedMessage: TeamMessage) => {
+      queryClient.setQueryData(["team-messages", teamId], (oldData: any) => {
+        if (!oldData) return oldData;
+        const newPages = oldData.pages.map((page: TeamMessage[]) => 
+          page.map((msg: TeamMessage) => msg.id === deletedMessage.id ? { ...msg, ...deletedMessage } : msg)
+        );
+        return { ...oldData, pages: newPages };
+      });
+    };
+
     socket.on("receive_chat_message", handleReceiveMessage);
     socket.on("messages_read_updated", handleMessagesReadUpdated);
+    socket.on("chat_message_edited", handleMessageEdited);
+    socket.on("chat_message_deleted", handleMessageDeleted);
 
     return () => {
       socket.emit("leave_team_room", teamId);
       socket.off("receive_chat_message", handleReceiveMessage);
       socket.off("messages_read_updated", handleMessagesReadUpdated);
+      socket.off("chat_message_edited", handleMessageEdited);
+      socket.off("chat_message_deleted", handleMessageDeleted);
     };
   }, [socket, teamId, queryClient]);
 
@@ -212,53 +246,59 @@ export function FloatingTeamChat({ teamId }: FloatingTeamChatProps) {
 
   return (
     <>
-      <div className={`fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 ${isOpen ? 'hidden' : 'flex'}`}>
-        {/* Tooltip Welcome Bubble */}
-        <AnimatePresence>
-          {showTooltip && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-zinc-800 text-foreground px-4 py-2 rounded-2xl rounded-br-sm shadow-xl border border-border text-sm font-medium flex items-center gap-2 relative"
-            >
-              <div className="absolute right-4 -bottom-[6px] w-3 h-3 bg-white dark:bg-zinc-800 border-b border-r border-border transform rotate-45" />
-              Chat with Team & Mentors 👋
-              <button onClick={() => setShowTooltip(false)} className="text-muted-foreground hover:text-foreground ml-1">
-                <X className="h-3 w-3" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {!inline && (
+        <div className={`fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 ${isOpen ? 'hidden' : 'flex'}`}>
+          {/* Tooltip Welcome Bubble */}
+          <AnimatePresence>
+            {showTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white dark:bg-zinc-800 text-foreground px-4 py-2 rounded-2xl rounded-br-sm shadow-xl border border-border text-sm font-medium flex items-center gap-2 relative"
+              >
+                <div className="absolute right-4 -bottom-[6px] w-3 h-3 bg-white dark:bg-zinc-800 border-b border-r border-border transform rotate-45" />
+                Chat with Team & Mentors 👋
+                <button onClick={() => setShowTooltip(false)} className="text-muted-foreground hover:text-foreground ml-1">
+                  <X className="h-3 w-3" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Floating Button */}
-        <div className="relative">
-          {unreadCount > 0 && (
-            <div className="absolute -top-2 -right-2 z-50 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white border-2 border-background rounded-full shadow-lg text-xs font-bold animate-bounce">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </div>
-          )}
-          <Button
-            onClick={() => {
-              setIsOpen(true);
-              setShowTooltip(false);
-            }}
-            className="h-14 w-14 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)] animate-bounce hover:animate-none bg-gradient-to-tr from-orange-600 to-orange-400 hover:scale-105 transition-transform relative z-10"
-          >
-            <MessageSquare className="h-6 w-6 text-white" />
-          </Button>
-          <div className="absolute inset-0 rounded-full bg-orange-500 opacity-20 animate-ping pointer-events-none" style={{ animationDuration: '3s' }} />
+          {/* Floating Button */}
+          <div className="relative">
+            {unreadCount > 0 && (
+              <div className="absolute -top-2 -right-2 z-50 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white border-2 border-background rounded-full shadow-lg text-xs font-bold animate-bounce">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </div>
+            )}
+            <Button
+              onClick={() => {
+                setIsOpen(true);
+                setShowTooltip(false);
+              }}
+              className="h-14 w-14 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)] animate-bounce hover:animate-none bg-gradient-to-tr from-orange-600 to-orange-400 hover:scale-105 transition-transform relative z-10"
+            >
+              <MessageSquare className="h-6 w-6 text-white" />
+            </Button>
+            <div className="absolute inset-0 rounded-full bg-orange-500 opacity-20 animate-ping pointer-events-none" style={{ animationDuration: '3s' }} />
+          </div>
         </div>
-      </div>
+      )}
 
       <AnimatePresence>
-        {isOpen && (
+        {(isOpen || inline) && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={inline ? false : { opacity: 0, y: 20, scale: 0.95 }}
+            animate={inline ? false : { opacity: 1, y: 0, scale: 1 }}
+            exit={inline ? false : { opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 flex h-[500px] w-[350px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
+            className={
+              inline
+                ? "flex h-full w-full flex-col overflow-hidden bg-background"
+                : "fixed bottom-6 right-6 z-50 flex h-[500px] w-[350px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
+            }
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border bg-muted/30 p-4">
@@ -269,14 +309,16 @@ export function FloatingTeamChat({ teamId }: FloatingTeamChatProps) {
                   {isConnected ? "Live" : "Connecting..."}
                 </Badge>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              {!inline && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Messages */}
@@ -346,17 +388,67 @@ export function FloatingTeamChat({ teamId }: FloatingTeamChatProps) {
                             </div>
                           )}
                           <div
-                            className={`px-4 py-2 text-sm ${
-                              isMe
-                                ? "bg-orange-500 text-white"
-                                : "bg-muted text-foreground"
+                            className={`px-4 py-2 text-sm relative group ${
+                              msg.isDeleted ? 'bg-muted/50 border border-border/50 text-muted-foreground' : (isMe ? "bg-orange-500 text-white" : "bg-muted text-foreground")
                             } ${
                               isMe 
                                 ? `rounded-l-2xl ${isConsecutive ? 'rounded-tr-md rounded-br-md' : 'rounded-tr-2xl rounded-br-md'} ${isLastInGroup ? 'rounded-br-2xl' : ''}`
                                 : `rounded-r-2xl ${isConsecutive ? 'rounded-tl-md rounded-bl-md' : 'rounded-tl-2xl rounded-bl-md'} ${isLastInGroup ? 'rounded-bl-2xl' : ''}`
                             }`}
                           >
-                            {msg.content}
+                            {msg.isDeleted ? (
+                              <span className="italic opacity-70">This message was deleted.</span>
+                            ) : editingMessageId === msg.id ? (
+                              <form 
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  if (editContent.trim()) {
+                                    socket?.emit("edit_chat_message", { messageId: msg.id, content: editContent.trim() });
+                                    setEditingMessageId(null);
+                                  }
+                                }}
+                                className="flex flex-col gap-2 min-w-[200px]"
+                              >
+                                <Input 
+                                  value={editContent} 
+                                  onChange={(e) => setEditContent(e.target.value)} 
+                                  className={`h-8 text-xs bg-background/50 border-white/20 ${isMe ? 'text-white' : 'text-foreground'}`}
+                                  autoFocus 
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <Button type="button" size="sm" variant="ghost" className={`h-6 px-2 text-[10px] ${isMe ? 'hover:text-white/80' : ''}`} onClick={() => setEditingMessageId(null)}>Cancel</Button>
+                                  <Button type="submit" size="sm" variant="secondary" className="h-6 px-2 text-[10px]">Save</Button>
+                                </div>
+                              </form>
+                            ) : (
+                              <>
+                                {msg.content}
+                                {msg.isEdited && <span className="text-[10px] opacity-70 ml-2">(edited)</span>}
+                                {(isMe || user?.role === 'admin' || user?.role === 'organizer') && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className={`absolute top-2 ${isMe ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-full transition-opacity z-10`}>
+                                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align={isMe ? "end" : "start"} className="z-[60]">
+                                      {isMe && (
+                                        <DropdownMenuItem onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content); }}>
+                                          <Pencil className="h-4 w-4 mr-2" /> Edit
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-600" onClick={() => {
+                                        if (confirm('Are you sure you want to delete this message?')) {
+                                          socket?.emit("delete_chat_message", { messageId: msg.id });
+                                        }
+                                      }}>
+                                        <Trash className="h-4 w-4 mr-2" /> Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </>
+                            )}
                           </div>
 
                           {/* Status / Timestamp */}

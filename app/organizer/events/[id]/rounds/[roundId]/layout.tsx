@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 import { 
-  Users, GraduationCap, FileText, Award, 
+  Users, GraduationCap, FileText, Award, MessageSquare,
   ChevronLeft, ChevronRight, LogOut, User as UserIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ export default function RoundWorkspaceLayout({
     { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
     { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
     { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
+    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare },
   ];
 
   const { data: user } = useQuery({
