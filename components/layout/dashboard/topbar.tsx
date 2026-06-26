@@ -3,7 +3,7 @@ import { ChevronDown, Search } from "lucide-react"; // Thêm Menu icon nếu c�
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationsMenu } from "./notifications-menu";
@@ -55,7 +55,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                 <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 transition-colors hover:bg-muted outline-none">
                         <Avatar className="h-9 w-9 border border-orange-500/30 overflow-hidden">
-                            {user?.avatarUrl && <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />}
+                            {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="Avatar" />}
                             <AvatarFallback className="bg-orange-500/15 text-sm font-bold text-orange-400">
                                 {user ? getInitials(user.name) : "U"}
                             </AvatarFallback>

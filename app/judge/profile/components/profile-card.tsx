@@ -2,7 +2,7 @@
 
 import { Camera, Mail, MapPin, Phone } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -24,12 +24,9 @@ export function ProfileCard() {
                 <div className="relative mx-auto w-fit">
                     <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-2xl" />
                     <Avatar className="relative mx-auto h-28 w-28 border border-orange-500/30 ring-4 ring-primary/25">
+                        {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="Avatar" />}
                         <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-white">
-                            {user?.avatarUrl ? (
-                                <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                            ) : (
-                                user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "J"
-                            )}
+                            {user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "J"}
                         </AvatarFallback>
                     </Avatar>
 
