@@ -20,6 +20,7 @@ import {
   judgeApi,
   type JudgeRubric,
 } from "@/lib/api/judge.api";
+import { getScoringLockState } from "@/lib/judge-scoring";
 
 function buildScoreState(
   rubrics: JudgeRubric[],
@@ -182,14 +183,16 @@ export default function EvaluationPage() {
     [router, selectedEvent],
   );
 
-  const roundStatus = submissionDetail?.round.status;
-  const submissionDeadline = submissionDetail?.round.submissionDeadline;
-  const scoringLocked =
-    !roundStatus ||
-    roundStatus === "results_published" ||
-    roundStatus === "not_started" ||
-    (roundStatus === "open" &&
-      (!submissionDeadline || new Date(submissionDeadline) > new Date()));
+  const roundStatus =
+    submissionDetail?.round.status ?? selectedRound?.roundStatus;
+  const submissionDeadline =
+    submissionDetail?.round.submissionDeadline ??
+    selectedRound?.submissionDeadline ??
+    null;
+  const { locked: scoringLocked, reason: scoringLockReason } = getScoringLockState(
+    roundStatus,
+    submissionDeadline,
+  );
 
   if (eventsLoading) {
     return (
@@ -227,6 +230,16 @@ export default function EvaluationPage() {
         selectedRoundId={selectedRoundId}
         onSelectRound={handleSelectRound}
       />
+
+      {scoringLocked && scoringLockReason && (
+        <GlassCard className="flex items-start gap-3 border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <div>
+            <p className="font-semibold text-amber-300">Chấm điểm đang khóa</p>
+            <p className="mt-1 text-amber-100/90">{scoringLockReason}</p>
+          </div>
+        </GlassCard>
+      )}
 
       <TeamSelectorBar
         teams={roundSubmissions}

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Users, FileText, Calendar, UserCheck, LayoutDashboard } from "lucide-react";
 import HomeHeader from "@/components/layout/dashboard/home-header";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { ChevronRight, Trophy, Shield, Target } from "lucide-react";
+import { setStudentLastEventId } from "@/lib/student-workspace";
 
 
 export default function TrackWorkspaceLayout({
@@ -19,6 +21,13 @@ export default function TrackWorkspaceLayout({
   const params = useParams();
   const eventId = params.id as string;
   const basePath = `/student/events/${eventId}/workspace`;
+
+  useEffect(() => {
+    const parsed = Number(eventId);
+    if (Number.isFinite(parsed)) {
+      setStudentLastEventId(parsed);
+    }
+  }, [eventId]);
 
   const { data } = useQuery({
     queryKey: ["workspace", eventId],

@@ -8,6 +8,7 @@ export interface JudgeAssignedRound {
   roundNumber: number;
   roundName: string;
   roundStatus: string;
+  submissionDeadline?: string | null;
   trackId: number | null;
   trackName: string | null;
 }

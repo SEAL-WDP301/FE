@@ -1,4 +1,5 @@
 import { ArrowRight, FileText } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -48,13 +49,17 @@ export function MyEventsSection({ events }: MyEventsSectionProps) {
                         </div>
 
                         <div className="mt-5 flex flex-wrap gap-2">
-                            <Button variant="orange" className="rounded-2xl">
-                                Open Workspace
-                                <ArrowRight className="h-4 w-4" />
+                            <Button variant="orange" className="rounded-2xl" asChild>
+                                <Link href={event.eventId ? `/student/events/${event.eventId}/workspace` : "/student/events"}>
+                                    Open Workspace
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
                             </Button>
-                            <Button variant="outline" className="rounded-2xl border-border bg-card">
-                                <FileText className="h-4 w-4" />
-                                View Submission
+                            <Button variant="outline" className="rounded-2xl border-border bg-card" asChild>
+                                <Link href={event.eventId ? `/student/events/${event.eventId}/workspace/submissions` : "/student/submissions"}>
+                                    <FileText className="h-4 w-4" />
+                                    View Submission
+                                </Link>
                             </Button>
                         </div>
                     </GlassCard>

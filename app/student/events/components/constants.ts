@@ -10,6 +10,7 @@ export type EventStatus =
     | "Eliminated";
 
 export interface EventItem {
+    id?: number;
     name: string;
     season: "Spring" | "Summer" | "Fall";
     year: number;
@@ -63,6 +64,7 @@ export const FILTERS = [
 
 export const events: EventItem[] = [
     {
+        id: 9,
         name: "SEAL Fall 2026 — Agile Frontier",
         season: "Fall",
         year: 2026,

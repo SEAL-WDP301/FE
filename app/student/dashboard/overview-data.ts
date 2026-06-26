@@ -13,6 +13,7 @@ export type ActiveEvent = {
 };
 
 export type MyEvent = {
+    eventId?: number;
     teamName: string;
     eventName: string;
     round: string;
@@ -73,8 +74,9 @@ export const activeEvents: ActiveEvent[] = [
 
 export const myEvents: MyEvent[] = [
     {
-        teamName: "SEAL Warriors",
-        eventName: "SEAL Spring 2026",
+        eventId: 9,
+        teamName: "SEAL Demo Two Rounds",
+        eventName: "Bulding Rag AI Automation",
         round: "Semi Final",
         status: "Semi Final",
         progress: 74,

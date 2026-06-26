@@ -94,8 +94,8 @@ export function EventCard({
                         size="sm"
                         asChild
                     >
-                        <Link href="/student/events/1">
-                            View Detail
+                        <Link href={event.id ? `/student/events/${event.id}/workspace` : "/student/events"}>
+                            Open Workspace
                             <ArrowUpRight className="h-3 w-3" />
                         </Link>
                     </Button>
@@ -105,7 +105,7 @@ export function EventCard({
                         size="sm"
                         asChild
                     >
-                        <Link href="/student/submission">
+                        <Link href={event.id ? `/student/events/${event.id}/workspace/submissions` : "/student/submissions"}>
                             Submission
                         </Link>
                     </Button>
@@ -115,7 +115,7 @@ export function EventCard({
                         size="sm"
                         asChild
                     >
-                        <Link href="/student/ranking">
+                        <Link href={event.id ? `/student/events/${event.id}/workspace` : "/student/events"}>
                             Ranking
                         </Link>
                     </Button>
