@@ -5,14 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { JudgeSidebar } from "../../components/layout/dashboard/judge-sidebar";
 import { Topbar } from "@/components/layout/dashboard/topbar";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { JudgeAreaGuard } from "@/components/auth/judge-area-guard";
+import { StakeholderPortalGuard } from "@/components/auth/stakeholder-portal-guard";
 import { axiosClient } from "@/lib/axios";
 
-interface MentorLayoutProps {
+interface JudgeLayoutProps {
     children: React.ReactNode;
 }
 
-export default function MentorLayout({ children }: MentorLayoutProps) {
+export default function JudgeLayout({ children }: JudgeLayoutProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     const { data: user } = useQuery({
@@ -25,7 +25,7 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
 
     return (
         <RoleGuard allowedRoles={["judge", "stakeholder", "admin"]}>
-        <JudgeAreaGuard role={user?.role}>
+        <StakeholderPortalGuard role={user?.role} required="judge">
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
                 <JudgeSidebar
@@ -43,7 +43,7 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
 
             </div>
         </div>
-        </JudgeAreaGuard>
+        </StakeholderPortalGuard>
         </RoleGuard>
     );
 }

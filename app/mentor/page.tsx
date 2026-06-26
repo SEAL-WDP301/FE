@@ -1,135 +1,92 @@
-import { CalendarClock, MessageSquareText, Plus, Search, Video } from "lucide-react";
+"use client";
 
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { Bell, UsersRound } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-
+import {
+  getMentorNotifications,
+  getMentorProfile,
+  getMentorTeams,
+} from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "./_components/mentor-page-header";
-import { ProgressBar } from "./_components/progress-bar";
-import { RiskBadge, SessionStatusBadge, TeamStatusBadge } from "./_components/status-badges";
-import { activities, attentionItems, sessions, stats, teams } from "./mock-data";
-
-const statIcons = [Search, CalendarClock, MessageSquareText, Video];
+import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "./_components/mentor-query-state";
 
 export default function MentorDashboardPage() {
-    return (
-        <div className="mx-auto max-w-[1500px] space-y-6">
-            <MentorPageHeader
-                title="Mentor Dashboard"
-                subtitle="Monitor your assigned teams and mentoring activities."
-                actions={
-                    <>
-                        <Button variant="outline" className="rounded-2xl border-border bg-muted/40">
-                            <Search className="h-4 w-4" />
-                            Search Teams
-                        </Button>
-                        <Button variant="orange" className="rounded-2xl">
-                            <Plus className="h-4 w-4" />
-                            Schedule Session
-                        </Button>
-                    </>
-                }
-            />
+  const profileQuery = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
+  const teamsQuery = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
+  const notificationsQuery = useQuery({ queryKey: ["userNotifications"], queryFn: getMentorNotifications });
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {stats.map((stat, index) => {
-                    const Icon = statIcons[index];
+  if (
+    profileQuery.isLoading ||
+    teamsQuery.isLoading ||
+    notificationsQuery.isLoading
+  ) {
+    return <MentorLoadingState />;
+  }
+  if (
+    profileQuery.isError ||
+    teamsQuery.isError ||
+    notificationsQuery.isError
+  ) {
+    return <MentorErrorState />;
+  }
 
-                    return (
-                        <GlassCard key={stat.label} className="rounded-[22px] bg-card p-5 hover:-translate-y-1">
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                        {stat.label}
-                                    </p>
-                                    <p className="mt-3 text-4xl font-semibold text-foreground">
-                                        {stat.value}
-                                    </p>
-                                    <p className="mt-2 text-sm text-primary">
-                                        {stat.trend}
-                                    </p>
-                                </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-primary">
-                                    <Icon className="h-5 w-5" />
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                })}
-            </section>
+  const teams = teamsQuery.data || [];
+  const notifications = notificationsQuery.data || [];
+  const stats = [
+    { label: "Assigned teams", value: teams.length, icon: UsersRound },
+    { label: "Notifications", value: notifications.length, icon: Bell },
+    { label: "Unread updates", value: notifications.filter((item) => !item.isRead).length, icon: Bell },
+  ];
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-                <main className="space-y-5">
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Today&apos;s Sessions</h2>
-                        <div className="mt-5 space-y-4">
-                            {sessions.slice(0, 3).map((session) => (
-                                <div key={`${session.team}-${session.time}`} className="flex flex-col gap-3 rounded-[20px] border border-border bg-muted/40 p-4 md:flex-row md:items-center md:justify-between">
-                                    <div>
-                                        <p className="font-semibold text-foreground">{session.team}</p>
-                                        <p className="mt-1 text-sm text-muted-foreground">{session.topic} · {session.time} · {session.type}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <SessionStatusBadge status={session.status} />
-                                        <Button variant="orange" size="sm" className="rounded-xl">Quick Join</Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Team Progress Overview</h2>
-                        <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            {teams.map((team) => (
-                                <div key={team.name} className="rounded-[20px] border border-border bg-muted/40 p-4">
-                                    <div className="mb-3 flex items-center justify-between gap-3">
-                                        <div>
-                                            <p className="font-semibold text-foreground">{team.name}</p>
-                                            <p className="text-xs text-muted-foreground">{team.milestone}</p>
-                                        </div>
-                                        <RiskBadge risk={team.risk} />
-                                    </div>
-                                    <ProgressBar value={team.progress} />
-                                    <div className="mt-3 flex items-center justify-between text-sm">
-                                        <TeamStatusBadge status={team.status} />
-                                        <span className="font-semibold text-primary">{team.progress}%</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-                </main>
-
-                <aside className="space-y-5">
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Teams Requiring Attention</h2>
-                        <div className="mt-5 space-y-3">
-                            {attentionItems.map((item) => (
-                                <div key={item.team} className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-                                    <div className="flex items-center justify-between">
-                                        <p className="font-semibold text-foreground">{item.team}</p>
-                                        <Badge variant={item.level === "High" ? "destructive" : "warning"}>{item.level}</Badge>
-                                    </div>
-                                    <p className="mt-2 text-sm text-muted-foreground">{item.reason}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Recent Activities</h2>
-                        <div className="mt-5 space-y-4">
-                            {activities.map((activity) => (
-                                <div key={activity} className="flex gap-3 text-sm">
-                                    <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_14px_rgba(243,112,33,0.7)]" />
-                                    <span className="text-muted-foreground">{activity}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-                </aside>
-            </div>
-        </div>
-    );
+  return (
+    <div className="mx-auto max-w-[1500px] space-y-6">
+      <MentorPageHeader
+        title={`Welcome${profileQuery.data?.name ? `, ${profileQuery.data.name}` : ""}`}
+        subtitle="Monitor teams assigned to you by the organizer."
+        actions={<Button asChild variant="outline"><Link href="/mentor/teams">View teams</Link></Button>}
+      />
+      <section className="grid gap-4 md:grid-cols-3">
+        {stats.map(({ label, value, icon: Icon }) => (
+          <GlassCard key={label} className="rounded-[22px] bg-card p-5">
+            <Icon className="h-5 w-5 text-primary" />
+            <p className="mt-4 text-sm text-muted-foreground">{label}</p>
+            <p className="mt-2 text-3xl font-semibold">{value}</p>
+          </GlassCard>
+        ))}
+      </section>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <GlassCard className="rounded-[24px] bg-card p-6">
+          <h2 className="text-lg font-semibold">Assigned teams</h2>
+          <div className="mt-5 space-y-3">
+            {teams.length === 0 ? (
+              <MentorEmptyState title="No teams assigned" description="An organizer must assign this mentor account to a team." />
+            ) : teams.map((team) => (
+              <Link key={team.id} href={`/mentor/teams/${team.id}`} className="block rounded-2xl border border-border bg-muted/40 p-4 hover:border-orange-500/40">
+                <p className="font-semibold">{team.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{team.event?.name || "Event unavailable"} · {team.track?.name || "Track unavailable"}</p>
+              </Link>
+            ))}
+          </div>
+        </GlassCard>
+        <GlassCard className="rounded-[24px] bg-card p-6">
+          <h2 className="text-lg font-semibold">Recent notifications</h2>
+          <div className="mt-5 space-y-3">
+            {notifications.slice(0, 5).map((item) => (
+              <div key={item.id} className="rounded-2xl border border-border bg-muted/40 p-4">
+                <p className="font-semibold">{item.title}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.content}</p>
+              </div>
+            ))}
+            {notifications.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No notifications.</p>
+            ) : null}
+          </div>
+        </GlassCard>
+      </div>
+    </div>
+  );
 }

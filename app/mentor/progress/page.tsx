@@ -1,70 +1,55 @@
-import { Eye, TrendingUp } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { Eye } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getMentorTeams } from "@/lib/api/mentor.api";
 
 import { MentorPageHeader } from "../_components/mentor-page-header";
-import { ProgressBar } from "../_components/progress-bar";
-import { RiskBadge, TeamStatusBadge } from "../_components/status-badges";
-import { teams } from "../mock-data";
+import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "../_components/mentor-query-state";
 
 export default function TeamProgressPage() {
-    return (
-        <div className="mx-auto max-w-[1500px] space-y-6">
-            <MentorPageHeader title="Team Progress" subtitle="Progress analytics, milestone tracking, heatmaps, and team risk monitoring." />
+  const query = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
+  if (query.isLoading) return <MentorLoadingState />;
+  if (query.isError) return <MentorErrorState />;
 
-            <section className="grid gap-4 md:grid-cols-4">
-                {[
-                    ["Average Progress", "69%"],
-                    ["Behind Schedule", "3"],
-                    ["Milestone Completion", "74%"],
-                    ["Active Teams", "11"],
-                ].map(([label, value]) => (
-                    <GlassCard key={label} className="rounded-[22px] bg-card p-5">
-                        <TrendingUp className="h-5 w-5 text-primary" />
-                        <p className="mt-4 text-sm text-muted-foreground">{label}</p>
-                        <p className="mt-2 text-3xl font-semibold text-foreground">{value}</p>
-                    </GlassCard>
-                ))}
-            </section>
-
-            <GlassCard className="rounded-[24px] bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground">Progress Management Table</h2>
-                <div className="mt-5">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-border hover:bg-transparent">
-                                {["Team", "Project", "Current milestone", "Completion", "Last update", "Risk", "Mentor status", "Actions"].map((head) => (
-                                    <TableHead key={head} className="text-muted-foreground">{head}</TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {teams.map((team) => (
-                                <TableRow key={team.name} className="border-border hover:bg-muted/40">
-                                    <TableCell className="font-semibold text-foreground">{team.name}</TableCell>
-                                    <TableCell className="text-muted-foreground">{team.project}</TableCell>
-                                    <TableCell className="text-muted-foreground">{team.milestone}</TableCell>
-                                    <TableCell className="min-w-36">
-                                        <ProgressBar value={team.progress} />
-                                        <span className="mt-1 block text-xs text-primary">{team.progress}%</span>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">{team.lastActivity}</TableCell>
-                                    <TableCell><RiskBadge risk={team.risk} /></TableCell>
-                                    <TableCell><TeamStatusBadge status={team.status} /></TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="sm" className="rounded-xl text-primary">
-                                            <Eye className="h-4 w-4" />
-                                            View
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </GlassCard>
-        </div>
-    );
+  const teams = query.data || [];
+  return (
+    <div className="mx-auto max-w-[1500px] space-y-6">
+      <MentorPageHeader title="Team Progress" subtitle="Backend team status for teams assigned to you." />
+      {teams.length === 0 ? (
+        <MentorEmptyState title="No progress data" description="Progress becomes available after an organizer assigns you to a team." />
+      ) : (
+        <GlassCard className="rounded-[24px] bg-card p-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {["Team", "Event", "Track", "Members", "Backend status", "Actions"].map((head) => <TableHead key={head}>{head}</TableHead>)}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {teams.map((team) => (
+                <TableRow key={team.id}>
+                  <TableCell className="font-semibold">{team.name}</TableCell>
+                  <TableCell>{team.event?.name || "N/A"}</TableCell>
+                  <TableCell>{team.track?.name || "N/A"}</TableCell>
+                  <TableCell>{team.members?.length || 0}</TableCell>
+                  <TableCell className="capitalize">{team.status || "N/A"}</TableCell>
+                  <TableCell>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href={`/mentor/teams/${team.id}`}><Eye className="h-4 w-4" />View</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </GlassCard>
+      )}
+    </div>
+  );
 }

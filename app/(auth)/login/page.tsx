@@ -7,6 +7,10 @@ import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
 import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
 import { getRoleHomePath } from "@/components/auth/role-guard";
+import {
+  getStakeholderPortalPath,
+  resolveStakeholderPortal,
+} from "@/lib/stakeholder-portal";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 
@@ -60,17 +64,8 @@ export default function LoginPage() {
       }
 
       if (role === "stakeholder") {
-        try {
-          const judgeRes = await axiosClient.get("/judge/events");
-          const assignedEvents = judgeRes.data?.data ?? [];
-          if (assignedEvents.length > 0) {
-            router.push("/judge/dashboard");
-            return;
-          }
-        } catch {
-          /* fall through to mentor home */
-        }
-        router.push("/mentor");
+        const portal = await resolveStakeholderPortal();
+        router.push(getStakeholderPortalPath(portal));
         return;
       }
 

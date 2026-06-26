@@ -43,23 +43,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                 <div className="relative ml-auto flex items-center md:flex-1 md:max-w-xl">
                     {customCenterContent ? (
                         customCenterContent
-                    ) : (
-                        <>
-                            {/* Icon Search cố định trên Desktop, biến thành nút bấm trên Mobile */}
-                            <Search className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground md:absolute md:left-4 md:top-1/2 md:-translate-y-1/2 cursor-pointer md:cursor-default" />
-
-                            {/* Ô Input: Ẩn trên Mobile (hidden), hiện từ màn hình md trở lên */}
-                            <Input
-                                placeholder="Search events..."
-                                className="hidden md:block h-11 rounded-2xl border-border bg-card pl-11 pr-16 text-sm focus-visible:ring-orange-500/30 w-full"
-                            />
-
-                            {/* Phím tắt kbd: Giữ nguyên chỉ hiện từ md */}
-                            <kbd className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-border bg-muted px-2 py-1 text-[10px] text-muted-foreground md:flex">
-                                ⌘K
-                            </kbd>
-                        </>
-                    )}
+                    ) : null}
                 </div>
 
                 <ThemeToggle />
@@ -116,6 +100,17 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />
+
+                        <DropdownMenuItem 
+                            className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
+                            onClick={() => {
+                                localStorage.removeItem('access_token');
+                                window.dispatchEvent(new Event('auth-unauthorized'));
+                                window.location.href = '/login';
+                            }}
+                        >
+                            Logout
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 

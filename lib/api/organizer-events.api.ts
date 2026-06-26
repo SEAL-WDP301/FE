@@ -20,6 +20,7 @@ export interface OrganizerRoundInput {
   submissionDeadline?: string;
   maxFileSizeMb?: number;
   isTrackSpecific: boolean;
+  trackId?: number | null;
 }
 
 export interface OrganizerEventPayload {
@@ -48,6 +49,9 @@ export interface OrganizerTrack extends OrganizerTrackInput {
 
 export interface OrganizerRound extends OrganizerRoundInput {
   id: number;
+  status?: "not_started" | "open" | "closed" | "results_published" | string;
+  startDate?: string;
+  track?: OrganizerTrack | null;
   _count?: {
     submissions?: number;
   };
@@ -55,6 +59,10 @@ export interface OrganizerRound extends OrganizerRoundInput {
 
 export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds"> {
   id: number;
+  icons?: Array<{
+    id?: number;
+    url: string;
+  }>;
   tracks?: OrganizerTrack[];
   rounds?: OrganizerRound[];
   _count?: {
@@ -151,6 +159,14 @@ export async function createOrganizerRubric(
   return unwrapData<OrganizerRubric>(res);
 }
 
+export async function bulkCreateOrganizerRubrics(
+  eventId: string | number,
+  payload: { rubrics: OrganizerRubricPayload[] }
+) {
+  const res = await axiosClient.post(`/organizer/events/${eventId}/rubrics/bulk`, payload);
+  return unwrapData<OrganizerRubric[]>(res);
+}
+
 export async function updateOrganizerRubric(
   eventId: string | number,
   rubricId: string | number,
@@ -168,4 +184,13 @@ export async function deleteOrganizerRubric(
   rubricId: string | number
 ) {
   await axiosClient.delete(`/organizer/events/${eventId}/rubrics/${rubricId}`);
+}
+
+export async function bulkDeleteOrganizerRubrics(
+  eventId: string | number,
+  rubricIds: number[]
+) {
+  await axiosClient.delete(`/organizer/events/${eventId}/rubrics/bulk`, {
+    data: { rubricIds },
+  });
 }

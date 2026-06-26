@@ -11,7 +11,9 @@ import {
   Target,
   Zap,
   Loader2,
-  Crown
+  Crown,
+  ScrollText,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -21,6 +23,14 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { useEffect, useState } from "react";
+
+interface WorkspaceRound {
+  id: number;
+  name: string;
+  roundNumber: number;
+  status: string;
+  submissionDeadline?: string | null;
+}
 
 // Helper for countdown
 function useCountdown(targetDate: string | null) {
@@ -59,13 +69,16 @@ export default function WorkspaceOverviewPage() {
   });
 
   const workspaceData = data?.data;
+  const isLeader = workspaceData?.role === "leader";
   const currentActiveRound = workspaceData?.currentActiveRound;
-  const rounds = workspaceData?.rounds || [];
-  const roundSubmissions = workspaceData?.roundSubmissions || [];
+  const rounds: WorkspaceRound[] = workspaceData?.rounds || [];
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
-  const activeIndex = rounds.findIndex((r: any) => r.status === "open");
-  const completedCount = rounds.filter((r: any) => r.status === "closed" || r.status === "results_published").length;
+  const activeIndex = rounds.findIndex((round) => round.status === "open");
+  const completedCount = rounds.filter(
+    (round) =>
+      round.status === "closed" || round.status === "results_published"
+  ).length;
   const currentIndex = activeIndex !== -1 ? activeIndex : completedCount - 1;
   const progressWidth = rounds.length > 0 && currentIndex >= 0 ? ((currentIndex + 0.5) / rounds.length) * 100 : 0;
 
@@ -120,19 +133,9 @@ export default function WorkspaceOverviewPage() {
             />
             
             <div className={`grid grid-cols-1 md:grid-cols-${Math.max(1, rounds.length)} gap-6 relative z-10`}>
-              {rounds.map((round: any, index: number) => {
+              {rounds.map((round, index) => {
                 const isCompleted = round.status === "closed" || round.status === "results_published";
                 const isActive = round.status === "open";
-                const roundEntry = roundSubmissions.find(
-                  (entry: any) => entry.round.id === round.id,
-                );
-                const submissionBadge = roundEntry?.submission
-                  ? { label: "Submitted", className: "text-green-500 bg-green-500/10 border-green-500/20" }
-                  : roundEntry?.canSubmit
-                    ? { label: "Pending", className: "text-orange-500 bg-orange-500/10 border-orange-500/20" }
-                    : roundEntry?.teamRound?.status === "eliminated"
-                      ? { label: "Eliminated", className: "text-red-500 bg-red-500/10 border-red-500/20" }
-                      : { label: "Locked", className: "text-muted-foreground bg-muted/50 border-border" };
 
                 const isFinalRound = index === rounds.length - 1;
 
@@ -185,9 +188,6 @@ export default function WorkspaceOverviewPage() {
                     <p className="text-xs text-muted-foreground mt-1 font-medium">
                       {round.submissionDeadline ? new Date(round.submissionDeadline).toLocaleDateString() : "TBA"}
                     </p>
-                    <Badge variant="outline" className={`mt-2 text-[10px] ${submissionBadge.className}`}>
-                      {submissionBadge.label}
-                    </Badge>
                   </motion.div>
                 );
               })}
@@ -201,7 +201,7 @@ export default function WorkspaceOverviewPage() {
         
         {/* Action Center - Spans 2 columns */}
         <div className="lg:col-span-2 space-y-6">
-          {currentActiveRound ? (
+          {currentActiveRound && isLeader ? (
             <GlassCard glow className="p-8 rounded-[24px] bg-gradient-to-br from-card to-background border-orange-500/20 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-32 bg-orange-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 group-hover:bg-orange-500/10 transition-colors duration-500 pointer-events-none" />
               
@@ -254,6 +254,39 @@ export default function WorkspaceOverviewPage() {
                 </div>
               </div>
             </GlassCard>
+          ) : currentActiveRound ? (
+            <GlassCard className="p-8 rounded-[24px] bg-gradient-to-br from-card to-background border-blue-500/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-32 bg-blue-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="mb-4 flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-blue-500" />
+                    <span className="text-sm font-semibold uppercase tracking-wider text-blue-500">
+                      Member Access
+                    </span>
+                  </div>
+                  <h2 className="mb-2 text-3xl font-bold">Competition Rules</h2>
+                  <p className="max-w-md text-muted-foreground">
+                    Review participation rules, team responsibilities, and submission
+                    requirements. Only the team leader can submit or update the project.
+                  </p>
+                </div>
+
+                <div className="min-w-[220px] rounded-2xl border border-border bg-background/50 p-6 backdrop-blur-md">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Current phase
+                  </p>
+                  <p className="mt-2 font-semibold">{currentActiveRound.name}</p>
+                  <Button asChild variant="outline" className="mt-5 w-full rounded-xl">
+                    <Link href={`${basePath}/rules`}>
+                      <ScrollText className="mr-2 h-4 w-4" />
+                      View Rules
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </GlassCard>
           ) : (
             <GlassCard className="p-8 rounded-[24px] bg-card border-border flex items-center justify-center">
               <p className="text-muted-foreground">No active round currently.</p>
@@ -269,9 +302,15 @@ export default function WorkspaceOverviewPage() {
                 </div>
               </div>
               <h3 className="text-3xl font-bold mb-1">
-                {workspaceData?.latestSubmission ? "Submitted" : "Pending"}
+                {isLeader
+                  ? workspaceData?.latestSubmission
+                    ? "Submitted"
+                    : "Pending"
+                  : currentActiveRound?.name || "No active round"}
               </h3>
-              <p className="text-sm text-muted-foreground">Current Round Status</p>
+              <p className="text-sm text-muted-foreground">
+                {isLeader ? "Current Round Status" : "Current Competition Phase"}
+              </p>
             </GlassCard>
             
             <GlassCard className="p-6 rounded-[24px] hover:bg-white/[0.02] transition-colors flex flex-col justify-between">
@@ -302,8 +341,28 @@ export default function WorkspaceOverviewPage() {
               </h2>
             </div>
 
-            <div className="flex-1 space-y-4 flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">No feedback yet.</p>
+            <div className="flex-1 space-y-4">
+              {workspaceData?.mentorFeedbacks && workspaceData.mentorFeedbacks.length > 0 ? (
+                workspaceData.mentorFeedbacks.slice(0, 3).map((feedback: any) => (
+                  <div key={feedback.id} className="rounded-xl border border-border bg-muted/30 p-4 relative group">
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant={feedback.status === "completed" ? "success" : feedback.status === "acknowledged" ? "outline" : "warning"} className="text-[10px] px-1.5 h-5 uppercase tracking-wider">
+                        {feedback.status}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    <p className="text-sm line-clamp-3 text-foreground/90">
+                      {feedback.content}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center py-8">
+                  <p className="text-sm text-muted-foreground">No feedback yet.</p>
+                </div>
+              )}
             </div>
 
             <Link href={`${basePath}/mentor`} className="mt-6 block">

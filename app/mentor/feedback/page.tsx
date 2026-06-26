@@ -1,81 +1,98 @@
-import { Copy, Edit, Plus, Send, Trash2 } from "lucide-react";
+"use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { ExternalLink } from "lucide-react";
+import { useMemo } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-
+import { getMentorFeedback, MentorFeedback } from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "../_components/mentor-page-header";
-import { PriorityBadge } from "../_components/status-badges";
-import { feedbackList, mentorProfile } from "../mock-data";
+import {
+  MentorEmptyState,
+  MentorErrorState,
+  MentorLoadingState,
+} from "../_components/mentor-query-state";
 
 export default function FeedbackManagementPage() {
-    return (
-        <div className="mx-auto max-w-[1500px] space-y-6">
-            <MentorPageHeader
-                title="Feedback Management"
-                subtitle="Create, organize, and send structured mentor feedback."
-                actions={<Button variant="orange" className="rounded-2xl"><Plus className="h-4 w-4" />Create Feedback</Button>}
-            />
+  const query = useQuery({
+    queryKey: ["mentorFeedback"],
+    queryFn: getMentorFeedback,
+  });
 
-            <GlassCard className="rounded-[22px] bg-card p-4">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                    <Input placeholder="Search feedback..." className="h-11 rounded-2xl border-border bg-muted/40" />
-                    <div className="flex flex-wrap gap-2">
-                        {["Team", "Category", "Priority", "Status", "Date"].map((filter) => (
-                            <Button key={filter} variant="outline" className="rounded-2xl border-border bg-muted/40">{filter}</Button>
-                        ))}
+  const feedbackItems = query.data || [];
+
+  const groupedFeedbacks = useMemo(() => {
+    const groups: Record<number, { teamName: string; teamId: number; feedbacks: MentorFeedback[] }> = {};
+    for (const fb of feedbackItems) {
+      const teamId = fb.teamId || fb.submission?.teamId || fb.team?.id;
+      if (!teamId) continue;
+      
+      const teamName = fb.team?.name || fb.submission?.team?.name || `Team ${teamId}`;
+      if (!groups[teamId]) {
+        groups[teamId] = { teamName, teamId, feedbacks: [] };
+      }
+      groups[teamId].feedbacks.push(fb);
+    }
+    return Object.values(groups);
+  }, [feedbackItems]);
+
+  if (query.isLoading) return <MentorLoadingState />;
+  if (query.isError) return <MentorErrorState />;
+
+  return (
+    <div className="mx-auto max-w-[1300px] space-y-6">
+      <MentorPageHeader
+        title="Feedback Management"
+        subtitle="Feedback associated with your assigned team submissions."
+      />
+      {groupedFeedbacks.length === 0 ? (
+        <MentorEmptyState
+          title="No feedback yet"
+          description="Feedback returned by the mentor API will appear here."
+        />
+      ) : (
+        <div className="space-y-6">
+          {groupedFeedbacks.map((group) => (
+            <GlassCard key={group.teamId} className="rounded-[24px] bg-card p-6">
+              <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
+                <h2 className="text-xl font-bold">{group.teamName}</h2>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/mentor/teams/${group.teamId}`}>
+                    View team
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {group.feedbacks.map((feedback) => (
+                  <div key={feedback.id} className="rounded-xl border border-border bg-muted/30 p-5">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <Badge
+                        variant={feedback.status === "completed" ? "success" : "outline"}
+                      >
+                        {feedback.status ? feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1) : "Feedback"}
+                      </Badge>
                     </div>
-                </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                      {feedback.content}
+                    </p>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Created at{" "}
+                      {feedback.createdAt
+                        ? new Date(feedback.createdAt).toLocaleString()
+                        : "an unavailable time"}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </GlassCard>
-
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-                <main className="grid gap-4 md:grid-cols-2">
-                    {feedbackList.map((feedback) => (
-                        <GlassCard key={feedback.title} className="rounded-[22px] bg-card p-5">
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <p className="text-sm text-primary">{feedback.team}</p>
-                                    <h2 className="mt-1 text-lg font-semibold text-foreground">{feedback.title}</h2>
-                                    <p className="mt-2 text-sm text-muted-foreground">{feedback.category} · {feedback.date}</p>
-                                </div>
-                                <PriorityBadge priority={feedback.priority} />
-                            </div>
-                            <div className="mt-4 flex items-center gap-2">
-                                <Avatar className="h-8 w-8"><AvatarFallback>{mentorProfile.initials}</AvatarFallback></Avatar>
-                                <Badge variant="outline">{feedback.status}</Badge>
-                            </div>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {[Edit, Send, Trash2, Copy].map((Icon, index) => (
-                                    <Button key={index} variant="ghost" size="icon-sm" className="rounded-xl text-primary hover:bg-orange-500/10">
-                                        <Icon className="h-4 w-4" />
-                                    </Button>
-                                ))}
-                            </div>
-                        </GlassCard>
-                    ))}
-                </main>
-
-                <aside>
-                    <GlassCard glow className="rounded-[24px] bg-card p-6">
-                        <h2 className="text-lg font-semibold text-foreground">Add Feedback Modal</h2>
-                        <div className="mt-5 space-y-4">
-                            {["Team selector", "Feedback category", "Title", "Priority level", "Visibility settings"].map((field) => (
-                                <Input key={field} placeholder={field} className="h-11 rounded-2xl border-border bg-muted/40" />
-                            ))}
-                            {["Strengths", "Weaknesses", "Suggestions"].map((field) => (
-                                <Textarea key={field} placeholder={field} className="min-h-20 rounded-2xl border-border bg-muted/40" />
-                            ))}
-                            <div className="flex gap-2">
-                                <Button variant="outline" className="rounded-2xl border-border bg-muted/40">Save Draft</Button>
-                                <Button variant="orange" className="rounded-2xl">Send Feedback</Button>
-                            </div>
-                        </div>
-                    </GlassCard>
-                </aside>
-            </div>
+          ))}
         </div>
-    );
+      )}
+    </div>
+  );
 }
