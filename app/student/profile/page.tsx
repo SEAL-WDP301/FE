@@ -13,11 +13,11 @@ export default function StudentProfilePage() {
                     Profile
                 </p>
 
-                <h1 className="mt-3 text-5xl font-bold tracking-tight text-muted-foreground">
+                <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                     My Profile
                 </h1>
 
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Your SEAL identity, history, and credentials.
                 </p>
             </div>

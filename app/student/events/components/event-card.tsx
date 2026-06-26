@@ -21,19 +21,19 @@ export function EventCard({
     const Icon = meta.icon;
 
     return (
-        <div className="overflow-hidden rounded-3xl border border-border bg-[#140b07] backdrop-blur-xl transition-all duration-300 hover:border-orange-500/30">
-            <div className="relative h-36 overflow-hidden border-b border-border">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-500/30">
+            <div className="relative h-40 overflow-hidden border-b border-border">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-transparent" />
 
                 <div className="absolute left-5 right-5 top-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1 rounded-full border border-border bg-black/40 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+                    <div className="flex items-center gap-1 rounded-full border border-border bg-background/70 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                         <Calendar className="h-3 w-3 text-orange-400" />
                         {event.season} {event.year}
                     </div>
 
                     <div
                         className={cn(
-                            "flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]",
+                            "flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
                             meta.color
                         )}
                     >
@@ -43,20 +43,20 @@ export function EventCard({
                 </div>
 
                 <div className="absolute bottom-5 left-5 right-5">
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-orange-400">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-orange-400">
                         {event.category}
                     </p>
 
-                    <h3 className="mt-2 text-lg font-bold text-foreground">
+                    <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-6 text-foreground">
                         {event.name}
                     </h3>
                 </div>
             </div>
 
             <div className="p-5">
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                             Rank
                         </p>
 
@@ -66,7 +66,7 @@ export function EventCard({
                     </div>
 
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                             Team
                         </p>
 
@@ -76,7 +76,7 @@ export function EventCard({
                     </div>
 
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                             Submission
                         </p>
 
@@ -105,7 +105,7 @@ export function EventCard({
                         size="sm"
                         asChild
                     >
-                        <Link href={event.id ? `/student/events/${event.id}/workspace/submissions` : "/student/submissions"}>
+                        <Link href="/student/submissions">
                             Submission
                         </Link>
                     </Button>

@@ -33,22 +33,22 @@ export default function StudentEventsPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div>
+            <div className="max-w-3xl">
                 <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                     My Events
                 </p>
 
-                <h1 className="mt-3 text-5xl font-bold tracking-tight text-foreground">
+                <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                     Hackathon History
                 </h1>
 
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Every SEAL event you have participated in.
                 </p>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                     {
                         label: "Total Events",
@@ -80,24 +80,24 @@ export default function StudentEventsPage() {
                 ].map((item) => (
                     <GlassCard
                         key={item.label}
-                        className="border border-border"
+                        className="min-h-[132px] border border-border p-5 sm:p-6"
                     >
                         <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">
+                            <div className="min-w-0">
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                                     {item.label}
                                 </p>
 
-                                <h3 className="mt-2 text-3xl font-bold text-orange-400">
+                                <h3 className="mt-3 text-3xl font-bold text-orange-400">
                                     {item.value}
                                 </h3>
 
-                                <p className="mt-1 text-xs text-zinc-500">
+                                <p className="mt-2 text-xs text-muted-foreground">
                                     {item.sub}
                                 </p>
                             </div>
 
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10">
                                 <item.icon className="h-5 w-5 text-orange-400" />
                             </div>
                         </div>

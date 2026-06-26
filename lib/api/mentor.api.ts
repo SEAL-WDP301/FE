@@ -100,20 +100,25 @@ export interface MentorSubmission {
   mentorFeedbacks?: MentorFeedback[];
 }
 
+export interface StudentWorkspaceMentorProfile {
+  jobTitle?: string | null;
+  organization?: string | null;
+  organizationName?: string | null;
+  experience?: string | null;
+  achievements?: string | null;
+  bio?: string | null;
+  isPublic?: boolean;
+}
+
 export interface StudentWorkspaceMentor {
   id?: number;
   name?: string | null;
   email?: string | null;
   avatarUrl?: string | null;
   avatar_url?: string | null;
-  stakeholderProfile?: {
-    jobTitle?: string | null;
-    organization?: string | null;
-    organizationName?: string | null;
-    experience?: string | null;
-    achievements?: string | null;
-    bio?: string | null;
-  } | null;
+  stakeholderProfile?: StudentWorkspaceMentorProfile | null;
+  stakeholder_profile?: StudentWorkspaceMentorProfile | null;
+  profile?: StudentWorkspaceMentorProfile | null;
 }
 
 export interface StudentWorkspaceFeedback {

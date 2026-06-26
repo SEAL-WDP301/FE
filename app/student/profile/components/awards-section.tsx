@@ -27,8 +27,8 @@ const awards = [
 
 export function AwardsSection() {
     return (
-        <GlassCard>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">
+        <GlassCard className="p-5 sm:p-6">
+            <h3 className="mb-5 text-base font-semibold text-foreground">
                 Awards & Achievements
             </h3>
 
@@ -36,16 +36,16 @@ export function AwardsSection() {
                 {awards.map((award) => (
                     <div
                         key={award.name}
-                        className="group relative overflow-hidden rounded-xl border border-border bg-white/[0.02] p-4 transition hover:border-orange-500/40"
+                        className="group relative overflow-hidden rounded-xl border border-border bg-muted/30 p-4 transition hover:border-orange-500/40"
                     >
                         <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-orange-500/10 blur-2xl opacity-0 transition group-hover:opacity-100" />
 
                         <div className="relative flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-black shadow-lg shadow-orange-500/20">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-black shadow-lg shadow-orange-500/20">
                                 <award.icon className="h-5 w-5" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <h4 className="text-sm font-semibold text-foreground">
                                     {award.name}
                                 </h4>

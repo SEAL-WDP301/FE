@@ -12,6 +12,8 @@ import {
   getStudentMentorWorkspace,
   type StudentMentorWorkspaceData,
   type StudentWorkspaceFeedback,
+  type StudentWorkspaceMentor,
+  type StudentWorkspaceMentorProfile,
 } from "@/lib/api/mentor.api";
 import { FeedbackStatusPanel } from "./components/feedback-status-panel";
 import { FeedbackThreadCard } from "./components/feedback-thread-card";
@@ -76,6 +78,62 @@ function normalizeFeedbackItems(data: StudentMentorWorkspaceData) {
   );
 }
 
+function mergeMentorProfiles(
+  ...mentors: Array<StudentWorkspaceMentor | null | undefined>
+) {
+  return mentors.reduce<StudentWorkspaceMentor | null>((merged, mentor) => {
+    const normalizedMentor = normalizeMentorProfile(mentor);
+    if (!normalizedMentor) return merged;
+
+    if (!merged) return normalizedMentor;
+
+    return {
+      ...normalizedMentor,
+      ...merged,
+      avatarUrl: merged.avatarUrl || normalizedMentor.avatarUrl,
+      avatar_url: merged.avatar_url || normalizedMentor.avatar_url,
+      stakeholderProfile: {
+        ...normalizedMentor.stakeholderProfile,
+        ...merged.stakeholderProfile,
+      },
+    };
+  }, null);
+}
+
+function normalizeMentorProfile(
+  mentor?: StudentWorkspaceMentor | null
+): StudentWorkspaceMentor | null {
+  if (!mentor) return null;
+
+  const profile = mergeProfileFields(
+    mentor.profile,
+    mentor.stakeholder_profile,
+    mentor.stakeholderProfile
+  );
+
+  return {
+    ...mentor,
+    stakeholderProfile: profile,
+  };
+}
+
+function mergeProfileFields(
+  ...profiles: Array<StudentWorkspaceMentorProfile | null | undefined>
+) {
+  return profiles.reduce<StudentWorkspaceMentorProfile | null>(
+    (merged, profile) => {
+      if (!profile) return merged;
+      return {
+        ...profile,
+        ...merged,
+        organization: merged?.organization || profile.organization,
+        organizationName: merged?.organizationName || profile.organizationName,
+      };
+    },
+    null
+  );
+}
+
 export default function MentorWorkspacePage() {
   const params = useParams();
   const eventId = Number(params.id);
@@ -127,9 +185,8 @@ export default function MentorWorkspacePage() {
   }
 
   const data = workspaceQuery.data;
-  const mentor =
-    mentorQuery.data || data.team?.mentorAssignments?.[0]?.mentor || null;
   const feedbackItems = normalizeFeedbackItems(data);
+
   const resolvedCount = feedbackItems.filter(
     (feedback) =>
       feedback.status === "published" || feedback.status === "resolved"
