@@ -1,6 +1,11 @@
 import { axiosClient } from "../axios";
 
 export const workspaceApi = {
+  getMyEvents: async () => {
+    const response = await axiosClient.get("/student/teams/my-events");
+    return response.data?.data ?? [];
+  },
+
   getWorkspaceOverview: async (eventId: number) => {
     const response = await axiosClient.get(`/student/teams/my-team/workspace`, {
       params: { eventId },

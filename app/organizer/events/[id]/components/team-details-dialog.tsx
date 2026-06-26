@@ -237,7 +237,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                    <Button 
                     size="sm" 
                     disabled={!selectedMentorUser || assignMentorMutation.isPending}
-                    onClick={() => assignMentorMutation.mutate({ teamId: team.id, stakeholderId: Number(selectedMentorUser) })}
+                    onClick={() => assignMentorMutation.mutate(Number(selectedMentorUser))}
                    >
                     {assignMentorMutation.isPending ? "Assigning..." : "Assign"}
                    </Button>
@@ -267,7 +267,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                       size="sm" 
                       variant="ghost" 
                       className="h-8 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 px-2"
-                      onClick={() => unassignMentorMutation.mutate({ teamId: team.id, stakeholderId: assignment.mentorId })}
+                      onClick={() => unassignMentorMutation.mutate(assignment.mentorId)}
                       disabled={unassignMentorMutation.isPending}
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove

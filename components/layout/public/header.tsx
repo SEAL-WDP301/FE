@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '../dashboard/theme-toggle';
 import { getRoleHomePath } from '@/components/auth/role-guard';
+import { resolveRoleHomePath } from '@/lib/stakeholder-portal';
 
 export default function Navigation() {
     const router = useRouter();
@@ -29,6 +30,13 @@ export default function Navigation() {
                 ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
                 : null;
         },
+    });
+
+    const { data: dashboardPath } = useQuery({
+        queryKey: ['role-dashboard-path', user?.role],
+        queryFn: () => resolveRoleHomePath(user!.role),
+        enabled: !!user?.role,
+        staleTime: 60_000,
     });
 
     useEffect(() => {
@@ -99,7 +107,7 @@ export default function Navigation() {
                                 size="lg"
                                 className="h-9 rounded-full px-3 text-primary hover:bg-primary/15 sm:px-4"
                             >
-                                <Link href={getRoleHomePath(user.role)}>
+                                <Link href={dashboardPath ?? getRoleHomePath(user.role)}>
                                     <LayoutDashboard className="size-4" />
                                     <span className="hidden sm:inline">Dashboard</span>
                                 </Link>

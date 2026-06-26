@@ -5,10 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   ChartNoAxesCombined,
   ChevronLeft,
-  ClipboardCheck,
   FileCheck2,
   LayoutDashboard,
-  Megaphone,
   MessageSquareText,
   Settings,
   UsersRound,
@@ -36,11 +34,6 @@ interface NavItem {
 
 const baseNavItems: NavItem[] = [
   { label: "Dashboard", href: "/mentor", icon: LayoutDashboard },
-  {
-    label: "Judge Evaluation",
-    href: "/judge/evaluation",
-    icon: ClipboardCheck,
-  },
   { label: "My Teams", href: "/mentor/teams", icon: UsersRound },
   {
     label: "Team Progress",
@@ -63,11 +56,6 @@ const baseNavItems: NavItem[] = [
     href: "/mentor/submissions",
     icon: FileCheck2,
     id: "submissions",
-  },
-  {
-    label: "Announcements",
-    href: "/mentor/announcements",
-    icon: Megaphone,
   },
   { label: "Settings", href: "/mentor/settings", icon: Settings },
 ];
