@@ -48,6 +48,19 @@ export default function TeamsTab({ event }: { event: any }) {
         enabled: isAssignMentorOpen,
     });
 
+    const { data: staffData } = useQuery({
+        queryKey: ["organizerStaff", event.id],
+        queryFn: async () => {
+            const res = await axiosClient.get(`/organizer/events/${event.id}/staff`);
+            return res.data.data;
+        },
+        enabled: isAssignMentorOpen,
+    });
+
+    const judgeIdsInEvent = new Set(
+        (staffData?.judges ?? []).map((ja: { judgeId: number }) => ja.judgeId),
+    );
+
     // Update Team Status Mutation
     const updateStatusMutation = useMutation({
         mutationFn: async ({ teamId, status, reason }: { teamId: number, status: string, reason?: string }) => {
@@ -532,7 +545,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                         <option value="">-- Choose Stakeholder --</option>
                                         {isLoadingUsers ? (
                                             <option disabled>Loading...</option>
-                                        ) : users?.filter((u: any) => u.role === 'stakeholder').map((u: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                                        ) : users?.filter((u: any) => u.role === 'stakeholder' && !judgeIdsInEvent.has(u.id)).map((u: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
                                             <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                                         ))}
                                      </select>

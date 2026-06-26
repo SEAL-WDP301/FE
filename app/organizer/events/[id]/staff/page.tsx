@@ -101,8 +101,15 @@ export default function EventStaffPage() {
   // Filter stakeholders and judges that can be assigned to judge rounds
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const staffUsers = users?.filter((u: any) => u.role === 'stakeholder' || u.role === 'judge') || [];
+
+  // Stakeholders who are mentors in this event cannot also be judges.
+  const mentorIdsInEvent = new Set(
+    allMentorAssignments.map((ma: { mentorId: number }) => ma.mentorId),
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const judgeCandidates = staffUsers.filter((u: any) => u.role === 'stakeholder' || u.role === 'judge');
+  const judgeCandidates = staffUsers.filter(
+    (u: any) => (u.role === "stakeholder" || u.role === "judge") && !mentorIdsInEvent.has(u.id),
+  );
   
   // Filter for search inside modal
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,7 +124,7 @@ export default function EventStaffPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mentors & Judges</h1>
           <p className="text-muted-foreground mt-1">
-            Manage judges for rounds and view mentor assignments.
+            Manage judges for rounds and view mentor assignments. Mỗi stakeholder chỉ được một vai trò trong cùng event: mentor hoặc judge.
           </p>
         </div>
         <div className="flex gap-3">
@@ -160,12 +167,18 @@ export default function EventStaffPage() {
                     const judgeAssignments = allJudgeAssignments.filter((ja: any) => ja.judgeId === user.id);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const mentorAssignments = allMentorAssignments.filter((ma: any) => ma.mentorId === user.id);
+                    const hasRoleConflict = judgeAssignments.length > 0 && mentorAssignments.length > 0;
 
                     return (
                         <tr key={user.id} className="border-b border-border hover:bg-muted/10">
                             <td className="px-6 py-4">
                                 <div className="font-medium text-foreground">{user.name}</div>
                                 <div className="text-xs text-muted-foreground">{user.email}</div>
+                                {hasRoleConflict && (
+                                  <div className="mt-1 text-xs font-medium text-red-500">
+                                    Conflict: vừa mentor vừa judge — cần gỡ một vai trò
+                                  </div>
+                                )}
                             </td>
                             <td className="px-6 py-4 text-xs">
                                 {judgeAssignments.length > 0 ? (

@@ -61,6 +61,7 @@ export default function WorkspaceOverviewPage() {
   const workspaceData = data?.data;
   const currentActiveRound = workspaceData?.currentActiveRound;
   const rounds = workspaceData?.rounds || [];
+  const roundSubmissions = workspaceData?.roundSubmissions || [];
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
   const activeIndex = rounds.findIndex((r: any) => r.status === "open");
@@ -122,6 +123,16 @@ export default function WorkspaceOverviewPage() {
               {rounds.map((round: any, index: number) => {
                 const isCompleted = round.status === "closed" || round.status === "results_published";
                 const isActive = round.status === "open";
+                const roundEntry = roundSubmissions.find(
+                  (entry: any) => entry.round.id === round.id,
+                );
+                const submissionBadge = roundEntry?.submission
+                  ? { label: "Submitted", className: "text-green-500 bg-green-500/10 border-green-500/20" }
+                  : roundEntry?.canSubmit
+                    ? { label: "Pending", className: "text-orange-500 bg-orange-500/10 border-orange-500/20" }
+                    : roundEntry?.teamRound?.status === "eliminated"
+                      ? { label: "Eliminated", className: "text-red-500 bg-red-500/10 border-red-500/20" }
+                      : { label: "Locked", className: "text-muted-foreground bg-muted/50 border-border" };
 
                 const isFinalRound = index === rounds.length - 1;
 
@@ -174,6 +185,9 @@ export default function WorkspaceOverviewPage() {
                     <p className="text-xs text-muted-foreground mt-1 font-medium">
                       {round.submissionDeadline ? new Date(round.submissionDeadline).toLocaleDateString() : "TBA"}
                     </p>
+                    <Badge variant="outline" className={`mt-2 text-[10px] ${submissionBadge.className}`}>
+                      {submissionBadge.label}
+                    </Badge>
                   </motion.div>
                 );
               })}
