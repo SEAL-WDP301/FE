@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -64,7 +65,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   });
 
   const getStatusBadge = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'approved': return <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-xs font-semibold uppercase tracking-wider">Approved</span>;
       case 'rejected': return <span className="px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full text-xs font-semibold uppercase tracking-wider">Rejected</span>;
       case 'disqualified': return <span className="px-2 py-0.5 bg-gray-500/10 text-gray-500 rounded-full text-xs font-semibold uppercase tracking-wider">Disqualified</span>;
@@ -74,7 +75,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if(!open) {
+      if (!open) {
         onClose();
         setIsAssignMentorOpen(false);
       }
@@ -93,7 +94,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
             Review team members, registration details, and assign mentors.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="mt-4 space-y-6">
           {/* Leader */}
           <div className="p-4 border border-amber-500/30 rounded-lg bg-amber-500/5 relative overflow-hidden">
@@ -114,18 +115,18 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                 </Avatar>
                 <div>
                   <p className="font-semibold text-foreground text-base">{team?.leader?.name || 'Unknown'}</p>
-                <p className="text-sm text-muted-foreground">{team?.leader?.email}</p>
-                {team?.leader?.studentProfile && (
-                  <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
-                    <span>Code: {team.leader.studentProfile.studentCode} • {team.leader.studentProfile.universityName && (" " + team.leader.studentProfile.universityName)}</span>
-                    {team.leader.studentProfile.phone && (
+                  <p className="text-sm text-muted-foreground">{team?.leader?.email}</p>
+                  {team?.leader?.studentProfile && (
+                    <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
+                      <span>Code: {team.leader.studentProfile.studentCode} • {team.leader.studentProfile.universityName && (" " + team.leader.studentProfile.universityName)}</span>
+                      {team.leader.studentProfile.phone && (
                         <span className="flex items-center gap-1 text-blue-400">
-                            <Phone className="w-3 h-3" /> {team.leader.studentProfile.phone}
+                          <Phone className="w-3 h-3" /> {team.leader.studentProfile.phone}
                         </span>
-                    )}
-                  </p>
-                )}
-              </div>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="text-right mt-1">
                 <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold shadow-sm">Accepted</span>
@@ -140,12 +141,12 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
               return (
                 <>
                   <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
-                    Members 
+                    Members
                     <span className="bg-muted px-2 py-0.5 rounded-full text-foreground">
                       {otherMembers.length}
                     </span>
                   </h4>
-                  
+
                   {otherMembers.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">No other members yet.</p>
                   ) : (
@@ -161,17 +162,17 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                             </Avatar>
                             <div>
                               <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
-                            <p className="text-sm text-muted-foreground">{member.user?.email}</p>
-                            {member.user?.studentProfile && (
-                              <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
-                                <span>Code: {member.user.studentProfile.studentCode} • {member.user.studentProfile.universityName && (" " + member.user.studentProfile.universityName)}</span>
-                                {member.user.studentProfile.phone && (
+                              <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                              {member.user?.studentProfile && (
+                                <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
+                                  <span>Code: {member.user.studentProfile.studentCode} • {member.user.studentProfile.universityName && (" " + member.user.studentProfile.universityName)}</span>
+                                  {member.user.studentProfile.phone && (
                                     <span className="flex items-center gap-1 text-blue-400">
-                                        <Phone className="w-3 h-3" /> {member.user.studentProfile.phone}
+                                      <Phone className="w-3 h-3" /> {member.user.studentProfile.phone}
                                     </span>
-                                )}
-                              </p>
-                            )}
+                                  )}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -200,57 +201,57 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
 
           {/* Mentors */}
           <div className="p-4 border border-blue-500/20 rounded-lg bg-blue-500/5">
-             <div className="flex justify-between items-center mb-3">
+            <div className="flex justify-between items-center mb-3">
               <h4 className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-4 h-4" />
                 Mentors
               </h4>
               {!isAssignMentorOpen && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   className="h-7 text-xs gap-1 border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
                   onClick={() => setIsAssignMentorOpen(true)}
                 >
                   <UserPlus className="w-3 h-3" /> Assign Mentor
                 </Button>
               )}
-             </div>
+            </div>
 
-             {isAssignMentorOpen && (
-               <div className="mb-4 p-3 border border-border rounded bg-background flex flex-col gap-2">
-                 <div className="text-xs font-medium text-foreground">Select a Stakeholder to Assign as Mentor</div>
-                 <select
+            {isAssignMentorOpen && (
+              <div className="mb-4 p-3 border border-border rounded bg-background flex flex-col gap-2">
+                <div className="text-xs font-medium text-foreground">Select a Stakeholder to Assign as Mentor</div>
+                <select
                   value={selectedMentorUser}
                   onChange={(e) => setSelectedMentorUser(e.target.value ? Number(e.target.value) : "")}
                   className="w-full bg-muted border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2"
-                 >
+                >
                   <option value="">-- Choose Stakeholder --</option>
                   {isLoadingUsers ? (
                     <option disabled>Loading...</option>
                   ) : stakeholders?.filter((u: any) => u.role === 'stakeholder').map((u: any) => (
                     <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                   ))}
-                 </select>
-                 <div className="flex justify-end gap-2 mt-1">
-                   <Button size="sm" variant="ghost" onClick={() => setIsAssignMentorOpen(false)}>Cancel</Button>
-                   <Button 
-                    size="sm" 
+                </select>
+                <div className="flex justify-end gap-2 mt-1">
+                  <Button size="sm" variant="ghost" onClick={() => setIsAssignMentorOpen(false)}>Cancel</Button>
+                  <Button
+                    size="sm"
                     disabled={!selectedMentorUser || assignMentorMutation.isPending}
                     onClick={() => assignMentorMutation.mutate(Number(selectedMentorUser))}
-                   >
+                  >
                     {assignMentorMutation.isPending ? "Assigning..." : "Assign"}
-                   </Button>
-                 </div>
-               </div>
-             )}
+                  </Button>
+                </div>
+              </div>
+            )}
 
-             {team?.mentorAssignments?.length === 0 ? (
-               <p className="text-sm text-muted-foreground italic">No mentors assigned.</p>
-             ) : (
-               <div className="space-y-2">
-                 {team?.mentorAssignments?.map((assignment: any) => (
-                   <div key={assignment.mentorId} className="flex justify-between items-center py-2 border-t border-border/50 first:border-0 first:pt-0">
+            {team?.mentorAssignments?.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No mentors assigned.</p>
+            ) : (
+              <div className="space-y-2">
+                {team?.mentorAssignments?.map((assignment: any) => (
+                  <div key={assignment.mentorId} className="flex justify-between items-center py-2 border-t border-border/50 first:border-0 first:pt-0">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 border border-blue-500/30">
                         <AvatarImage src={assignment.mentor?.avatarUrl || assignment.mentor?.avatar_url} />
@@ -263,19 +264,19 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                         <p className="text-xs text-muted-foreground">{assignment.mentor?.email}</p>
                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="h-8 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 px-2"
                       onClick={() => unassignMentorMutation.mutate(assignment.mentorId)}
                       disabled={unassignMentorMutation.isPending}
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
                     </Button>
-                   </div>
-                 ))}
-               </div>
-             )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>

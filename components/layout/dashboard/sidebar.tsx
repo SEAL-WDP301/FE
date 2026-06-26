@@ -26,13 +26,13 @@ interface DashboardSidebarProps {
 const menus = [
   {
     label: "Overview",
-    href: "/student/events",
+    href: "/student/dashboard",
     icon: UserRoundCog,
   },
 
   {
     label: "Events",
-    href: "/student/events",
+    href: "/student/evevnts",
     icon: Trophy,
   },
 

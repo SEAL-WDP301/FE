@@ -43,9 +43,9 @@ function normalizeFeedbackItems(data: StudentMentorWorkspaceData) {
         submission: item.submission ||
           (fallbackSubmission
             ? {
-                id: fallbackSubmission.id,
-                round: fallbackSubmission.round,
-              }
+              id: fallbackSubmission.id,
+              round: fallbackSubmission.round,
+            }
             : item.submission),
       };
       const key =
@@ -150,6 +150,7 @@ export default function MentorWorkspacePage() {
   });
   const queryClient = useQueryClient();
   const { socket, isConnected } = useSocket();
+  const mentor = normalizeMentorProfile(mentorQuery.data);
 
   const teamId = workspaceQuery.data?.team?.id;
 
