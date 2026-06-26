@@ -34,9 +34,9 @@ const fields = [
 
 export function PersonalInformation() {
     return (
-        <GlassCard>
-            <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">
+        <GlassCard className="p-5 sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-foreground">
                     Personal Information
                 </h3>
 
@@ -49,7 +49,7 @@ export function PersonalInformation() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {fields.map((field) => (
                     <div key={field.label}>
-                        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        <Label className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                             {field.label}
                         </Label>
 

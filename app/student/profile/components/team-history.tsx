@@ -19,8 +19,8 @@ const teams = [
 
 export function TeamHistory() {
     return (
-        <GlassCard>
-            <h3 className="text-sm font-semibold text-foreground">
+        <GlassCard className="p-5 sm:p-6">
+            <h3 className="text-base font-semibold text-foreground">
                 Team history
             </h3>
 

@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 
 export function SecuritySection() {
     return (
-        <GlassCard>
-            <div className="mb-5 flex items-center justify-between">
+        <GlassCard className="p-5 sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-orange-500" />
 
-                    <h3 className="text-sm font-semibold text-foreground">
+                    <h3 className="text-base font-semibold text-foreground">
                         Password & Security
                     </h3>
                 </div>
@@ -24,7 +24,7 @@ export function SecuritySection() {
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div>
-                    <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                         Current Password
                     </Label>
 
@@ -36,7 +36,7 @@ export function SecuritySection() {
                 </div>
 
                 <div>
-                    <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                         New Password
                     </Label>
 
@@ -48,7 +48,7 @@ export function SecuritySection() {
                 </div>
 
                 <div>
-                    <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                         Confirm Password
                     </Label>
 
