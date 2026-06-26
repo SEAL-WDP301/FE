@@ -48,6 +48,8 @@ export default function LoginPage() {
 
       // Update global user state
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["stakeholder-portal"] });
+      queryClient.invalidateQueries({ queryKey: ["student", "my-events"] });
 
       const role = res.data?.data?.user?.role;
       const redirectTo = getSafeRedirectPath(

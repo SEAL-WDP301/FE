@@ -1,7 +1,20 @@
 import { axiosClient } from "../axios";
 
+export interface StudentMyEvent {
+  teamId: number;
+  teamName: string;
+  teamStatus: string;
+  event: {
+    id: number;
+    name: string;
+    season: string;
+    year: number;
+    status: string;
+  };
+}
+
 export const workspaceApi = {
-  getMyEvents: async () => {
+  getMyEvents: async (): Promise<StudentMyEvent[]> => {
     const response = await axiosClient.get("/student/teams/my-events");
     return response.data?.data ?? [];
   },

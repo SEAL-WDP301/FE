@@ -18,6 +18,28 @@ import {
 import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
 
+function isNavActive(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
+  if (pathname === href) return true;
+
+  switch (href) {
+    case "/student/events":
+      return pathname.startsWith("/student/events");
+    case "/student/teams":
+      return pathname.includes("/workspace/my-team");
+    case "/student/mentor":
+      return pathname.includes("/workspace/mentor");
+    case "/student/submissions":
+      return pathname.includes("/workspace/submissions");
+    case "/student/schedule":
+      return pathname.includes("/workspace/schedule");
+    case "/student/settings":
+      return pathname === "/student/settings" || pathname === "/student/profile";
+    default:
+      return pathname.startsWith(`${href}/`);
+  }
+}
+
 interface DashboardSidebarProps {
   collapsed: boolean;
   setCollapsed: (value: boolean) => void;
@@ -104,7 +126,7 @@ export function Sidebar({
           {menus.map((item) => {
             const Icon = item.icon;
 
-            const active = pathname === item.href;
+            const active = isNavActive(pathname, item.href);
 
             return (
               <Link

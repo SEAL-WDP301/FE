@@ -23,7 +23,7 @@ interface UserProfile {
 const roleHomePath: Record<AppRole, string> = {
   admin: "/organizer/events",
   organizer: "/organizer/events",
-  student: "/home",
+  student: "/student/events",
   stakeholder: "/mentor",
   judge: "/judge/dashboard",
 };
@@ -75,11 +75,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     if (!isLoading && !isFetching && user) {
       const role = user.role;
       if (!role || !allowedRoles.includes(role as AppRole)) {
-        if (role === "stakeholder") {
-          void resolveRoleHomePath(role).then((path) => router.replace(path));
-        } else {
-          router.replace(getRoleHomePath(role));
-        }
+        void resolveRoleHomePath(role).then((path) => router.replace(path));
       }
     }
   }, [allowedRoles, hasToken, isError, isFetching, isLoading, pathname, router, user]);

@@ -150,7 +150,6 @@ export default function MentorWorkspacePage() {
   });
   const queryClient = useQueryClient();
   const { socket, isConnected } = useSocket();
-  const mentor = normalizeMentorProfile(mentorQuery.data);
 
   const teamId = workspaceQuery.data?.team?.id;
 

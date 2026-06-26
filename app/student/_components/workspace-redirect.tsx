@@ -25,14 +25,16 @@ interface StudentEventEntry {
 }
 
 async function resolveEventId(): Promise<number | null> {
-  const cached = getStudentLastEventId();
-  if (cached) return cached;
-
   const res = await axiosClient.get("/student/teams/my-events");
   const events = (res.data?.data ?? []) as StudentEventEntry[];
   if (!events.length) return null;
 
-  const eventId = events[0].event.id;
+  const cached = getStudentLastEventId();
+  const validCached = cached
+    ? events.find((entry) => entry.event.id === cached)?.event.id
+    : undefined;
+
+  const eventId = validCached ?? events[0].event.id;
   setStudentLastEventId(eventId);
   return eventId;
 }
@@ -72,7 +74,7 @@ export function StudentWorkspaceRedirect({
           Bạn cần tham gia một team trước khi mở workspace. Vào Events để đăng ký hoặc chấp nhận lời mời.
         </p>
         <Button asChild className="mt-6">
-          <Link href="/student/events">Xem Events</Link>
+          <Link href="/home/events">Khám phá Events</Link>
         </Button>
       </GlassCard>
     );
