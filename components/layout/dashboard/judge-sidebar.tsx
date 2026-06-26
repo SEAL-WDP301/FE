@@ -14,6 +14,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
+import { isNavPathActive } from "@/lib/role-navigation";
 
 interface DashboardSidebarProps {
     collapsed: boolean;
@@ -75,7 +76,7 @@ export function JudgeSidebar({
                         : "justify-start p-6"
                 )}
             >
-                <Logo collapsed={collapsed} />
+                <Logo collapsed={collapsed} href="/judge/dashboard" />
             </div>
 
             {/* Navigation */}
@@ -84,7 +85,10 @@ export function JudgeSidebar({
                     {menus.map((item) => {
                         const Icon = item.icon;
 
-                        const active = pathname === item.href;
+                        const active =
+                            item.href === "/judge/dashboard"
+                                ? pathname === item.href
+                                : isNavPathActive(pathname, item.href);
 
                         return (
                             <Link

@@ -12,7 +12,7 @@ import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '../dashboard/theme-toggle';
-import { getRoleHomePath } from '@/components/auth/role-guard';
+import { getSyncRoleHomePath } from '@/lib/role-navigation';
 import { resolveRoleHomePath } from '@/lib/stakeholder-portal';
 
 export default function Navigation() {
@@ -107,7 +107,7 @@ export default function Navigation() {
                                 size="lg"
                                 className="h-9 rounded-full px-3 text-primary hover:bg-primary/15 sm:px-4"
                             >
-                                <Link href={dashboardPath ?? getRoleHomePath(user.role)}>
+                                <Link href={dashboardPath ?? getSyncRoleHomePath(user.role)}>
                                     <LayoutDashboard className="size-4" />
                                     <span className="hidden sm:inline">Dashboard</span>
                                 </Link>

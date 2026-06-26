@@ -100,7 +100,7 @@ export function MentorSidebar({
           collapsed ? "justify-center p-4" : "justify-start p-6"
         )}
       >
-        <Logo collapsed={collapsed} />
+        <Logo collapsed={collapsed} href="/mentor" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">

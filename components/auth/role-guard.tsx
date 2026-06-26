@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { axiosClient } from "@/lib/axios";
+import { getSyncRoleHomePath } from "@/lib/role-navigation";
 import { resolveRoleHomePath } from "@/lib/stakeholder-portal";
 
 export type AppRole = "admin" | "organizer" | "student" | "stakeholder" | "judge";
@@ -20,16 +21,8 @@ interface UserProfile {
   [key: string]: unknown;
 }
 
-const roleHomePath: Record<AppRole, string> = {
-  admin: "/organizer/events",
-  organizer: "/organizer/events",
-  student: "/student/events",
-  stakeholder: "/mentor",
-  judge: "/judge/dashboard",
-};
-
 export function getRoleHomePath(role?: string) {
-  return role && role in roleHomePath ? roleHomePath[role as AppRole] : "/home";
+  return getSyncRoleHomePath(role);
 }
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {

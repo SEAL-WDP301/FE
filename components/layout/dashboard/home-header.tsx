@@ -14,7 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
-import { resolveRoleHomePath } from '@/lib/stakeholder-portal';
+import { resolveRoleHomePath } from "@/lib/stakeholder-portal";
+import { getRoleAccountLinks } from "@/lib/role-navigation";
 
 // ORGANIZER_MENUS removed per user request
 
@@ -61,11 +62,12 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     const rawAvatarUrl = user?.avatarUrl;
     const avatarUrl = typeof rawAvatarUrl === 'string' ? rawAvatarUrl.trim() : '';
 
+    const accountLinks = getRoleAccountLinks(user?.role, pathname);
+
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
             <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
-                {/* Logo */}
-                <Logo size='sm' href="/home" />
+                <Logo size='sm' href={user ? accountLinks.home : "/home"} />
 
                 {/* Center Navigation */}
                 {customCenterContent ? (
@@ -96,7 +98,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                 <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
-                            <Link href="/home" className="cursor-pointer transition-transform hover:scale-105">
+                            <Link href={accountLinks.home} className="cursor-pointer transition-transform hover:scale-105">
                                 <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
                                     {avatarUrl ? (
                                         <AvatarImage
