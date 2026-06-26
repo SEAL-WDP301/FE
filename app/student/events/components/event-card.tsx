@@ -105,7 +105,7 @@ export function EventCard({
                         size="sm"
                         asChild
                     >
-                        <Link href="/student/submissions">
+                        <Link href={event.id ? `/student/events/${event.id}/workspace/submissions` : "/student/submissions"}>
                             Submission
                         </Link>
                     </Button>
