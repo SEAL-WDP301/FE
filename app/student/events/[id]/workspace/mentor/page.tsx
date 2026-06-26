@@ -185,6 +185,12 @@ export default function MentorWorkspacePage() {
   }
 
   const data = workspaceQuery.data;
+  const mentor = normalizeMentorProfile(
+    mergeMentorProfiles(
+      mentorQuery.data,
+      data.team?.mentorAssignments?.[0]?.mentor,
+    ),
+  );
   const feedbackItems = normalizeFeedbackItems(data);
 
   const resolvedCount = feedbackItems.filter(
