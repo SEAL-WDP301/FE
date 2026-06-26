@@ -28,6 +28,8 @@ export interface JudgeRoundSubmission {
   anonymousIndex?: number;
   track: { id: number; name: string };
   status: string;
+  githubUrl?: string | null;
+  assignedRepoUrl?: string | null;
   submittedAt?: string | null;
   scoringStatus: JudgeScoringStatus;
   scoredCriteria: number;
@@ -62,6 +64,7 @@ export interface JudgeSubmissionDetail {
     name: string;
     anonymousIndex?: number;
     track: { id: number; name: string };
+    githubRepoUrl?: string | null;
   };
   round: {
     id: number;
@@ -88,7 +91,15 @@ export interface SubmitJudgeScoresPayload {
 export const judgeApi = {
   getAssignedEvents: async () => {
     const response = await axiosClient.get("/judge/events");
-    return response.data?.data as JudgeAssignedEvent[];
+    const data = response.data?.data as JudgeAssignedEvent[] || [];
+    
+    return data.map(event => {
+      // Deduplicate rounds by roundId because a judge can be assigned to multiple tracks in the same round
+      const uniqueRounds = Array.from(
+        new Map(event.rounds.map(r => [r.roundId, r])).values()
+      );
+      return { ...event, rounds: uniqueRounds };
+    });
   },
 
   getRoundSubmissions: async (roundId: number) => {

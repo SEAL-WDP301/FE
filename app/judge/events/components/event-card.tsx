@@ -18,8 +18,8 @@ export default function EventCard({ event }: EventCardProps) {
   )[0];
 
   const reviewHref = primaryRound
-    ? `/judge/evalution?eventId=${event.id}&roundId=${primaryRound.roundId}`
-    : `/judge/evalution?eventId=${event.id}`;
+    ? `/judge/events/${event.id}/evalution?roundId=${primaryRound.roundId}`
+    : `/judge/events/${event.id}/evalution`;
 
   return (
     <GlassCard className="overflow-hidden p-0 seal-card-hover bg-gradient-to-br">

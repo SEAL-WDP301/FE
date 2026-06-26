@@ -59,21 +59,6 @@ export default function LoginPage() {
         return;
       }
 
-      if (role === "stakeholder") {
-        try {
-          const judgeRes = await axiosClient.get("/judge/events");
-          const assignedEvents = judgeRes.data?.data ?? [];
-          if (assignedEvents.length > 0) {
-            router.push("/judge/dashboard");
-            return;
-          }
-        } catch {
-          /* fall through to mentor home */
-        }
-        router.push("/mentor");
-        return;
-      }
-
       router.push(getRoleHomePath(role));
     } catch (error: unknown) {
       enqueueSnackbar(

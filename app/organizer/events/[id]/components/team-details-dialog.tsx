@@ -32,8 +32,8 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   });
 
   const assignMentorMutation = useMutation({
-    mutationFn: async (stakeholderId: number) => {
-      const res = await axiosClient.post(`/organizer/assignments/teams/${team.id}/mentors`, { stakeholderId });
+    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
+      const res = await axiosClient.post(`/organizer/assignments/teams/${teamId}/mentors`, { stakeholderId });
       return res.data;
     },
     onSuccess: () => {
@@ -49,8 +49,8 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   });
 
   const unassignMentorMutation = useMutation({
-    mutationFn: async (stakeholderId: number) => {
-      const res = await axiosClient.delete(`/organizer/assignments/teams/${team.id}/mentors/${stakeholderId}`);
+    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
+      const res = await axiosClient.delete(`/organizer/assignments/teams/${teamId}/mentors/${stakeholderId}`);
       return res.data;
     },
     onSuccess: () => {

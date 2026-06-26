@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 
-import { JudgeSidebar } from "@/components/layout/dashboard/judge-sidebar";
+import { MentorSidebar } from "@/app/mentor/_components/mentor-sidebar";
 import { Topbar } from "@/components/layout/dashboard/topbar";
 import { RoleGuard } from "@/components/auth/role-guard";
 
@@ -13,10 +13,10 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
-        <RoleGuard allowedRoles={["judge", "stakeholder", "admin"]}>
+        <RoleGuard allowedRoles={["stakeholder"]}>
         <div className="min-h-screen bg-background text-foreground">
             <div className="flex h-screen overflow-hidden">
-                <JudgeSidebar
+                <MentorSidebar
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
                 />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 
 import {
     CalendarClock,
@@ -20,44 +20,40 @@ interface DashboardSidebarProps {
     setCollapsed: (value: boolean) => void;
 }
 
-const menus = [
-    {
-        label: "Overview",
-        href: "/judge/dashboard",
-        icon: LayoutDashboard,
-    },
-
-    {
-        label: "Asigned Events",
-        href: "/judge/events",
-        icon: CalendarRange,
-    },
-
-    {
-        label: "Evalution",
-        href: "/judge/evalution",
-        icon: ClipboardCheck,
-    },
-
-    {
-        label: "Schedule",
-        href: "/judge/schedule",
-        icon: CalendarClock,
-    },
-
-    {
-        label: "Profile",
-        href: "/judge/profile",
-        icon: User,
-    },
-
-];
+const getMenus = (eventId: string) => {
+    const base = `/judge/events/${eventId}`;
+    return [
+        {
+            label: "Overview",
+            href: `${base}/dashboard`,
+            icon: LayoutDashboard,
+        },
+        {
+            label: "Evalution",
+            href: `${base}/evalution`,
+            icon: ClipboardCheck,
+        },
+        {
+            label: "Schedule",
+            href: `${base}/schedule`,
+            icon: CalendarClock,
+        },
+        {
+            label: "Profile",
+            href: "/judge/profile",
+            icon: User,
+        },
+    ];
+};
 
 export function JudgeSidebar({
     collapsed,
     setCollapsed,
 }: DashboardSidebarProps) {
     const pathname = usePathname();
+    const params = useParams();
+    const eventId = params.eventId as string || "1";
+    const menus = getMenus(eventId);
 
     return (
         <aside

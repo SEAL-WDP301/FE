@@ -23,12 +23,13 @@ const roleHomePath: Record<AppRole, string> = {
   admin: "/organizer/events",
   organizer: "/organizer/events",
   student: "/home",
-  stakeholder: "/mentor",
+  stakeholder: "/home",
   judge: "/judge/dashboard",
 };
 
 export function getRoleHomePath(role?: string) {
-  return role && role in roleHomePath ? roleHomePath[role as AppRole] : "/home";
+  const normalizedRole = role?.toLowerCase();
+  return normalizedRole && normalizedRole in roleHomePath ? roleHomePath[normalizedRole as AppRole] : "/home";
 }
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
@@ -72,7 +73,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     }
 
     if (!isLoading && !isFetching && user) {
-      const role = user.role;
+      const role = user.role?.toLowerCase();
       if (!role || !allowedRoles.includes(role as AppRole)) {
         router.replace(getRoleHomePath(role));
       }
@@ -83,7 +84,8 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     return <RoleGuardFallback />;
   }
 
-  if (!user?.role || !allowedRoles.includes(user.role as AppRole)) {
+  const normalizedUserRole = user?.role?.toLowerCase();
+  if (!normalizedUserRole || !allowedRoles.includes(normalizedUserRole as AppRole)) {
     return <RoleGuardFallback />;
   }
 

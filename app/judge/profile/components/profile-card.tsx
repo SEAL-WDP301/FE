@@ -1,11 +1,23 @@
+"use client";
+
 import { Camera, Mail, MapPin, Phone } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { useQuery } from "@tanstack/react-query";
+import { axiosClient } from "@/lib/axios";
 
 export function ProfileCard() {
+    const { data: user } = useQuery<any>({
+        queryKey: ["userProfile"],
+        queryFn: async () => {
+            const res = await axiosClient.get("/users/profile");
+            return res.data?.data ?? null;
+        }
+    });
+
     return (
         <Card glow className="overflow-hidden border-orange-500/20 bg-card">
             <CardContent className="p-8 text-center">
@@ -13,7 +25,11 @@ export function ProfileCard() {
                     <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-2xl" />
                     <Avatar className="relative mx-auto h-28 w-28 border border-orange-500/30 ring-4 ring-primary/25">
                         <AvatarFallback className="bg-gradient-to-br from-[#ff8a3d] to-[#f37021] text-3xl font-black text-white">
-                            NM
+                            {user?.avatarUrl ? (
+                                <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                            ) : (
+                                user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "J"
+                            )}
                         </AvatarFallback>
                     </Avatar>
 
@@ -27,11 +43,11 @@ export function ProfileCard() {
                 </div>
 
                 <h2 className="mt-5 text-xl font-bold text-foreground">
-                    Dr. Nguyen Minh
+                    {user?.name || "Loading..."}
                 </h2>
 
-                <div className="mt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                    Senior Judge · AI / ML Track
+                <div className="mt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground capitalize">
+                    {user?.role || "Judge"} · {user?.profile?.jobTitle || "Judge"}
                 </div>
 
                 <div className="mt-3 flex items-center justify-center gap-2">
@@ -47,16 +63,12 @@ export function ProfileCard() {
                 <div className="mt-5 space-y-2 text-left text-xs">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <Mail className="h-3.5 w-3.5" />
-                        minh.n@fpt.edu.vn
+                        {user?.email || "N/A"}
                     </div>
 
                     <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-3.5 w-3.5" />
-                        +84 90 123 4567
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" />
-                        Ho Chi Minh City, Vietnam
+                        Vietnam
                     </div>
                 </div>
             </CardContent>

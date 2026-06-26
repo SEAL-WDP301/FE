@@ -4,10 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+import { enqueueSnackbar } from 'notistack';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock, BellRing, GraduationCap, Mail } from 'lucide-react';
-import { getStudentAssignedMentor } from '@/lib/api/mentor.api';
+import { getStudentAssignedMentor, getMentorTeams } from '@/lib/api/mentor.api';
 
 function getInitials(name?: string | null) {
   return (name || 'M')
@@ -32,6 +34,8 @@ export default function EventDetailPage() {
       return res.data?.data;
     },
   });
+
+  const userRole = user?.role?.toLowerCase();
 
   // Fetch Public Event Details
   const { data: event, isLoading: isEventLoading } = useQuery({
@@ -59,7 +63,7 @@ export default function EventDetailPage() {
       const res = await axiosClient.get('/student/teams/invitations/pending');
       return res.data.data;
     },
-    enabled: !!user && user.role === 'student',
+    enabled: !!user && userRole === 'student',
   });
 
   const teamStatus = studentInfo?.teamInfo?.team?.status;
@@ -70,9 +74,40 @@ export default function EventDetailPage() {
   const { data: assignedMentor, isLoading: isMentorLoading } = useQuery({
     queryKey: ['studentAssignedMentor', eventId],
     queryFn: () => getStudentAssignedMentor(eventId),
-    enabled: !!user && user.role === 'student' && hasApprovedTeam,
+    enabled: !!user && userRole === 'student' && hasApprovedTeam,
     retry: false,
   });
+
+  // Fetch Stakeholder Data
+  const { data: judgeEvents } = useQuery({
+    queryKey: ['judgeEvents'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/judge/events');
+      return res.data?.data ?? [];
+    },
+    enabled: !!user && userRole === 'stakeholder',
+  });
+
+  const { data: mentorTeams } = useQuery({
+    queryKey: ['mentorTeams'],
+    queryFn: getMentorTeams,
+    enabled: !!user && userRole === 'stakeholder',
+  });
+
+  const isJudgeForEvent = judgeEvents?.some((e: any) => e.id === Number(eventId));
+  const isMentorForEvent = mentorTeams?.some((t: any) => t.event?.id === Number(eventId) || t.eventId === Number(eventId));
+
+  useEffect(() => {
+    if (userRole === 'stakeholder') {
+      if (isJudgeForEvent && isMentorForEvent) {
+        enqueueSnackbar('Bạn đã được chỉ định làm Mentor và Judge cho sự kiện này!', { variant: 'info' });
+      } else if (isJudgeForEvent) {
+        enqueueSnackbar('Bạn đã được chỉ định làm Judge cho sự kiện này!', { variant: 'info' });
+      } else if (isMentorForEvent) {
+        enqueueSnackbar('Bạn đã được chỉ định làm Mentor cho sự kiện này!', { variant: 'info' });
+      }
+    }
+  }, [userRole, isJudgeForEvent, isMentorForEvent]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventPendingInvitations = pendingInvitations?.filter((inv: any) => inv.team.eventId === Number(eventId)) || [];
@@ -111,7 +146,7 @@ export default function EventDetailPage() {
     }
 
     // 2. Organizer or Admin
-    if (user.role === 'organizer' || user.role === 'admin') {
+    if (userRole === 'organizer' || userRole === 'admin') {
       return (
         <Link href={`/organizer/events/${eventId}`}>
           <Button size="lg" className="w-full sm:w-auto px-8 bg-blue-600 hover:bg-blue-700">
@@ -122,7 +157,7 @@ export default function EventDetailPage() {
     }
 
     // 3. Student
-    if (user.role === 'student') {
+    if (userRole === 'student') {
       if (isStudentLoading) {
         return <Button disabled>Loading status...</Button>;
       }
@@ -190,6 +225,35 @@ export default function EventDetailPage() {
             Register Now
           </Button>
         </Link>
+      );
+    }
+
+    // 4. Stakeholder (Judge/Mentor)
+    if (userRole === 'stakeholder') {
+      if (isJudgeForEvent || isMentorForEvent) {
+        return (
+          <div className="flex gap-4">
+            {isJudgeForEvent && (
+              <Link href={`/judge/events/${eventId}/dashboard`}>
+                <Button size="lg" className="w-full sm:w-auto px-8 bg-purple-600 hover:bg-purple-700 text-white">
+                  Enter Judge Workspace
+                </Button>
+              </Link>
+            )}
+            {isMentorForEvent && (
+              <Link href={`/mentor/events/${eventId}/teams`}>
+                <Button size="lg" className="w-full sm:w-auto px-8 bg-blue-600 hover:bg-blue-700 text-white">
+                  Enter Mentor Workspace
+                </Button>
+              </Link>
+            )}
+          </div>
+        );
+      }
+      return (
+        <Button size="lg" disabled className="w-full sm:w-auto px-8">
+          Not Assigned to Event
+        </Button>
       );
     }
 

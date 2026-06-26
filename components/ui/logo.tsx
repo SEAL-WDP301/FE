@@ -12,7 +12,7 @@ export default function Logo({
   size = "md",
   showText = true,
   collapsed = false,
-  href = "/",
+  href = "/home",
 }: LogoProps) {
   const sizes = {
     sm: {

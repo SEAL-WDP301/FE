@@ -32,10 +32,15 @@ async function fetchWorkspaceSubmissions(
     event.rounds.map((round) => ({ event, round })),
   );
 
-  if (!rounds.length) return [];
+  // Deduplicate rounds by roundId since a judge might be assigned to multiple tracks in the same round
+  const uniqueRounds = Array.from(
+    new Map(rounds.map((r) => [r.round.roundId, r])).values()
+  );
+
+  if (!uniqueRounds.length) return [];
 
   const batches = await Promise.all(
-    rounds.map(async ({ event, round }) => {
+    uniqueRounds.map(async ({ event, round }) => {
       const submissions = await judgeApi.getRoundSubmissions(round.roundId);
       return submissions.map((submission) => ({
         ...submission,

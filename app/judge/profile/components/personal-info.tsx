@@ -1,30 +1,44 @@
+"use client";
+
 import { Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GlassCard } from "@/components/ui/glass-card";
+import { useQuery } from "@tanstack/react-query";
+import { axiosClient } from "@/lib/axios";
 
-const fields = [
-    {
-        label: "Full name",
-        value: "Nguyễn Minh",
-    },
-    {
-        label: "Email",
-        value: "minh.n@fpt.edu.vn",
-    },
-    {
-        label: "Title",
-        value: "Senior Judge — AI/ML",
-    },
-    {
-        label: "Phone",
-        value: "+84 90 123 4567",
-    },
-];
+  // Placeholder fields, we'll map real data to this later
 
 export function PersonalInformation() {
+    const { data: user } = useQuery<any>({
+        queryKey: ["userProfile"],
+        queryFn: async () => {
+            const res = await axiosClient.get("/users/profile");
+            return res.data?.data ?? null;
+        }
+    });
+
+    const fields = [
+        {
+            label: "Full name",
+            value: user?.name || "N/A",
+        },
+        {
+            label: "Email",
+            value: user?.email || "N/A",
+        },
+        {
+            label: "Title",
+            value: user?.profile?.jobTitle || "Judge",
+        },
+        {
+            label: "Organization",
+            value: user?.profile?.organization || "N/A",
+        },
+    ];
+
     return (
         <GlassCard>
             <div className="mb-4 flex items-center justify-between">

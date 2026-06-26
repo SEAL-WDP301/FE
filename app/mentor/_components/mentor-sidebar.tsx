@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import {
   ChartNoAxesCombined,
   ChevronLeft,
@@ -34,43 +34,19 @@ interface NavItem {
   badge?: string;
 }
 
-const baseNavItems: NavItem[] = [
-  { label: "Dashboard", href: "/mentor", icon: LayoutDashboard },
-  {
-    label: "Judge Evaluation",
-    href: "/judge/evaluation",
-    icon: ClipboardCheck,
-  },
-  { label: "My Teams", href: "/mentor/teams", icon: UsersRound },
-  {
-    label: "Team Progress",
-    href: "/mentor/progress",
-    icon: ChartNoAxesCombined,
-  },
-  {
-    label: "Mentoring Sessions",
-    href: "/mentor/sessions",
-    icon: Video,
-  },
-  {
-    label: "Feedback",
-    href: "/mentor/feedback",
-    icon: MessageSquareText,
-    id: "feedback",
-  },
-  {
-    label: "Submissions Review",
-    href: "/mentor/submissions",
-    icon: FileCheck2,
-    id: "submissions",
-  },
-  {
-    label: "Announcements",
-    href: "/mentor/announcements",
-    icon: Megaphone,
-  },
-  { label: "Settings", href: "/mentor/settings", icon: Settings },
-];
+const getNavItems = (eventId: string): NavItem[] => {
+  const base = `/mentor/events/${eventId}`;
+  return [
+    { label: "Dashboard", href: base, icon: LayoutDashboard },
+    { label: "My Teams", href: `${base}/teams`, icon: UsersRound },
+    { label: "Team Progress", href: `${base}/progress`, icon: ChartNoAxesCombined },
+    { label: "Mentoring Sessions", href: `${base}/sessions`, icon: Video },
+    { label: "Feedback", href: `${base}/feedback`, icon: MessageSquareText, id: "feedback" },
+    { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
+    { label: "Announcements", href: `${base}/announcements`, icon: Megaphone },
+    { label: "Settings", href: `${base}/settings`, icon: Settings },
+  ];
+};
 
 export function MentorSidebar({
   collapsed,
@@ -91,7 +67,10 @@ export function MentorSidebar({
   const feedbackCount = feedbacks?.length || 0;
   const submissionsCount = submissions?.length || 0;
 
-  const navItems = baseNavItems.map((item) => {
+  const params = useParams();
+  const eventId = params.eventId as string || "1"; // Fallback to 1 if not present for some reason
+
+  const navItems = getNavItems(eventId).map((item) => {
     if (item.id === "feedback" && feedbackCount > 0)
       return { ...item, badge: feedbackCount > 99 ? "99+" : feedbackCount.toString() };
     if (item.id === "submissions" && submissionsCount > 0)
@@ -120,7 +99,7 @@ export function MentorSidebar({
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
-              item.href === "/mentor"
+              item.href === `/mentor/events/${eventId}`
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
