@@ -27,3 +27,19 @@ export function getStakeholderPortalPath(portal: StakeholderPortal): string {
   if (portal === "mentor") return "/mentor";
   return "/home";
 }
+
+export async function resolveRoleHomePath(role?: string): Promise<string> {
+  if (role === "stakeholder") {
+    const portal = await resolveStakeholderPortal();
+    return getStakeholderPortalPath(portal);
+  }
+
+  const roleHomePath: Record<string, string> = {
+    admin: "/organizer/events",
+    organizer: "/organizer/events",
+    student: "/student/events",
+    judge: "/judge/dashboard",
+  };
+
+  return role && role in roleHomePath ? roleHomePath[role] : "/home";
+}

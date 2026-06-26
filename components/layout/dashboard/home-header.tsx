@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
+import { resolveRoleHomePath } from '@/lib/stakeholder-portal';
 
 // ORGANIZER_MENUS removed per user request
 
@@ -33,6 +34,13 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                 ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
                 : null;
         },
+    });
+
+    const { data: workspacePath } = useQuery({
+        queryKey: ['role-dashboard-path', user?.role],
+        queryFn: () => resolveRoleHomePath(user!.role),
+        enabled: !!user?.role,
+        staleTime: 60_000,
     });
 
     useEffect(() => {
@@ -72,8 +80,8 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                         <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
                     ) : user && !isError ? (
                         <div className="flex items-center gap-3">
-                            {user.role === 'stakeholder' ? (
-                                <Link href="/mentor">
+                            {user.role === 'stakeholder' && workspacePath ? (
+                                <Link href={workspacePath}>
                                     <Button variant="outline" size="sm" className="hidden sm:flex border-purple-500/30 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 dark:text-purple-400">
                                         Stakeholder Workspace
                                     </Button>

@@ -34,6 +34,7 @@ export interface JudgeRoundSubmission {
   scoredCriteria: number;
   totalCriteria: number;
   weightedScore?: number | null;
+  githubUrl?: string | null;
 }
 
 export interface JudgeRubric {

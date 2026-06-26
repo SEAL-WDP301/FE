@@ -21,6 +21,7 @@ interface BulkImportModalProps {
 interface ParsedRow {
   Track?: string;
   "Track*"?: string;
+  "Rubric Name"?: string;
   "Rubric Name*"?: string;
   Description?: string;
   "Max Score"?: number | string;

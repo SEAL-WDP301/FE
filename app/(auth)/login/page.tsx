@@ -6,11 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
 import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
-import { getRoleHomePath } from "@/components/auth/role-guard";
-import {
-  getStakeholderPortalPath,
-  resolveStakeholderPortal,
-} from "@/lib/stakeholder-portal";
+import { resolveRoleHomePath } from "@/lib/stakeholder-portal";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 
@@ -63,13 +59,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (role === "stakeholder") {
-        const portal = await resolveStakeholderPortal();
-        router.push(getStakeholderPortalPath(portal));
-        return;
-      }
-
-      router.push(getRoleHomePath(role));
+      router.push(await resolveRoleHomePath(role));
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)

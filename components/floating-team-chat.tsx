@@ -290,9 +290,9 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false }
       <AnimatePresence>
         {(isOpen || inline) && (
           <motion.div
-            initial={inline ? false : { opacity: 0, y: 20, scale: 0.95 }}
-            animate={inline ? false : { opacity: 1, y: 0, scale: 1 }}
-            exit={inline ? false : { opacity: 0, y: 20, scale: 0.95 }}
+            initial={inline ? undefined : { opacity: 0, y: 20, scale: 0.95 }}
+            animate={inline ? undefined : { opacity: 1, y: 0, scale: 1 }}
+            exit={inline ? undefined : { opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={
               inline

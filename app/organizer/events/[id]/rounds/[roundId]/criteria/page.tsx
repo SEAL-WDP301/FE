@@ -439,7 +439,7 @@ export default function EventCriteriaPage() {
                         </td>
                         <td className="px-4 py-4">{round ? round.name : "Unknown"}</td>
                         <td className="px-4 py-4">
-                          {track ? <Badge variant="outline">{track.name}</Badge> : <Badge variant="secondary">All tracks</Badge>}
+                          {track ? <Badge variant="outline">{track.name}</Badge> : <Badge variant="outline">All tracks</Badge>}
                         </td>
                         <td className="px-4 py-4 text-center">{rubric.maxScore}</td>
                         <td className="px-4 py-4 text-center">{rubric.weight}</td>
