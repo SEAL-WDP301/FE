@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
+import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { getMentorFeedback } from "@/lib/api/mentor.api";
+import { getMentorFeedback, MentorFeedback } from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "../_components/mentor-page-header";
 import {
   MentorEmptyState,
@@ -21,10 +22,25 @@ export default function FeedbackManagementPage() {
     queryFn: getMentorFeedback,
   });
 
+  const feedbackItems = query.data || [];
+
+  const groupedFeedbacks = useMemo(() => {
+    const groups: Record<number, { teamName: string; teamId: number; feedbacks: MentorFeedback[] }> = {};
+    for (const fb of feedbackItems) {
+      const teamId = fb.teamId || fb.submission?.teamId || fb.team?.id;
+      if (!teamId) continue;
+      
+      const teamName = fb.team?.name || fb.submission?.team?.name || `Team ${teamId}`;
+      if (!groups[teamId]) {
+        groups[teamId] = { teamName, teamId, feedbacks: [] };
+      }
+      groups[teamId].feedbacks.push(fb);
+    }
+    return Object.values(groups);
+  }, [feedbackItems]);
+
   if (query.isLoading) return <MentorLoadingState />;
   if (query.isError) return <MentorErrorState />;
-
-  const feedbackItems = query.data || [];
 
   return (
     <div className="mx-auto max-w-[1300px] space-y-6">
@@ -32,62 +48,49 @@ export default function FeedbackManagementPage() {
         title="Feedback Management"
         subtitle="Feedback associated with your assigned team submissions."
       />
-      {feedbackItems.length === 0 ? (
+      {groupedFeedbacks.length === 0 ? (
         <MentorEmptyState
           title="No feedback yet"
           description="Feedback returned by the mentor API will appear here."
         />
       ) : (
-        <div className="space-y-4">
-          {feedbackItems.map((feedback) => {
-            const teamId =
-              feedback.teamId ||
-              feedback.submission?.teamId ||
-              feedback.team?.id;
-
-            return (
-              <GlassCard key={feedback.id} className="rounded-[24px] bg-card p-5">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-semibold">
-                      {feedback.team?.name ||
-                        feedback.submission?.team?.name ||
-                        `Submission ${feedback.submissionId || ""}`}
-                    </h2>
-                    <Badge
-                      variant={
-                        feedback.status === "published" ? "success" : "outline"
-                      }
-                    >
-                      {feedback.status || "Feedback"}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">
-                    {feedback.content}
-                  </p>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Updated{" "}
-                    {feedback.updatedAt
-                      ? new Date(feedback.updatedAt).toLocaleString()
-                      : "at an unavailable time"}
-                  </p>
-                </div>
-
-                {feedback.submissionId && teamId ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link
-                      href={`/mentor/teams/${teamId}/submissions/${feedback.submissionId}`}
-                    >
-                      View submission
-                      <ExternalLink className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                ) : null}
+        <div className="space-y-6">
+          {groupedFeedbacks.map((group) => (
+            <GlassCard key={group.teamId} className="rounded-[24px] bg-card p-6">
+              <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
+                <h2 className="text-xl font-bold">{group.teamName}</h2>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/mentor/teams/${group.teamId}`}>
+                    View team
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
-              </GlassCard>
-            );
-          })}
+
+              <div className="space-y-4">
+                {group.feedbacks.map((feedback) => (
+                  <div key={feedback.id} className="rounded-xl border border-border bg-muted/30 p-5">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <Badge
+                        variant={feedback.status === "completed" ? "success" : "outline"}
+                      >
+                        {feedback.status ? feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1) : "Feedback"}
+                      </Badge>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                      {feedback.content}
+                    </p>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Created at{" "}
+                      {feedback.createdAt
+                        ? new Date(feedback.createdAt).toLocaleString()
+                        : "an unavailable time"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          ))}
         </div>
       )}
     </div>

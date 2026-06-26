@@ -99,11 +99,18 @@ export default function EventCriteriaPage() {
   );
   const tracks = useMemo(() => event?.tracks || [], [event?.tracks]);
   
-  const isRoundNotStarted = (id: string | number | null | undefined) => {
+  const canEditCriteria = (id: string | number | null | undefined) => {
     if (event?.status === "closed") return false;
     if (!id) return true;
     const round = roundById.get(Number(id));
-    return !round || round.status === "not_started";
+    return !round || round.status === "not_started" || round.status === "open";
+  };
+
+  const getDisabledReason = () => {
+    if (event?.status === "closed") return "Event is closed. Cannot modify criteria.";
+    if (!currentRound) return "Round not found.";
+    if (!canEditCriteria(currentRound.id)) return "Cannot modify criteria for rounds that have already ended.";
+    return undefined;
   };
 
   const roundById = useMemo(
@@ -160,8 +167,8 @@ export default function EventCriteriaPage() {
 
   const saveRubricMutation = useMutation({
     mutationFn: async () => {
-      if (!isRoundNotStarted(currentRoundId)) {
-        throw new Error("Can only manage criteria for rounds that have not started yet.");
+      if (!canEditCriteria(currentRoundId)) {
+        throw new Error("Can only manage criteria for rounds that are not started or open.");
       }
       if (isTrackSpecific && !rubricDraft.trackId) throw new Error("Track is required for track-specific rounds.");
       if (!rubricDraft.name.trim()) throw new Error("Criterion name is required.");
@@ -269,7 +276,7 @@ export default function EventCriteriaPage() {
 
   const hasRequiredConfiguration = rounds.length > 0;
   const isTrackValid = !isTrackSpecific || Boolean(rubricDraft.trackId);
-  const canSubmit = isRoundNotStarted(currentRoundId) && Boolean(rubricDraft.name.trim()) && isTrackValid && !saveRubricMutation.isPending;
+  const canSubmit = canEditCriteria(currentRoundId) && Boolean(rubricDraft.name.trim()) && isTrackValid && !saveRubricMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -291,8 +298,9 @@ export default function EventCriteriaPage() {
           <Button
             type="button"
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            disabled={event?.status === "closed" || !currentRound || !isRoundNotStarted(currentRound.id)}
+            disabled={event?.status === "closed" || !currentRound || !canEditCriteria(currentRound.id)}
             onClick={() => setIsBulkImportOpen(true)}
+            title={getDisabledReason()}
           >
             <UploadCloud className="mr-2 h-4 w-4" />
             Bulk Import
@@ -300,8 +308,9 @@ export default function EventCriteriaPage() {
           <Button
             type="button"
             className="shrink-0"
-            disabled={event?.status === "closed" || !currentRound || !isRoundNotStarted(currentRound.id)}
+            disabled={event?.status === "closed" || !currentRound || !canEditCriteria(currentRound.id)}
             onClick={() => { setEditingRubricId(null); setIsAddEditModalOpen(true); }}
+            title={getDisabledReason()}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Rubric
@@ -428,20 +437,20 @@ export default function EventCriteriaPage() {
                             <div className="mt-1 text-xs text-muted-foreground italic">No description</div>
                           )}
                         </td>
-                        <td className="px-4 py-4">{round ? `Round ${round.roundNumber}: ${round.name}` : "Unknown"}</td>
+                        <td className="px-4 py-4">{round ? round.name : "Unknown"}</td>
                         <td className="px-4 py-4">
                           {track ? <Badge variant="outline">{track.name}</Badge> : <Badge variant="secondary">All tracks</Badge>}
                         </td>
                         <td className="px-4 py-4 text-center">{rubric.maxScore}</td>
                         <td className="px-4 py-4 text-center">{rubric.weight}</td>
                         <td className="px-4 py-4">
-                          <div className="flex justify-end gap-2" title={event?.status === "closed" ? "Read-only: Event is closed." : !isRoundNotStarted(rubric.roundId) ? "Read-only: This round has already started." : undefined}>
+                          <div className="flex justify-end gap-2" title={event?.status === "closed" ? "Read-only: Event is closed." : !canEditCriteria(rubric.roundId) ? "Read-only: This round has already ended." : undefined}>
                             <Button
                               type="button"
                               variant="outline"
                               size="icon-sm"
-                              title="Edit rubric"
-                              disabled={!isRoundNotStarted(rubric.roundId)}
+                              title={canEditCriteria(rubric.roundId) ? "Edit rubric" : undefined}
+                              disabled={!canEditCriteria(rubric.roundId)}
                               onClick={() => startEditRubric(rubric)}
                             >
                               <Edit2 className="h-4 w-4" />
@@ -450,8 +459,8 @@ export default function EventCriteriaPage() {
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              title="Delete rubric"
-                              disabled={!isRoundNotStarted(rubric.roundId) || deleteRubricMutation.isPending}
+                              title={canEditCriteria(rubric.roundId) ? "Delete rubric" : undefined}
+                              disabled={!canEditCriteria(rubric.roundId) || deleteRubricMutation.isPending}
                               onClick={() => {
                                 if (window.confirm(`Delete rubric "${rubric.name}"?`)) {
                                   deleteRubricMutation.mutate(rubric.id);
@@ -513,7 +522,7 @@ export default function EventCriteriaPage() {
               <Field label="Track *">
                 <select
                   value={rubricDraft.trackId}
-                  disabled={!isRoundNotStarted(currentRoundId)}
+                  disabled={!canEditCriteria(currentRoundId)}
                   onChange={(event) => setRubricDraft((draft) => ({ ...draft, trackId: event.target.value }))}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -529,7 +538,7 @@ export default function EventCriteriaPage() {
               <Input
                 value={rubricDraft.name}
                 placeholder="Technical Implementation"
-                disabled={!isRoundNotStarted(currentRoundId)}
+                disabled={!canEditCriteria(currentRoundId)}
                 onChange={(event) => setRubricDraft((draft) => ({ ...draft, name: event.target.value }))}
               />
             </Field>
@@ -539,7 +548,7 @@ export default function EventCriteriaPage() {
                 value={rubricDraft.description}
                 className="min-h-24 resize-none"
                 placeholder="Describe what judges should evaluate."
-                disabled={!isRoundNotStarted(currentRoundId)}
+                disabled={!canEditCriteria(currentRoundId)}
                 onChange={(event) => setRubricDraft((draft) => ({ ...draft, description: event.target.value }))}
               />
             </Field>
@@ -550,7 +559,7 @@ export default function EventCriteriaPage() {
                   type="number"
                   min={1}
                   value={rubricDraft.maxScore}
-                  disabled={!isRoundNotStarted(currentRoundId)}
+                  disabled={!canEditCriteria(currentRoundId)}
                   onChange={(event) => setRubricDraft((draft) => ({ ...draft, maxScore: event.target.value }))}
                 />
               </Field>
@@ -560,7 +569,7 @@ export default function EventCriteriaPage() {
                   min={0.01}
                   step="0.01"
                   value={rubricDraft.weight}
-                  disabled={!isRoundNotStarted(currentRoundId)}
+                  disabled={!canEditCriteria(currentRoundId)}
                   onChange={(event) => setRubricDraft((draft) => ({ ...draft, weight: event.target.value }))}
                 />
               </Field>

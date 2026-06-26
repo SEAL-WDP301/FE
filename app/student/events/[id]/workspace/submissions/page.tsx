@@ -76,7 +76,12 @@ export default function SubmissionsPage() {
   const currentActiveRound = workspaceData?.currentActiveRound;
   const latestSubmission = workspaceData?.latestSubmission;
   const isLeader = workspaceData?.role === "leader";
+  const teamStatus = workspaceData?.team?.status as string | undefined;
+  const canSubmit = workspaceData?.canSubmit !== false && teamStatus === "approved";
   const assignedRepoUrl = workspaceData?.team?.githubRepoUrl as string | undefined;
+  const submissionType = currentActiveRound?.submissionType as "file" | "github_link" | undefined;
+  const isGithubRound = submissionType === "github_link";
+  const isFileRound = submissionType === "file";
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
   const isDeadlinePassed = currentActiveRound?.submissionDeadline 
@@ -108,9 +113,11 @@ export default function SubmissionsPage() {
       const formData = new FormData();
       formData.append("eventId", String(eventId));
       formData.append("roundId", String(currentActiveRound.id));
-      if (githubUrl) formData.append("githubUrl", githubUrl);
       if (description) formData.append("description", description);
-      if (file) formData.append("file", file);
+      if (isFileRound && file) formData.append("file", file);
+      if (isGithubRound && assignedRepoUrl) {
+        formData.append("githubUrl", assignedRepoUrl);
+      }
 
       return workspaceApi.submitProject(formData);
     },
@@ -164,10 +171,24 @@ export default function SubmissionsPage() {
     }
   };
 
+  const canSubmitPayload =
+    isGithubRound
+      ? Boolean(assignedRepoUrl || latestSubmission?.githubUrl)
+      : Boolean(file || latestSubmission?.fileUrl);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file && !githubUrl && !assignedRepoUrl && !latestSubmission) {
-      enqueueSnackbar("Please provide a file or use your assigned GitHub repository", { variant: "warning" });
+    if (!canSubmit) {
+      enqueueSnackbar("Your team must be approved before submitting", { variant: "warning" });
+      return;
+    }
+    if (!canSubmitPayload) {
+      enqueueSnackbar(
+        isGithubRound
+          ? "Your team repository is not ready yet. Wait for organizer approval."
+          : "Please upload a file for this round",
+        { variant: "warning" },
+      );
       return;
     }
     submitMutation.mutate();
@@ -239,14 +260,38 @@ export default function SubmissionsPage() {
         </div>
       )}
 
-      {assignedRepoUrl && (
+      {!canSubmit && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">Team chưa được duyệt</h4>
+            <p className="text-sm mt-1 opacity-90">
+              Organizer cần approve team trước khi bạn nộp bài và nhận link GitHub repo của team.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isGithubRound && canSubmit && !assignedRepoUrl && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">Chưa có GitHub repo</h4>
+            <p className="text-sm mt-1 opacity-90">
+              Repo sẽ được tạo tự động khi team được approve. Hãy push code vào repo đó rồi submit.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {assignedRepoUrl && isGithubRound && (
         <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
           <div className="flex items-start gap-3">
             <FaGithub className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
             <div className="min-w-0">
               <h4 className="font-semibold">Assigned Team Repository</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Push your project code to this repository. When you submit, this link is used automatically for judging.
+                Đây là repo chính thức của team bạn. Push code vào đây, rồi bấm Submit — hệ thống tự dùng link này để chấm.
               </p>
               <a
                 href={assignedRepoUrl}
@@ -267,12 +312,13 @@ export default function SubmissionsPage() {
           <div className="md:col-span-2 space-y-6">
             
             {/* Dropzone */}
+            {isFileRound && (
             <GlassCard className="p-8 rounded-[24px]">
               <h2 className="text-xl font-semibold mb-4">Upload File</h2>
               <div 
                 className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
                   isDragging ? "border-orange-500 bg-orange-500/5" : "border-border hover:bg-white/[0.02]"
-                } ${isDeadlinePassed || !isLeader ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
+                } ${isDeadlinePassed || !isLeader || !canSubmit ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -327,22 +373,27 @@ export default function SubmissionsPage() {
                 )}
               </div>
             </GlassCard>
+            )}
 
-            {/* Links and Description */}
             <GlassCard className="p-8 rounded-[24px] space-y-6">
+              {isGithubRound && (
               <div>
                 <label className="text-sm font-semibold mb-2 flex items-center gap-2">
                   <FaGithub className="h-4 w-4" />
-                  GitHub Repository URL
+                  Team GitHub Repository
                 </label>
-                <Input 
-                  placeholder={assignedRepoUrl ? "Using assigned team repository" : isLeader ? "https://github.com/your-username/repo" : "No GitHub URL provided"} 
+                <Input
+                  placeholder="Repo sẽ hiện sau khi team được approve"
                   className="bg-background border-border h-12"
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                  disabled={isDeadlinePassed || !isLeader || Boolean(assignedRepoUrl)}
+                  value={assignedRepoUrl || githubUrl || ""}
+                  readOnly
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Link repo gắn với team — không nhập tay URL khác.
+                </p>
               </div>
+              )}
 
               <div>
                 <label className="text-sm font-semibold mb-2 block">
@@ -485,7 +536,13 @@ export default function SubmissionsPage() {
         type="submit" 
         variant="orange" 
         className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(243,112,33,0.3)]"
-        disabled={isDeadlinePassed || submitMutation.isPending || (!file && !githubUrl && !latestSubmission) || !isLeader}
+        disabled={
+          isDeadlinePassed ||
+          submitMutation.isPending ||
+          !isLeader ||
+          !canSubmit ||
+          !canSubmitPayload
+        }
         title={!isLeader ? "Only the team leader can submit the project" : ""}
       >
         {submitMutation.isPending ? (

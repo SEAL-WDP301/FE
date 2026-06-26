@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface MentorPageHeaderProps {
-  title: string;
+  title: string | ReactNode;
   subtitle: string;
   actions?: ReactNode;
 }

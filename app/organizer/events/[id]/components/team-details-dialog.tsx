@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Users, UserPlus, Trash2, Phone } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 
@@ -24,15 +25,15 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   const { data: stakeholders, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["organizerStakeholders", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/stakeholders/events/${eventId}`);
+      const res = await axiosClient.get(`/organizer/assignments/events/${eventId}`);
       return res.data.data;
     },
     enabled: isOpen,
   });
 
   const assignMentorMutation = useMutation({
-    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-      const res = await axiosClient.post(`/organizer/stakeholders/teams/${teamId}/mentors`, { stakeholderId });
+    mutationFn: async (stakeholderId: number) => {
+      const res = await axiosClient.post(`/organizer/assignments/teams/${team.id}/mentors`, { stakeholderId });
       return res.data;
     },
     onSuccess: () => {
@@ -48,8 +49,8 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
   });
 
   const unassignMentorMutation = useMutation({
-    mutationFn: async ({ teamId, stakeholderId }: { teamId: number, stakeholderId: number }) => {
-      const res = await axiosClient.delete(`/organizer/stakeholders/teams/${teamId}/mentors/${stakeholderId}`);
+    mutationFn: async (stakeholderId: number) => {
+      const res = await axiosClient.delete(`/organizer/assignments/teams/${team.id}/mentors/${stakeholderId}`);
       return res.data;
     },
     onSuccess: () => {
@@ -104,12 +105,19 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
               Team Leader
             </h4>
             <div className="flex justify-between items-start relative z-10">
-              <div>
-                <p className="font-semibold text-foreground text-base">{team?.leader?.name || 'Unknown'}</p>
+              <div className="flex gap-4">
+                <Avatar className="h-12 w-12 border-2 border-amber-500/50 shadow-sm">
+                  <AvatarImage src={team?.leader?.avatarUrl || team?.leader?.avatar_url} />
+                  <AvatarFallback className="bg-amber-500/20 text-amber-600 font-bold">
+                    {team?.leader?.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-foreground text-base">{team?.leader?.name || 'Unknown'}</p>
                 <p className="text-sm text-muted-foreground">{team?.leader?.email}</p>
                 {team?.leader?.studentProfile && (
                   <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
-                    <span>Code: {team.leader.studentProfile.studentCode} • {team.leader.studentProfile.universityName && ` ${team.leader.studentProfile.universityName}`}</span>
+                    <span>Code: {team.leader.studentProfile.studentCode} • {team.leader.studentProfile.universityName && (" " + team.leader.studentProfile.universityName)}</span>
                     {team.leader.studentProfile.phone && (
                         <span className="flex items-center gap-1 text-blue-400">
                             <Phone className="w-3 h-3" /> {team.leader.studentProfile.phone}
@@ -117,6 +125,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                     )}
                   </p>
                 )}
+              </div>
               </div>
               <div className="text-right mt-1">
                 <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-semibold shadow-sm">Accepted</span>
@@ -143,12 +152,19 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                     <div className="space-y-3">
                       {otherMembers.map((member: any) => (
                         <div key={member.id} className="flex justify-between items-start pt-3 border-t border-border/50 first:border-0 first:pt-0">
-                          <div>
-                            <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
+                          <div className="flex gap-3">
+                            <Avatar className="h-10 w-10 border border-border mt-1">
+                              <AvatarImage src={member.user?.avatarUrl || member.user?.avatar_url} />
+                              <AvatarFallback className="font-medium text-muted-foreground">
+                                {member.user?.name?.charAt(0) || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-foreground">{member.user?.name || 'Pending User'}</p>
                             <p className="text-sm text-muted-foreground">{member.user?.email}</p>
                             {member.user?.studentProfile && (
                               <p className="text-xs text-muted-foreground mt-1 flex flex-col gap-1">
-                                <span>Code: {member.user.studentProfile.studentCode} • {member.user.studentProfile.universityName && ` ${member.user.studentProfile.universityName}`}</span>
+                                <span>Code: {member.user.studentProfile.studentCode} • {member.user.studentProfile.universityName && (" " + member.user.studentProfile.universityName)}</span>
                                 {member.user.studentProfile.phone && (
                                     <span className="flex items-center gap-1 text-blue-400">
                                         <Phone className="w-3 h-3" /> {member.user.studentProfile.phone}
@@ -156,6 +172,7 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                                 )}
                               </p>
                             )}
+                            </div>
                           </div>
                           <div className="text-right">
                             {member.status === 'pending' ? (
@@ -234,9 +251,17 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                <div className="space-y-2">
                  {team?.mentorAssignments?.map((assignment: any) => (
                    <div key={assignment.mentorId} className="flex justify-between items-center py-2 border-t border-border/50 first:border-0 first:pt-0">
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">{assignment.mentor?.name || 'Unknown User'}</p>
-                      <p className="text-xs text-muted-foreground">{assignment.mentor?.email}</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-blue-500/30">
+                        <AvatarImage src={assignment.mentor?.avatarUrl || assignment.mentor?.avatar_url} />
+                        <AvatarFallback className="bg-blue-500/10 text-blue-600">
+                          {assignment.mentor?.name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-foreground text-sm">{assignment.mentor?.name || 'Unknown User'}</p>
+                        <p className="text-xs text-muted-foreground">{assignment.mentor?.email}</p>
+                      </div>
                     </div>
                     <Button 
                       size="sm" 

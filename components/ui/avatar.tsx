@@ -30,6 +30,8 @@ function AvatarImage({
                 "aspect-square h-full w-full object-cover",
                 className
             )}
+            loading="lazy"
+            decoding="async"
             {...props}
         />
     );

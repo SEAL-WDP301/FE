@@ -15,6 +15,7 @@ import HomeHeader from "@/components/layout/dashboard/home-header";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { ChevronRight, Trophy, Shield, Target } from "lucide-react";
+import { FloatingTeamChat } from "@/components/floating-team-chat";
 
 
 export default function TrackWorkspaceLayout({
@@ -112,6 +113,11 @@ export default function TrackWorkspaceLayout({
 
         {children}
       </main>
+
+      {/* Floating Chat for Team */}
+      {workspaceData?.team?.id && (
+        <FloatingTeamChat teamId={workspaceData.team.id} />
+      )}
     </div>
   );
 }
