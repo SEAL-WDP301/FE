@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { axiosClient } from "@/lib/axios";
+import { resolveRoleHomePath } from "@/lib/stakeholder-portal";
 
 export type AppRole = "admin" | "organizer" | "student" | "stakeholder" | "judge";
 
@@ -22,7 +23,7 @@ interface UserProfile {
 const roleHomePath: Record<AppRole, string> = {
   admin: "/organizer/events",
   organizer: "/organizer/events",
-  student: "/home",
+  student: "/student/events",
   stakeholder: "/mentor",
   judge: "/judge/dashboard",
 };
@@ -74,7 +75,11 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     if (!isLoading && !isFetching && user) {
       const role = user.role;
       if (!role || !allowedRoles.includes(role as AppRole)) {
-        router.replace(getRoleHomePath(role));
+        if (role === "stakeholder") {
+          void resolveRoleHomePath(role).then((path) => router.replace(path));
+        } else {
+          router.replace(getRoleHomePath(role));
+        }
       }
     }
   }, [allowedRoles, hasToken, isError, isFetching, isLoading, pathname, router, user]);

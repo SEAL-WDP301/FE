@@ -20,7 +20,7 @@ export function SubmissionContentCard({
   description,
 }: SubmissionContentCardProps) {
   const resolvedGithub =
-    detail?.githubUrl ?? detail?.assignedRepoUrl ?? detail?.team?.githubRepoUrl ?? githubUrl;
+    detail?.githubUrl ?? detail?.assignedRepoUrl ?? githubUrl;
   const resolvedFile = detail?.fileUrl ?? fileUrl;
   const resolvedDescription = detail?.description ?? description;
 

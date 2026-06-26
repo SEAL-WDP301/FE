@@ -26,7 +26,7 @@ interface DashboardSidebarProps {
 const menus = [
   {
     label: "Overview",
-    href: "/student/dashboard",
+    href: "/student/events",
     icon: UserRoundCog,
   },
 

@@ -8,6 +8,7 @@ export interface JudgeAssignedRound {
   roundNumber: number;
   roundName: string;
   roundStatus: string;
+  submissionDeadline?: string | null;
   trackId: number | null;
   trackName: string | null;
 }
@@ -33,6 +34,7 @@ export interface JudgeRoundSubmission {
   scoredCriteria: number;
   totalCriteria: number;
   weightedScore?: number | null;
+  githubUrl?: string | null;
 }
 
 export interface JudgeRubric {

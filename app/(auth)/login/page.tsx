@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
 import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
-import { getRoleHomePath } from "@/components/auth/role-guard";
+import { resolveRoleHomePath } from "@/lib/stakeholder-portal";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 
@@ -59,22 +59,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (role === "stakeholder") {
-        try {
-          const judgeRes = await axiosClient.get("/judge/events");
-          const assignedEvents = judgeRes.data?.data ?? [];
-          if (assignedEvents.length > 0) {
-            router.push("/judge/dashboard");
-            return;
-          }
-        } catch {
-          /* fall through to mentor home */
-        }
-        router.push("/mentor");
-        return;
-      }
-
-      router.push(getRoleHomePath(role));
+      router.push(await resolveRoleHomePath(role));
     } catch (error: unknown) {
       enqueueSnackbar(
         isAxiosError<{ message?: string }>(error)
