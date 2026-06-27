@@ -176,7 +176,7 @@ export default function JudgesSection() {
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 text-4xl font-black md:text-5xl">
                         <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                            Judges
+                            Stakeholder
                         </span>
                     </h2>
 
