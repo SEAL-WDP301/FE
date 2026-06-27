@@ -16,6 +16,7 @@ import {
   ScrollText,
   ShieldCheck,
   XCircle,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -141,9 +142,9 @@ export default function WorkspaceOverviewPage() {
       {/* Header */}
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          {currentActiveRound ? (
+          {displayRound ? (
             <Badge variant="outline" className="mb-3 border-orange-500/30 text-orange-400 bg-orange-500/10">
-              Current Phase: {currentActiveRound.name}
+              {displayRound.name}
             </Badge>
           ) : (
             <Badge variant="outline" className="mb-3 border-zinc-500/30 text-zinc-400 bg-zinc-500/10">
@@ -394,24 +395,39 @@ export default function WorkspaceOverviewPage() {
               </div>
             </GlassCard>
           ) : displayRound ? (
-            <GlassCard className="p-8 rounded-[24px] bg-gradient-to-br from-card to-background border-blue-500/20 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-32 bg-blue-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+            <GlassCard className={`p-8 rounded-[24px] bg-gradient-to-br from-card to-background relative overflow-hidden group ${selectedRoundEntry?.teamRound?.status === 'advanced' ? 'border-green-500/20' : 'border-blue-500/20'}`}>
+              <div className={`absolute top-0 right-0 p-32 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none ${selectedRoundEntry?.teamRound?.status === 'advanced' ? 'bg-green-500/5' : 'bg-blue-500/5'}`} />
               <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="mb-4 flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-semibold uppercase tracking-wider text-blue-500">Member Access</span>
-                  </div>
-                  <h2 className="mb-2 text-3xl font-bold">Competition Rules</h2>
-                  <p className="max-w-md text-muted-foreground">
-                    Review participation rules, team responsibilities, and submission requirements. Only the team leader can submit.
-                  </p>
+                  {selectedRoundEntry?.teamRound?.status === "advanced" ? (
+                    <>
+                      <div className="mb-4 flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-green-500" />
+                        <span className="text-sm font-semibold uppercase tracking-wider text-green-500">Round Passed</span>
+                      </div>
+                      <h2 className="mb-2 text-3xl font-bold">Chúc mừng! Bạn đã vượt qua vòng này</h2>
+                      <p className="max-w-md text-muted-foreground">
+                        Đây là kết quả của vòng thi trước. Đội của bạn đã xuất sắc lọt vào vòng trong. Bạn có thể xem lại bài nộp và nhận xét của giám khảo.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-4 flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm font-semibold uppercase tracking-wider text-blue-500">Member Access</span>
+                      </div>
+                      <h2 className="mb-2 text-3xl font-bold">Competition Rules</h2>
+                      <p className="max-w-md text-muted-foreground">
+                        Review participation rules, team responsibilities, and submission requirements. Only the team leader can submit.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="min-w-[220px] rounded-2xl border border-border bg-background/50 p-6 backdrop-blur-md">
                   <p className="text-sm font-medium text-muted-foreground">Current phase</p>
                   <p className="mt-2 font-semibold">{displayRound.name}</p>
                   <Button asChild variant="outline" className="mt-5 w-full rounded-xl">
-                    <Link href={`${basePath}/rules`}>
+                    <Link href={`${basePath}/rules?roundId=${displayRound.id}`}>
                       <ScrollText className="mr-2 h-4 w-4" />
                       View Rules
                     </Link>

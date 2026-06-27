@@ -20,6 +20,8 @@ import {
   Info,
   Eye,
   Star,
+  UserCircle,
+  MessageSquare,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useSnackbar } from "notistack";
@@ -104,6 +106,20 @@ export default function SubmissionsPage() {
   const isDeadlinePassed = currentActiveRound?.submissionDeadline 
     ? new Date() > new Date(currentActiveRound.submissionDeadline)
     : false;
+
+  // Group judge scores
+  const judgeScores = pastSubmission?.scores?.reduce((acc: any, score: any) => {
+    const judgeId = score.judge.id;
+    if (!acc[judgeId]) {
+      acc[judgeId] = {
+        judge: score.judge,
+        scores: [],
+      };
+    }
+    acc[judgeId].scores.push(score);
+    return acc;
+  }, {}) || {};
+  const judgeList = Object.values(judgeScores) as any[];
 
   // Sync initial state if there's a past submission
   useEffect(() => {
@@ -258,20 +274,75 @@ export default function SubmissionsPage() {
 
         {/* Score Summary */}
         {pastScore !== null && (
-          <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-orange-500/10 rounded-2xl">
-                <Star className="h-6 w-6 text-orange-500" />
+          <div className="space-y-4">
+            <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-500/10 rounded-2xl">
+                  <Star className="h-6 w-6 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tổng điểm trung bình (Tham khảo)</p>
+                  <p className="text-4xl font-bold mt-0.5">
+                    {Number(pastScore).toFixed(2)}
+                    <span className="text-lg text-muted-foreground font-normal ml-1">/ 10.00</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Judge Score — {displayRound?.name}</p>
-                <p className="text-4xl font-bold mt-0.5">
-                  {Number(pastScore).toFixed(2)}
-                  <span className="text-lg text-muted-foreground font-normal ml-1">/ 10.00</span>
-                </p>
-              </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
+
+            {judgeList.length > 0 && (
+              <GlassCard className="p-6 rounded-[24px]">
+                <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Chi tiết điểm từ Ban Giám Khảo</h3>
+                <div className="space-y-6">
+                  {judgeList.map((j: any, idx: number) => {
+                    // Calculate total score from this judge
+                    const totalJudgeScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.scoreValue), 0);
+                    const totalMaxScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.criterion.maxScore), 0);
+                    
+                    return (
+                      <div key={j.judge.id} className={`space-y-4 ${idx !== judgeList.length - 1 ? 'border-b border-border/50 pb-6' : ''}`}>
+                        <div className="flex items-center gap-3">
+                          {j.judge.avatarUrl ? (
+                            <img src={j.judge.avatarUrl} alt={j.judge.name} className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                              <UserCircle className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold">{j.judge.name}</p>
+                            <p className="text-xs text-muted-foreground">Giám khảo • Tổng điểm: {totalJudgeScore} / {totalMaxScore}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid gap-3 pl-14 md:pl-12">
+                          {j.scores.map((s: any) => (
+                            <div key={s.id} className="bg-muted/30 p-3 rounded-xl border border-border/50">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-medium text-sm">{s.criterion.name}</p>
+                                  {/* s.criterion.weight and maxScore could be displayed if needed */}
+                                </div>
+                                <div className="bg-background border border-border px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap">
+                                  {Number(s.scoreValue)} / {Number(s.criterion.maxScore)}
+                                </div>
+                              </div>
+                              {s.comment && (
+                                <div className="flex gap-2 text-sm text-muted-foreground bg-background/50 p-2 rounded-lg mt-2">
+                                  <MessageSquare className="w-4 h-4 mt-0.5 shrink-0" />
+                                  <p>{s.comment}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </GlassCard>
+            )}
+          </div>
         )}
 
         {/* Disclaimer */}

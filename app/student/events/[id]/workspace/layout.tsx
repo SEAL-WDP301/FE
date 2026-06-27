@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Users,
@@ -40,6 +41,32 @@ export default function TrackWorkspaceLayout({
   const isEliminated = workspaceData?.isEliminated;
   const isLeader = workspaceData?.role === "leader";
 
+  // Read selected round from URL
+  const searchParams = useSearchParams();
+  const selectedRoundId = searchParams.get("roundId") ? Number(searchParams.get("roundId")) : null;
+
+  // All rounds the team participated in (has teamRound entry), in order
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roundSubmissions: any[] = workspaceData?.roundSubmissions || [];
+  const participatedRounds = roundSubmissions
+    .filter((rs) => rs.teamRound !== null)
+    .map((rs) => rs.round);
+
+  // The round currently being viewed (from URL or fall back to active)
+  const selectedRound = selectedRoundId
+    ? participatedRounds.find((r) => r.id === selectedRoundId) ||
+      (workspaceData?.rounds || []).find((r: any) => r.id === selectedRoundId)
+    : currentActiveRound;
+
+  // Breadcrumb: show ALL participated rounds (the ones the student is eligible for / has completed)
+  const breadcrumbRounds = participatedRounds.length > 0 
+    ? participatedRounds 
+    : selectedRound 
+      ? [selectedRound] 
+      : currentActiveRound 
+        ? [currentActiveRound] 
+        : [];
+
   const roleTab = workspaceData
     ? isLeader
       ? { name: "Submissions", href: `${basePath}/submissions`, icon: FileText }
@@ -60,10 +87,18 @@ export default function TrackWorkspaceLayout({
         const Icon = tab.icon;
         // Exact match for base path, startsWith for subpaths
         const isActive = tab.href === basePath ? pathname === basePath : pathname.startsWith(tab.href);
+        
+        // Persist roundId across tabs
+        const tabHref = selectedRoundId && tab.name !== "Mentor" // if you want Mentor to also persist roundId, just remove the condition
+          ? `${tab.href}?roundId=${selectedRoundId}`
+          : selectedRoundId 
+            ? `${tab.href}?roundId=${selectedRoundId}` 
+            : tab.href;
+
         return (
           <Link
             key={tab.href}
-            href={tab.href}
+            href={tabHref}
             className={cn(
               "flex items-center gap-2 text-sm font-medium transition-all py-2 px-3 rounded-xl whitespace-nowrap",
               isActive
@@ -100,15 +135,26 @@ export default function TrackWorkspaceLayout({
               <span className="font-semibold">{teamName}</span>
             </div>
 
-            {currentActiveRound && (
-              <>
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-500 px-3 py-1 rounded-full font-medium">
-                  <Target className="h-4 w-4" />
-                  <span>Phase: {currentActiveRound.name}</span>
-                </div>
-              </>
-            )}
+            {/* Breadcrumb rounds: show all participated rounds in order */}
+            {breadcrumbRounds.map((round) => {
+              const isSelected = selectedRound?.id === round.id;
+              return (
+                <React.Fragment key={`breadcrumb-${round.id}`}>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                  <Link
+                    href={`${basePath}?roundId=${round.id}`}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition-colors ${
+                      isSelected
+                        ? "bg-orange-500/10 border border-orange-500/20 text-orange-500"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {isSelected && <Target className="h-4 w-4" />}
+                    <span>{round.name}</span>
+                  </Link>
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
 
