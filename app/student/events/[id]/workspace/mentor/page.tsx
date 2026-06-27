@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, UserRoundX } from "lucide-react";
 import { useEffect } from "react";
@@ -79,6 +79,8 @@ function normalizeFeedbackItems(data: StudentMentorWorkspaceData) {
 export default function MentorWorkspacePage() {
   const params = useParams();
   const eventId = Number(params.id);
+  const searchParams = useSearchParams();
+  const selectedRoundId = searchParams.get("roundId") ? Number(searchParams.get("roundId")) : null;
   const workspaceQuery = useQuery({
     queryKey: ["studentMentorWorkspace", eventId],
     queryFn: () => getStudentMentorWorkspace(eventId),
@@ -145,7 +147,16 @@ export default function MentorWorkspacePage() {
     { label: "Pending", value: String(pendingCount) },
     {
       label: "Current round",
-      value: data.currentActiveRound?.name || "N/A",
+      value: (() => {
+        if (selectedRoundId) {
+          const rs = (data.roundSubmissions || []).find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (e: any) => e.round?.id === selectedRoundId
+          );
+          if (rs?.round?.name) return rs.round.name;
+        }
+        return data.currentActiveRound?.name || "N/A";
+      })(),
     },
   ];
 

@@ -1,25 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { 
-  Clock, 
-  CheckCircle2, 
-  Upload, 
-  MessageSquare, 
-  Award, 
+import {
+  Clock,
+  CheckCircle2,
+  Upload,
+  MessageSquare,
+  Award,
   ChevronRight,
+  ChevronLeft,
   Target,
   Zap,
   Loader2,
   Crown,
   ScrollText,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { useEffect, useState } from "react";
@@ -32,13 +34,11 @@ interface WorkspaceRound {
   submissionDeadline?: string | null;
 }
 
-// Helper for countdown
 function useCountdown(targetDate: string | null) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
     if (!targetDate) return;
-
     const interval = setInterval(() => {
       const difference = new Date(targetDate).getTime() - new Date().getTime();
       if (difference > 0) {
@@ -51,7 +51,6 @@ function useCountdown(targetDate: string | null) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0 });
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [targetDate]);
 
@@ -62,6 +61,10 @@ export default function WorkspaceOverviewPage() {
   const params = useParams();
   const eventId = params.id as string;
   const basePath = `/student/events/${eventId}/workspace`;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const roundIdParam = searchParams.get("roundId");
+  const selectedRoundId = roundIdParam ? Number(roundIdParam) : null;
 
   const { data, isLoading } = useQuery({
     queryKey: ["workspace", eventId],
@@ -72,15 +75,58 @@ export default function WorkspaceOverviewPage() {
   const isLeader = workspaceData?.role === "leader";
   const currentActiveRound = workspaceData?.currentActiveRound;
   const rounds: WorkspaceRound[] = workspaceData?.rounds || [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roundSubmissions: any[] = workspaceData?.roundSubmissions || [];
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
-  const activeIndex = rounds.findIndex((round) => round.status === "open");
-  const completedCount = rounds.filter(
-    (round) =>
-      round.status === "closed" || round.status === "results_published"
-  ).length;
-  const currentIndex = activeIndex !== -1 ? activeIndex : completedCount - 1;
-  const progressWidth = rounds.length > 0 && currentIndex >= 0 ? ((currentIndex + 0.5) / rounds.length) * 100 : 0;
+  // ── Auto-redirect to correct roundId ──────────────────────────────────────
+  useEffect(() => {
+    if (!workspaceData || selectedRoundId) return;
+
+    // Priority: competing → last participated → first round
+    const competingEntry = roundSubmissions.find(
+      (rs) => rs.teamRound?.status === "competing"
+    );
+    const participatedEntries = roundSubmissions.filter(
+      (rs) => rs.teamRound !== null
+    );
+    const lastParticipated = participatedEntries[participatedEntries.length - 1];
+    const firstEntry = roundSubmissions[0];
+
+    const target = competingEntry || lastParticipated || firstEntry;
+    if (target) {
+      router.replace(`${basePath}?roundId=${target.round.id}`);
+    }
+  }, [workspaceData, selectedRoundId, router, basePath, roundSubmissions]);
+
+  // ── Progress Line (team-level, not event-level) ───────────────────────────
+  const eliminatedRoundIdx = roundSubmissions.findIndex(
+    (rs) => rs.teamRound?.status === "eliminated"
+  );
+  const isEliminated = eliminatedRoundIdx >= 0;
+
+  const lastParticipatedIdx = roundSubmissions.reduce(
+    (lastIdx: number, rs: any, idx: number) =>
+      rs.teamRound !== null ? idx : lastIdx,
+    -1
+  );
+
+  const progressWidth =
+    lastParticipatedIdx >= 0
+      ? ((lastParticipatedIdx + (isEliminated ? 0 : 0.5)) / rounds.length) * 100
+      : 0;
+
+  // ── Prev / Next round navigation ──────────────────────────────────────────
+  const selectedIdx = rounds.findIndex((r) => r.id === selectedRoundId);
+  const prevRound = selectedIdx > 0 ? rounds[selectedIdx - 1] : null;
+  const nextRound = selectedIdx < rounds.length - 1 ? rounds[selectedIdx + 1] : null;
+
+  // ── Show the active round card based on selected round context ─────────────
+  const selectedRoundEntry = selectedRoundId
+    ? roundSubmissions.find((rs) => rs.round.id === selectedRoundId)
+    : null;
+  const displayRound = selectedRoundEntry?.round ?? currentActiveRound;
+  const canSubmitSelected = selectedRoundEntry?.canSubmit ?? false;
 
   if (isLoading) {
     return (
@@ -92,7 +138,7 @@ export default function WorkspaceOverviewPage() {
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
+      {/* Header */}
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           {currentActiveRound ? (
@@ -113,113 +159,206 @@ export default function WorkspaceOverviewPage() {
         </div>
       </header>
 
-      {/* Competition Timeline Stepper */}
+      {/* ── Competition Journey ── */}
       <section>
         <GlassCard className="p-6 md:p-8 rounded-[24px] bg-card border-border relative overflow-hidden">
-          {/* Decorative background glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
-          
+
           <h2 className="text-lg font-semibold mb-8 flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-500" />
             Competition Journey
           </h2>
-          
+
           <div className="relative">
-            {/* Connecting Line */}
+            {/* Base line */}
             <div className="absolute top-[24px] left-0 w-full h-1 bg-border -translate-y-1/2 rounded-full hidden md:block" />
-            <div 
-              className="absolute top-[24px] left-0 h-1 bg-orange-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out" 
-              style={{ width: `${progressWidth}%` }} 
+            {/* Progress line — team-level */}
+            <div
+              className={`absolute top-[24px] left-0 h-1 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out ${
+                isEliminated ? "bg-red-500" : "bg-orange-500"
+              }`}
+              style={{ width: `${progressWidth}%` }}
             />
-            
+
             <div className={`grid grid-cols-1 md:grid-cols-${Math.max(1, rounds.length)} gap-6 relative z-10`}>
               {rounds.map((round, index) => {
-                const isCompleted = round.status === "closed" || round.status === "results_published";
-                const isActive = round.status === "open";
-
+                const rs = roundSubmissions.find((e) => e.round.id === round.id);
+                const teamRoundStatus = rs?.teamRound?.status ?? null;
+                const isEliminatedHere = teamRoundStatus === "eliminated";
+                const isAdvanced = teamRoundStatus === "advanced";
+                const isCompeting = teamRoundStatus === "competing";
+                const isParticipated = rs?.teamRound !== null;
+                const isAfterEliminated = isEliminated && index > eliminatedRoundIdx;
                 const isFinalRound = index === rounds.length - 1;
+                const isSelected = round.id === selectedRoundId;
+                const isActive = round.status === "open" && isCompeting;
+                const isCompleted =
+                  (round.status === "closed" || round.status === "results_published") &&
+                  isParticipated;
+
+                // Node color
+                const nodeClass = isEliminatedHere
+                  ? "bg-red-500/20 border-2 border-red-500 text-red-500 ring-4 ring-red-500/20"
+                  : isAfterEliminated
+                  ? "bg-muted border border-border text-muted-foreground/30 cursor-not-allowed"
+                  : isFinalRound
+                  ? isCompleted
+                    ? "bg-gradient-to-tr from-orange-500 to-yellow-400 text-white ring-4 ring-yellow-500/40 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.4)]"
+                    : isActive
+                    ? "bg-background border-2 border-yellow-500 text-yellow-600 ring-4 ring-yellow-500/20 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+                    : "bg-muted border-2 border-yellow-500/30 text-muted-foreground"
+                  : isCompleted || isAdvanced
+                  ? "bg-orange-500 text-white"
+                  : isActive
+                  ? "bg-background border-2 border-orange-500 text-orange-500 shadow-[0_0_20px_rgba(243,112,33,0.4)]"
+                  : "bg-muted border border-border text-muted-foreground";
+
+                const labelClass = isEliminatedHere
+                  ? "text-red-500 font-semibold"
+                  : isAfterEliminated
+                  ? "text-muted-foreground/30"
+                  : isFinalRound && (isActive || isCompleted)
+                  ? "text-yellow-600 dark:text-yellow-500 font-semibold"
+                  : isActive
+                  ? "text-orange-400 font-semibold"
+                  : isCompleted || isAdvanced
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground";
+
+                const NodeWrapper = isAfterEliminated ? "div" : Link;
+                const nodeProps = isAfterEliminated
+                  ? {}
+                  : { href: `${basePath}?roundId=${round.id}` };
 
                 return (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    key={round.id} 
+                    key={round.id}
                     className="flex flex-col items-center text-center"
                   >
-                    <div className="relative mb-4">
-                      {/* Radiating Glow Effect for Active Phase */}
-                      {isActive && (
-                        <div className={`absolute inset-0 rounded-full animate-ping z-0 opacity-75 ${isFinalRound ? 'bg-yellow-500' : 'bg-orange-500'}`} style={{ animationDuration: '2s' }} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <NodeWrapper {...(nodeProps as any)} className="relative mb-4 block group">
+                      {/* Selected ring */}
+                      {isSelected && !isAfterEliminated && (
+                        <div className="absolute -inset-2 rounded-full border-2 border-orange-500/50 z-20 pointer-events-none" />
                       )}
-                      
-                      {/* Tilted Crown for Final Round */}
+                      {/* Active pulse */}
+                      {isActive && !isEliminatedHere && (
+                        <div
+                          className={`absolute inset-0 rounded-full animate-ping z-0 opacity-75 ${
+                            isFinalRound ? "bg-yellow-500" : "bg-orange-500"
+                          }`}
+                          style={{ animationDuration: "2s" }}
+                        />
+                      )}
+                      {/* Crown for final */}
                       {isFinalRound && (
-                        <motion.div 
+                        <motion.div
                           initial={{ opacity: 0, rotate: -45, y: 10 }}
                           animate={{ opacity: 1, rotate: 15, y: 0 }}
                           transition={{ delay: index * 0.1 + 0.3, type: "spring" }}
                           className="absolute -top-4 -right-3 z-20"
                         >
-                          <Crown className={`h-6 w-6 ${isCompleted ? 'text-yellow-400 drop-shadow-[0_2px_10px_rgba(250,204,21,0.8)]' : isActive ? 'text-yellow-500/80 drop-shadow-sm' : 'text-yellow-500/40'}`} fill="currentColor" />
+                          <Crown
+                            className={`h-6 w-6 ${
+                              isCompleted
+                                ? "text-yellow-400 drop-shadow-[0_2px_10px_rgba(250,204,21,0.8)]"
+                                : isActive
+                                ? "text-yellow-500/80 drop-shadow-sm"
+                                : "text-yellow-500/30"
+                            }`}
+                            fill="currentColor"
+                          />
                         </motion.div>
                       )}
-                      
-                      {/* Circle Node */}
-                      <div 
-                        className={`h-12 w-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg relative z-10
-                          ${isFinalRound ? (
-                            isCompleted ? "bg-gradient-to-tr from-orange-500 to-yellow-400 text-white ring-4 ring-yellow-500/40 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.4)]" :
-                            isActive ? "bg-background border-2 border-yellow-500 text-yellow-600 ring-4 ring-yellow-500/20 scale-110 shadow-[0_0_20px_rgba(234,179,8,0.3)]" :
-                            "bg-muted border-2 border-yellow-500/30 text-muted-foreground"
-                          ) : (
-                            isCompleted ? "bg-orange-500 text-white" : 
-                            isActive ? "bg-background border-2 border-orange-500 text-orange-500 shadow-[0_0_20px_rgba(243,112,33,0.4)]" : 
-                            "bg-muted border border-border text-muted-foreground"
-                          )}`}
+                      {/* Circle */}
+                      <div
+                        className={`h-12 w-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg relative z-10 ${nodeClass} ${
+                          !isAfterEliminated ? "group-hover:scale-105" : ""
+                        }`}
                       >
-                        {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <span className="font-bold text-lg">{round.roundNumber}</span>}
+                        {isEliminatedHere ? (
+                          <XCircle className="h-6 w-6" />
+                        ) : isCompleted || isAdvanced ? (
+                          <CheckCircle2 className="h-6 w-6" />
+                        ) : (
+                          <span className="font-bold text-lg">{round.roundNumber}</span>
+                        )}
                       </div>
-                    </div>
-                    
-                    <h3 className={`font-semibold ${isFinalRound && (isActive || isCompleted) ? 'text-yellow-600 dark:text-yellow-500' : isActive ? "text-orange-400" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
-                      {round.name}
-                    </h3>
+                    </NodeWrapper>
+
+                    <h3 className={`text-sm ${labelClass}`}>{round.name}</h3>
+                    {isEliminatedHere && (
+                      <span className="text-[10px] text-red-400 font-medium">Eliminated</span>
+                    )}
                     <p className="text-xs text-muted-foreground mt-1 font-medium">
-                      {round.submissionDeadline ? new Date(round.submissionDeadline).toLocaleDateString() : "TBA"}
+                      {round.submissionDeadline
+                        ? new Date(round.submissionDeadline).toLocaleDateString()
+                        : "TBA"}
                     </p>
                   </motion.div>
                 );
               })}
             </div>
           </div>
+
+          {/* Prev / Next navigation */}
+          {rounds.length > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+              {prevRound ? (
+                <Link href={`${basePath}?roundId=${prevRound.id}`}>
+                  <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+                    <ChevronLeft className="h-4 w-4" />
+                    {prevRound.name}
+                  </Button>
+                </Link>
+              ) : (
+                <div />
+              )}
+              {selectedRoundId && (
+                <span className="text-xs text-muted-foreground">
+                  Viewing: <span className="font-semibold text-foreground">
+                    {rounds.find((r) => r.id === selectedRoundId)?.name}
+                  </span>
+                </span>
+              )}
+              {nextRound ? (
+                <Link href={`${basePath}?roundId=${nextRound.id}`}>
+                  <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+                    {nextRound.name}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <div />
+              )}
+            </div>
+          )}
         </GlassCard>
       </section>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        
-        {/* Action Center - Spans 2 columns */}
         <div className="lg:col-span-2 space-y-6">
-          {currentActiveRound && isLeader ? (
+          {displayRound && canSubmitSelected && isLeader ? (
             <GlassCard glow className="p-8 rounded-[24px] bg-gradient-to-br from-card to-background border-orange-500/20 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-32 bg-orange-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 group-hover:bg-orange-500/10 transition-colors duration-500 pointer-events-none" />
-              
               <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <span className="flex h-3 w-3 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
                     </span>
                     <span className="text-sm font-semibold uppercase tracking-wider text-red-400">Action Required</span>
                   </div>
-                  <h2 className="text-3xl font-bold mb-2">Submit {currentActiveRound.name} Project</h2>
+                  <h2 className="text-3xl font-bold mb-2">Submit {displayRound.name} Project</h2>
                   <p className="text-muted-foreground max-w-md">
                     Please submit your files and project links before the deadline.
                   </p>
                 </div>
-
                 <div className="flex flex-col items-center gap-4 bg-background/50 backdrop-blur-md p-6 rounded-2xl border border-white/5 min-w-[200px]">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Clock className="h-4 w-4" />
@@ -236,48 +375,41 @@ export default function WorkspaceOverviewPage() {
                       </>
                     )}
                     <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
-                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.hours).padStart(2, "0")}</span>
                       <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Hrs</span>
                     </div>
                     <span className="text-muted-foreground font-bold text-lg mb-1">:</span>
                     <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
-                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.minutes).padStart(2, "0")}</span>
                       <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Mins</span>
                     </div>
                   </div>
-                  <Link href={`${basePath}/submissions`} className="w-full">
+                  <Link href={`${basePath}/submissions?roundId=${displayRound.id}`} className="w-full">
                     <Button variant="orange" className="w-full mt-2 rounded-xl h-11 shadow-[0_0_15px_rgba(243,112,33,0.3)]">
                       <Upload className="h-4 w-4 mr-2" />
-                      {workspaceData.latestSubmission ? "Resubmit / Edit" : "Upload Files"}
+                      {selectedRoundEntry?.submission ? "Resubmit / Edit" : "Upload Files"}
                     </Button>
                   </Link>
                 </div>
               </div>
             </GlassCard>
-          ) : currentActiveRound ? (
+          ) : displayRound ? (
             <GlassCard className="p-8 rounded-[24px] bg-gradient-to-br from-card to-background border-blue-500/20 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-32 bg-blue-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-
               <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="mb-4 flex items-center gap-2">
                     <ShieldCheck className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-semibold uppercase tracking-wider text-blue-500">
-                      Member Access
-                    </span>
+                    <span className="text-sm font-semibold uppercase tracking-wider text-blue-500">Member Access</span>
                   </div>
                   <h2 className="mb-2 text-3xl font-bold">Competition Rules</h2>
                   <p className="max-w-md text-muted-foreground">
-                    Review participation rules, team responsibilities, and submission
-                    requirements. Only the team leader can submit or update the project.
+                    Review participation rules, team responsibilities, and submission requirements. Only the team leader can submit.
                   </p>
                 </div>
-
                 <div className="min-w-[220px] rounded-2xl border border-border bg-background/50 p-6 backdrop-blur-md">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Current phase
-                  </p>
-                  <p className="mt-2 font-semibold">{currentActiveRound.name}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Current phase</p>
+                  <p className="mt-2 font-semibold">{displayRound.name}</p>
                   <Button asChild variant="outline" className="mt-5 w-full rounded-xl">
                     <Link href={`${basePath}/rules`}>
                       <ScrollText className="mr-2 h-4 w-4" />
@@ -293,7 +425,7 @@ export default function WorkspaceOverviewPage() {
             </GlassCard>
           )}
 
-          {/* Quick Stats Grid */}
+          {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-6">
             <GlassCard className="p-6 rounded-[24px] hover:bg-white/[0.02] transition-colors">
               <div className="flex justify-between items-start mb-4">
@@ -303,16 +435,16 @@ export default function WorkspaceOverviewPage() {
               </div>
               <h3 className="text-3xl font-bold mb-1">
                 {isLeader
-                  ? workspaceData?.latestSubmission
+                  ? selectedRoundEntry?.submission
                     ? "Submitted"
                     : "Pending"
-                  : currentActiveRound?.name || "No active round"}
+                  : displayRound?.name || "No active round"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {isLeader ? "Current Round Status" : "Current Competition Phase"}
+                {isLeader ? "Round Submission Status" : "Current Competition Phase"}
               </p>
             </GlassCard>
-            
+
             <GlassCard className="p-6 rounded-[24px] hover:bg-white/[0.02] transition-colors flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-4 text-muted-foreground">
@@ -331,7 +463,7 @@ export default function WorkspaceOverviewPage() {
           </div>
         </div>
 
-        {/* Right Sidebar - Recent Feedback */}
+        {/* Right Sidebar — Recent Feedback */}
         <div className="space-y-6">
           <GlassCard className="p-6 rounded-[24px] h-full flex flex-col">
             <div className="flex items-center justify-between mb-6">
@@ -340,22 +472,23 @@ export default function WorkspaceOverviewPage() {
                 Recent Feedback
               </h2>
             </div>
-
             <div className="flex-1 space-y-4">
               {workspaceData?.mentorFeedbacks && workspaceData.mentorFeedbacks.length > 0 ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 workspaceData.mentorFeedbacks.slice(0, 3).map((feedback: any) => (
                   <div key={feedback.id} className="rounded-xl border border-border bg-muted/30 p-4 relative group">
                     <div className="flex justify-between items-start mb-2">
-                      <Badge variant={feedback.status === "completed" ? "success" : feedback.status === "acknowledged" ? "outline" : "warning"} className="text-[10px] px-1.5 h-5 uppercase tracking-wider">
+                      <Badge
+                        variant={feedback.status === "completed" ? "success" : feedback.status === "acknowledged" ? "outline" : "warning"}
+                        className="text-[10px] px-1.5 h-5 uppercase tracking-wider"
+                      >
                         {feedback.status}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : ""}
                       </span>
                     </div>
-                    <p className="text-sm line-clamp-3 text-foreground/90">
-                      {feedback.content}
-                    </p>
+                    <p className="text-sm line-clamp-3 text-foreground/90">{feedback.content}</p>
                   </div>
                 ))
               ) : (
@@ -364,15 +497,13 @@ export default function WorkspaceOverviewPage() {
                 </div>
               )}
             </div>
-
-            <Link href={`${basePath}/mentor`} className="mt-6 block">
+            <Link href={`${basePath}/mentor${selectedRoundId ? `?roundId=${selectedRoundId}` : ""}`} className="mt-6 block">
               <Button variant="outline" className="w-full rounded-xl border-border hover:bg-muted">
                 Open Mentor Hub
               </Button>
             </Link>
           </GlassCard>
         </div>
-        
       </div>
     </div>
   );

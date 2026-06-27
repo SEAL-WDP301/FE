@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,10 @@ import {
   CheckCircle2, 
   Clock, 
   AlertCircle,
-  Loader2
+  Loader2,
+  Info,
+  Eye,
+  Star,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useSnackbar } from "notistack";
@@ -60,6 +63,8 @@ export default function SubmissionsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
+  const searchParams = useSearchParams();
+  const selectedRoundId = searchParams.get("roundId") ? Number(searchParams.get("roundId")) : null;
 
   const [file, setFile] = useState<File | null>(null);
   const [githubUrl, setGithubUrl] = useState("");
@@ -73,7 +78,19 @@ export default function SubmissionsPage() {
   });
 
   const workspaceData = data?.data;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roundSubmissions: any[] = workspaceData?.roundSubmissions || [];
   const currentActiveRound = workspaceData?.currentActiveRound;
+
+  // Determine if viewing a past round (read-only mode)
+  const selectedRoundEntry = selectedRoundId
+    ? roundSubmissions.find((rs) => rs.round.id === selectedRoundId)
+    : roundSubmissions.find((rs) => rs.canSubmit);
+  const isPastRound = selectedRoundEntry && selectedRoundEntry.round.id !== currentActiveRound?.id;
+  const displayRound = selectedRoundEntry?.round ?? currentActiveRound;
+  const pastSubmission = selectedRoundEntry?.submission ?? null;
+  const pastScore = selectedRoundEntry?.teamRound?.score ?? null;
+
   const latestSubmission = workspaceData?.latestSubmission;
   const isLeader = workspaceData?.role === "leader";
   const teamStatus = workspaceData?.team?.status as string | undefined;
@@ -210,13 +227,127 @@ export default function SubmissionsPage() {
     );
   }
 
-  if (!currentActiveRound) {
+  if (!currentActiveRound && !isPastRound) {
     return (
       <div className="mx-auto max-w-[1000px] flex items-center justify-center h-[50vh]">
         <GlassCard className="p-12 text-center rounded-[24px]">
           <AlertCircle className="h-12 w-12 text-zinc-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">No Active Round</h2>
           <p className="text-muted-foreground">There are currently no active submission rounds for your team.</p>
+        </GlassCard>
+      </div>
+    );
+  }
+
+  // ── Past Round Read-Only View ──────────────────────────────────────────────
+  if (isPastRound) {
+    return (
+      <div className="mx-auto max-w-[1000px] space-y-8 animate-in fade-in duration-500">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Project Submission</h1>
+            <p className="text-muted-foreground mt-1">
+              Viewing results for <span className="font-semibold text-foreground">{displayRound?.name}</span> — Read Only
+            </p>
+          </div>
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border bg-muted/30 border-border text-muted-foreground">
+            <Eye className="h-5 w-5" />
+            <span className="font-semibold">Past Round</span>
+          </div>
+        </header>
+
+        {/* Score Summary */}
+        {pastScore !== null && (
+          <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-orange-500/10 rounded-2xl">
+                <Star className="h-6 w-6 text-orange-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Judge Score — {displayRound?.name}</p>
+                <p className="text-4xl font-bold mt-0.5">
+                  {Number(pastScore).toFixed(2)}
+                  <span className="text-lg text-muted-foreground font-normal ml-1">/ 10.00</span>
+                </p>
+              </div>
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Disclaimer */}
+        <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
+          <Info className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">📌 Lưu ý về điểm số giám khảo</h4>
+            <p className="text-sm mt-1 opacity-90">
+              Điểm số trên chỉ mang tính tham khảo. Mọi quyết định về đội nào lọt vào vòng trong đều thuộc về
+              Ban Giám Khảo và Ban Tổ Chức dựa trên đánh giá chuyên môn toàn diện, không chỉ dựa trên điểm số.
+            </p>
+          </div>
+        </div>
+
+        {/* Submitted File / Link */}
+        <GlassCard className="p-6 rounded-[24px]">
+          <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Bài Nộp — {displayRound?.name}</h3>
+          {pastSubmission ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Đã nộp bài</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(pastSubmission.updatedAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {pastSubmission.description && (
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Mô tả dự án</p>
+                  <p className="text-sm">{pastSubmission.description}</p>
+                </div>
+              )}
+
+              {pastSubmission.fileUrl && (
+                <a
+                  href={pastSubmission.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 w-full p-4 border border-border rounded-xl hover:bg-muted/20 transition-colors"
+                >
+                  <File className="h-5 w-5 text-orange-500 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">File nộp bài</p>
+                    <p className="text-xs text-muted-foreground truncate">{pastSubmission.fileUrl}</p>
+                  </div>
+                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 ml-auto" />
+                </a>
+              )}
+
+              {pastSubmission.githubUrl && (
+                <a
+                  href={pastSubmission.githubUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 w-full p-4 border border-border rounded-xl hover:bg-muted/20 transition-colors"
+                >
+                  <FaGithub className="h-5 w-5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">GitHub Repository</p>
+                    <p className="text-xs text-muted-foreground truncate">{pastSubmission.githubUrl}</p>
+                  </div>
+                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 ml-auto" />
+                </a>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <AlertCircle className="h-5 w-5" />
+              <p className="text-sm">Không có bài nộp nào cho vòng này.</p>
+            </div>
+          )}
         </GlassCard>
       </div>
     );
@@ -229,7 +360,7 @@ export default function SubmissionsPage() {
         <div>
           <h1 className="text-3xl font-bold">Project Submission</h1>
           <p className="text-muted-foreground mt-1">
-            Submit your work for {currentActiveRound.name}
+            Submit your work for {currentActiveRound?.name}
           </p>
         </div>
         
@@ -246,6 +377,18 @@ export default function SubmissionsPage() {
           )}
         </div>
       </header>
+
+      {/* Disclaimer */}
+      <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
+        <Info className="h-5 w-5 mt-0.5 shrink-0" />
+        <div>
+          <h4 className="font-semibold text-sm">📌 Lưu ý về điểm số giám khảo</h4>
+          <p className="text-sm mt-1 opacity-90">
+            Điểm số từ giám khảo chỉ mang tính tham khảo. Mọi quyết định về đội nào lọt vào vòng trong
+            đều thuộc về Ban Giám Khảo và Ban Tổ Chức dựa trên đánh giá chuyên môn toàn diện.
+          </p>
+        </div>
+      </div>
 
       {/* Non-Leader Read-Only Alert */}
       {!isLeader && (
