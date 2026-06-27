@@ -272,11 +272,11 @@ export async function getRoundRankings(
 export async function publishRoundResults(
   eventId: string | number,
   roundId: string | number,
-  topNPerTrack: number
+  advancingTeamIds: number[]
 ) {
   const res = await axiosClient.post(
     `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
-    { topNPerTrack }
+    { advancingTeamIds }
   );
   return unwrapData<any>(res);
 }

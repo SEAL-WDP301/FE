@@ -65,26 +65,43 @@ function DeviationBadge({ deviation }: { deviation: number }) {
   );
 }
 
-function TeamRow({ entry, topN, rank }: { entry: DetailedRankedTeamEntry; topN: number; rank: number }) {
+function TeamRow({ 
+  entry, 
+  rank, 
+  isSelected, 
+  onToggle 
+}: { 
+  entry: DetailedRankedTeamEntry; 
+  rank: number;
+  isSelected: boolean;
+  onToggle: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const willAdvance = rank <= topN;
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden mb-3 transition-all">
+    <div className={`border rounded-xl overflow-hidden mb-3 transition-all ${isSelected ? "border-emerald-500/50" : "border-border"}`}>
       {/* Team Header Row */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20 ${
-          willAdvance ? "bg-emerald-500/5 border-b border-emerald-500/10" : "bg-card"
+      <div
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
+          isSelected ? "bg-emerald-500/10" : "bg-card hover:bg-muted/20"
         }`}
       >
+        <div className="shrink-0 pt-1">
+          <input 
+            type="checkbox" 
+            checked={isSelected}
+            onChange={onToggle}
+            className="w-5 h-5 rounded border-border text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+          />
+        </div>
+        
         <RankBadge rank={rank} />
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-base truncate">{entry.teamName}</span>
-            {willAdvance && (
+            {isSelected && (
               <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10 text-[10px] px-1.5 py-0">
                 <CheckCircle2 className="w-3 h-3 mr-1" />Advances
               </Badge>
@@ -112,10 +129,10 @@ function TeamRow({ entry, topN, rank }: { entry: DetailedRankedTeamEntry; topN: 
           <span>{entry.judges.length} judge{entry.judges.length !== 1 ? "s" : ""}</span>
         </div>
 
-        <div className="text-muted-foreground ml-1">
+        <div className="text-muted-foreground ml-1" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
-      </button>
+      </div>
 
       {/* Expanded Analytics */}
       <AnimatePresence>
@@ -210,8 +227,9 @@ export default function RankingsPage() {
   const queryClient = useQueryClient();
 
   const [selectedTrackIdx, setSelectedTrackIdx] = useState(0);
-  const [topN, setTopN] = useState(3);
-  const [publishTopN, setPublishTopN] = useState(3);
+  const [autoSelectTopN, setAutoSelectTopN] = useState(3);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(new Set());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["detailedRankings", eventId, roundId],
@@ -220,9 +238,10 @@ export default function RankingsPage() {
   });
 
   const { mutate: publish, isPending: isPublishing } = useMutation({
-    mutationFn: () => publishRoundResults(eventId, roundId, publishTopN),
+    mutationFn: () => publishRoundResults(eventId, roundId, Array.from(selectedTeamIds)),
     onSuccess: () => {
       enqueueSnackbar("Round results published successfully!", { variant: "success" });
+      setShowConfirmModal(false);
       queryClient.invalidateQueries({ queryKey: ["detailedRankings", eventId, roundId] });
     },
     onError: (err: any) => {
@@ -241,6 +260,28 @@ export default function RankingsPage() {
     open: "text-blue-500",
     closed: "text-orange-500",
     results_published: "text-emerald-500",
+  };
+
+  const handleToggleTeam = (teamId: number) => {
+    const next = new Set(selectedTeamIds);
+    if (next.has(teamId)) {
+      next.delete(teamId);
+    } else {
+      next.add(teamId);
+    }
+    setSelectedTeamIds(next);
+  };
+
+  const handleAutoSelect = () => {
+    const next = new Set<number>();
+    tracks.forEach(trackGroup => {
+      const topEntries = trackGroup.entries
+        .filter(e => e.finalScore !== null)
+        .slice(0, autoSelectTopN);
+      topEntries.forEach(e => next.add(e.teamId));
+    });
+    setSelectedTeamIds(next);
+    enqueueSnackbar(`Auto-selected top ${autoSelectTopN} teams for all tracks.`, { variant: "info" });
   };
 
   return (
@@ -268,27 +309,13 @@ export default function RankingsPage() {
         {/* Publish Panel */}
         {round?.status === "closed" && (
           <GlassCard className="p-4 flex items-center gap-3 shrink-0">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Top N lọt vòng / Track</label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPublishTopN(Math.max(1, publishTopN - 1))}
-                  className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-muted text-sm font-bold"
-                >−</button>
-                <span className="text-lg font-bold w-6 text-center tabular-nums">{publishTopN}</span>
-                <button
-                  onClick={() => setPublishTopN(publishTopN + 1)}
-                  className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-muted text-sm font-bold"
-                >+</button>
-              </div>
-            </div>
             <Button
-              onClick={() => publish()}
-              disabled={isPublishing}
+              onClick={() => setShowConfirmModal(true)}
               className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+              disabled={selectedTeamIds.size === 0}
             >
-              {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Publish Results
+              <Send className="w-4 h-4" />
+              Publish Results ({selectedTeamIds.size} teams)
             </Button>
           </GlassCard>
         )}
@@ -321,16 +348,22 @@ export default function RankingsPage() {
       )}
 
       {/* Top-N Highlight Control */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Preview Top</span>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setTopN(Math.max(1, topN - 1))} className="w-6 h-6 rounded border border-border flex items-center justify-center hover:bg-muted font-bold">−</button>
-          <span className="font-bold text-foreground w-5 text-center">{topN}</span>
-          <button onClick={() => setTopN(topN + 1)} className="w-6 h-6 rounded border border-border flex items-center justify-center hover:bg-muted font-bold">+</button>
+      {round?.status === "closed" && (
+        <div className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border border-border">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Auto-select Top</span>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setAutoSelectTopN(Math.max(1, autoSelectTopN - 1))} className="w-6 h-6 rounded border border-border flex items-center justify-center hover:bg-muted font-bold bg-background">−</button>
+              <span className="font-bold text-foreground w-5 text-center">{autoSelectTopN}</span>
+              <button onClick={() => setAutoSelectTopN(autoSelectTopN + 1)} className="w-6 h-6 rounded border border-border flex items-center justify-center hover:bg-muted font-bold bg-background">+</button>
+            </div>
+            <span>teams per track</span>
+          </div>
+          <Button variant="outline" onClick={handleAutoSelect} className="h-8 text-xs">
+            Apply Auto-Select
+          </Button>
         </div>
-        <span>teams as advancing</span>
-        <span className="text-[10px] text-muted-foreground/60">(for display only, doesn't affect publish)</span>
-      </div>
+      )}
 
       {/* Rankings List */}
       <GlassCard className="p-6 rounded-[24px]">
@@ -358,11 +391,58 @@ export default function RankingsPage() {
             </div>
 
             {entries.map((entry, idx) => (
-              <TeamRow key={entry.teamId} entry={entry} topN={topN} rank={idx + 1} />
+              <TeamRow 
+                key={entry.teamId} 
+                entry={entry} 
+                rank={idx + 1} 
+                isSelected={selectedTeamIds.has(entry.teamId)}
+                onToggle={() => handleToggleTeam(entry.teamId)}
+              />
             ))}
           </div>
         )}
       </GlassCard>
+
+      {/* Confirm Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-6 h-6 text-emerald-500" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Xác nhận Publish Kết Quả</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Bạn đã chọn <strong>{selectedTeamIds.size} đội</strong> lọt vào vòng trong.
+                Các đội còn lại sẽ được đánh dấu là <strong>Bị loại (Eliminated)</strong>.<br/><br/>
+                Hành động này không thể hoàn tác và sẽ gửi email thông báo tới tất cả thí sinh. Bạn có chắc chắn?
+              </p>
+              <div className="flex items-center gap-3 w-full">
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isPublishing}
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" 
+                  onClick={() => publish()}
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Xác nhận Publish
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

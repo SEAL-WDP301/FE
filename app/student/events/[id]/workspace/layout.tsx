@@ -14,7 +14,7 @@ import {
 import HomeHeader from "@/components/layout/dashboard/home-header";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
-import { ChevronRight, Trophy, Shield, Target } from "lucide-react";
+import { ChevronRight, Trophy, Shield, Target, AlertTriangle } from "lucide-react";
 import { FloatingTeamChat } from "@/components/floating-team-chat";
 
 
@@ -37,6 +37,7 @@ export default function TrackWorkspaceLayout({
   const eventName = workspaceData?.team?.event?.name || "Event";
   const teamName = workspaceData?.team?.name || "Team";
   const currentActiveRound = workspaceData?.currentActiveRound;
+  const isEliminated = workspaceData?.isEliminated;
   const isLeader = workspaceData?.role === "leader";
 
   const roleTab = workspaceData
@@ -108,6 +109,18 @@ export default function TrackWorkspaceLayout({
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {isEliminated && (
+          <div className="mb-8 p-4 rounded-2xl border border-red-500/20 bg-red-500/10 flex items-start gap-3 shadow-sm">
+            <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-red-600 dark:text-red-400">Đội của bạn đã dừng chân tại vòng thi này</h4>
+              <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">
+                Cảm ơn bạn đã tham gia cuộc thi. Bạn vẫn có thể xem lại kết quả và nhận xét của giám khảo cho các vòng thi đã qua, nhưng sẽ không thể tham gia các vòng tiếp theo. Hẹn gặp lại bạn ở những sự kiện sắp tới!
+              </p>
+            </div>
           </div>
         )}
 
