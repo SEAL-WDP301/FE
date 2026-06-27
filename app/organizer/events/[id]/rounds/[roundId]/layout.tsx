@@ -9,7 +9,7 @@ import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
 import { 
   Users, GraduationCap, FileText, Award, MessageSquare,
-  ChevronLeft, ChevronRight, LogOut, User as UserIcon
+  ChevronLeft, ChevronRight, LogOut, User as UserIcon, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,6 +35,7 @@ export default function RoundWorkspaceLayout({
     { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
     { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
     { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
+    { name: "Rankings", href: `${baseUrl}/rankings`, icon: BarChart3 },
     { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare },
   ];
 

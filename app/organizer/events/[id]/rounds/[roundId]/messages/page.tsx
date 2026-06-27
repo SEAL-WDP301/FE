@@ -61,7 +61,7 @@ export default function RoundMessagesPage() {
 
             <div className="flex -space-x-2 mt-3">
                {[...(team.leader ? [{ user: team.leader }] : []), ...(team.members || [])].slice(0, 5).map((m: any, idx) => (
-                 <Avatar key={m.user?.id || idx} className="h-6 w-6 border-2 border-background ring-1 ring-border/50">
+                 <Avatar key={`avatar-${team.id}-${m.user?.id || 'anon'}-${idx}`} className="h-6 w-6 border-2 border-background ring-1 ring-border/50">
                    <AvatarImage src={m.user?.avatarUrl || m.user?.avatar_url} />
                    <AvatarFallback className="text-[8px]">{m.user?.name?.charAt(0) || 'U'}</AvatarFallback>
                  </Avatar>

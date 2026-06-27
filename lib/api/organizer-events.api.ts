@@ -194,3 +194,90 @@ export async function bulkDeleteOrganizerRubrics(
     data: { rubricIds },
   });
 }
+
+export interface DetailedCriterionAverage {
+  criterionId: number;
+  name: string;
+  maxScore: number;
+  weight: number;
+  averageScore: number;
+}
+
+export interface DetailedJudgeScore {
+  judgeId: number;
+  judgeName: string;
+  totalGivenScore: number;
+  deviationFromAverage: number;
+  comment?: string;
+  criteriaScores: {
+    criterionId: number;
+    scoreValue: number;
+  }[];
+}
+
+export interface DetailedRankedTeamEntry {
+  rank: number;
+  teamId: number;
+  teamName: string;
+  trackId: number;
+  trackName: string;
+  submissionId: number | null;
+  finalScore: number | null;
+  criteriaAverages: DetailedCriterionAverage[];
+  judges: DetailedJudgeScore[];
+  status: string;
+  submittedAt: string;
+}
+
+export interface DetailedRankingsResponse {
+  round: any;
+  tracks: {
+    track: { id: number; name: string };
+    entries: DetailedRankedTeamEntry[];
+  }[];
+}
+
+export async function getDetailedRoundRankings(
+  eventId: string | number,
+  roundId: string | number,
+  trackId?: string | number
+) {
+  const params = new URLSearchParams();
+  if (trackId !== undefined && trackId !== null) {
+    params.set("trackId", String(trackId));
+  }
+  const query = params.toString();
+  const res = await axiosClient.get(
+    `/organizer/events/${eventId}/rounds/${roundId}/rankings/detailed${query ? `?${query}` : ""}`
+  );
+  return unwrapData<DetailedRankingsResponse>(res);
+}
+
+export async function getRoundRankings(
+  eventId: string | number,
+  roundId: string | number,
+  trackId?: string | number
+) {
+  const params = new URLSearchParams();
+  if (trackId !== undefined && trackId !== null) {
+    params.set("trackId", String(trackId));
+  }
+  const query = params.toString();
+  const res = await axiosClient.get(
+    `/organizer/events/${eventId}/rounds/${roundId}/rankings${query ? `?${query}` : ""}`
+  );
+  return unwrapData<any>(res);
+}
+
+export async function publishRoundResults(
+  eventId: string | number,
+  roundId: string | number,
+  topNPerTrack: number
+) {
+  const res = await axiosClient.post(
+    `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
+    { topNPerTrack }
+  );
+  return unwrapData<any>(res);
+}
+

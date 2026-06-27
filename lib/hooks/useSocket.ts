@@ -18,7 +18,9 @@ export const useSocket = (namespace: string = "") => {
     if (!socketRef.current) {
       const url = namespace ? `${SOCKET_URL}${namespace.startsWith('/') ? namespace : `/${namespace}`}` : SOCKET_URL;
       socketRef.current = io(url, {
-        auth: { token },
+        auth: (cb) => {
+          cb({ token: localStorage.getItem("access_token") });
+        },
         transports: ["websocket"],
       });
 
@@ -26,7 +28,25 @@ export const useSocket = (namespace: string = "") => {
       socketRef.current.on("disconnect", () => setIsConnected(false));
     }
 
+    const handleTokenRefresh = () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current.connect(); // Tự động lấy token mới nhờ hàm auth ở trên
+      }
+    };
+
+    const handleAuthUnauthorized = () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+
+    window.addEventListener("token-refreshed", handleTokenRefresh);
+    window.addEventListener("auth-unauthorized", handleAuthUnauthorized);
+
     return () => {
+      window.removeEventListener("token-refreshed", handleTokenRefresh);
+      window.removeEventListener("auth-unauthorized", handleAuthUnauthorized);
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
