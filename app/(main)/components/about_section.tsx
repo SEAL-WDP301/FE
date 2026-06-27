@@ -24,25 +24,6 @@ export default function AboutSealSection() {
         },
     ];
 
-    const timeline = [
-        {
-            season: 'Spring',
-            month: 'Mar - Apr',
-            status: 'Innovation Challenge',
-        },
-
-        {
-            season: 'Summer',
-            month: 'Jun - Jul',
-            status: 'Intensive Hackathon',
-        },
-
-        {
-            season: 'Fall',
-            month: 'Sep - Oct',
-            status: 'Championship Finale',
-        },
-    ];
 
     return (
         <section className="relative overflow-hidden bg-background py-24">
@@ -50,8 +31,7 @@ export default function AboutSealSection() {
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-orange-500/10 blur-[140px]" />
 
             <div className="container relative z-10 mx-auto px-4">
-                <div className="grid items-center gap-16 lg:grid-cols-2">
-                    {/* LEFT */}
+                <div className="w-full">
                     <div>
                         {/* Badge */}
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 backdrop-blur-xl">
@@ -68,7 +48,7 @@ export default function AboutSealSection() {
                         </h2>
 
                         {/* Description */}
-                        <p className="mb-10 text-lg leading-8 text-muted-foreground">
+                        <p className="mb-10 max-w-5xl text-lg leading-8 text-muted-foreground">
                             SEAL (Software Engineering Agile League)
                             is an annual academic hackathon series
                             that brings together talented students
@@ -108,60 +88,8 @@ export default function AboutSealSection() {
                             })}
                         </div>
                     </div>
-
-                    {/* RIGHT */}
-                    <div className="relative">
-                        <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 backdrop-blur-xl">
-                            {/* Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent" />
-
-                            {/* Glow */}
-                            <div className="absolute bottom-0 right-0 h-40 w-40 rounded-full bg-orange-500/10 blur-[100px]" />
-
-                            <div className="relative z-10">
-                                {/* Title */}
-                                <h3 className="mb-10 text-3xl font-bold text-foreground">
-                                    Annual SEAL Cycle
-                                </h3>
-
-                                {/* Timeline */}
-                                <div className="space-y-8">
-                                    {timeline.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center gap-5"
-                                        >
-                                            {/* Number */}
-                                            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/25">
-                                                <span className="text-lg font-bold text-foreground">
-                                                    {index + 1}
-                                                </span>
-                                            </div>
-
-                                            {/* Content */}
-                                            <div className="flex-1">
-                                                <div className="mb-1 flex items-center justify-between">
-                                                    <h4 className="text-xl font-semibold text-foreground">
-                                                        SEAL {item.season}
-                                                    </h4>
-
-                                                    <span className="text-sm text-muted-foreground">
-                                                        {item.month}
-                                                    </span>
-                                                </div>
-
-                                                <p className="text-sm text-muted-foreground">
-                                                    {item.status}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </section>
+        </section >
     );
 }

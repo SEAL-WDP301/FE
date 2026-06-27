@@ -48,8 +48,7 @@ export default function Navigation() {
 
     const navItems = [
         { label: 'Home', href: '/' },
-        { label: 'Events', href: '#events' },
-        { label: 'Rankings', href: '#rankings' },
+        { label: 'Stakeholder', href: '#stakeholder' },
         { label: 'Categories', href: '#categories' },
         { label: 'About', href: '#about' },
         { label: 'FAQ', href: '#FAQ' }
