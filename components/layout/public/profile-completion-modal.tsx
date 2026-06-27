@@ -22,6 +22,7 @@ const studentSchema = z.object({
   studentCode: z.string().min(1, "Student ID is required"),
   universityName: z.string().optional(),
   phone: z.string().optional(),
+  githubUsername: z.string().min(1, "GitHub Username is required"),
 });
 
 const stakeholderSchema = z.object({
@@ -39,7 +40,7 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
 
   const studentForm = useForm<z.infer<typeof studentSchema>>({
     resolver: zodResolver(studentSchema),
-    defaultValues: { studentType: "fpt", studentCode: "", universityName: "Đại học FPT", phone: "" },
+    defaultValues: { studentType: "fpt", studentCode: "", universityName: "Đại học FPT", phone: "", githubUsername: "" },
   });
 
   const watchStudentType = studentForm.watch("studentType");
@@ -163,6 +164,19 @@ export function ProfileCompletionModal({ isOpen, onOpenChange }: { isOpen: boole
                       <FormLabel>Phone number</FormLabel>
                       <FormControl>
                         <Input placeholder="E.g: 0987654321" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={studentForm.control}
+                  name="githubUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GitHub Username (*)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g: octocat" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
