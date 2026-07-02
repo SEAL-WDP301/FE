@@ -14,8 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function NotificationsMenu() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['userNotifications'],
     queryFn: async () => {
@@ -23,6 +27,30 @@ export function NotificationsMenu() {
       return res.data.data;
     },
   });
+
+  const handleNotificationClick = async (notif: any) => {
+    if (!notif.isRead) {
+      try {
+        await axiosClient.patch(`/users/notifications/${notif.id}/read`);
+        queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
+      } catch (err) {
+        console.error("Failed to mark notification as read", err);
+      }
+    }
+
+    if (notif.eventId) {
+      switch (notif.type) {
+        case 'judge_assigned':
+          router.push(`/judge/events/${notif.eventId}`);
+          break;
+        case 'mentor_assigned':
+          router.push(`/mentor/events/${notif.eventId}`);
+          break;
+        default:
+          router.push(`/home/events/${notif.eventId}`);
+      }
+    }
+  };
 
   const notifications = data || [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +93,8 @@ export function NotificationsMenu() {
             {notifications.map((notif: any) => (
               <DropdownMenuItem 
                 key={notif.id} 
-                className={`p-3 rounded-lg flex flex-col items-start gap-1 cursor-default focus:bg-muted ${!notif.isRead ? 'bg-orange-50/50 dark:bg-orange-950/20' : ''}`}
+                onClick={() => handleNotificationClick(notif)}
+                className={`p-3 rounded-lg flex flex-col items-start gap-1 cursor-pointer focus:bg-muted ${!notif.isRead ? 'bg-orange-50/50 dark:bg-orange-950/20' : ''}`}
               >
                 <div className="flex justify-between items-start w-full gap-2">
                   <p className={`text-sm leading-tight text-foreground ${!notif.isRead ? 'font-bold' : 'font-medium'}`}>

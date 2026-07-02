@@ -117,7 +117,7 @@ export default function EventStakeholdersPage() {
 
   const assignMentorMutation = useMutation({
     mutationFn: async (data: { stakeholderId: number, teamIds: number[] }) => {
-      const res = await axiosClient.post(`/organizer/teams/events/${eventId}/mentors/bulk-assign`, data);
+      const res = await axiosClient.post(`/organizer/assignments/events/${eventId}/mentors/bulk-assign`, data);
       return res.data;
     },
     onSuccess: () => {
