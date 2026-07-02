@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 export default function RoundWorkspaceLayout({
   children,
@@ -42,7 +43,7 @@ export default function RoundWorkspaceLayout({
   const { data: user } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
-        const token = localStorage.getItem('access_token');
+        const token = useAuthStore.getState().accessToken;
         if (!token) return null;
         const res = await axiosClient.get('/users/profile');
         const profile = res.data?.data;
@@ -53,7 +54,7 @@ export default function RoundWorkspaceLayout({
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
+    useAuthStore.getState().clearAccessToken();
     queryClient.setQueryData(['userProfile'], null);
     enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
     router.push('/');

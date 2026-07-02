@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Calendar, Users, Trophy, ExternalLink, ArrowLeft, Clock, BellRing, GraduationCap, Mail } from 'lucide-react';
 import { getStudentAssignedMentor, getMentorTeams } from '@/lib/api/mentor.api';
+import { useAuthStore } from '@/lib/stores/auth.store';
 
 function getInitials(name?: string | null) {
   return (name || 'M')
@@ -28,7 +29,7 @@ export default function EventDetailPage() {
   const { data: user } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
-      const token = localStorage.getItem('access_token');
+      const token = useAuthStore.getState().accessToken;
       if (!token) return null;
       const res = await axiosClient.get('/users/profile');
       return res.data?.data;

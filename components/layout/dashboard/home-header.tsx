@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
+import { useAuthStore } from '@/lib/stores/auth.store';
 
 // ORGANIZER_MENUS removed per user request
 
@@ -25,7 +26,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     const { data: user, isLoading, isError } = useQuery({
         queryKey: ['userProfile'],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
+            const token = useAuthStore.getState().accessToken;
             if (!token) return null;
             const res = await axiosClient.get('/users/profile');
             const profile = res.data?.data;
@@ -44,7 +45,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     }, [queryClient]);
 
     const handleLogout = () => {
-        localStorage.removeItem('access_token');
+        useAuthStore.getState().clearAccessToken();
         queryClient.setQueryData(['userProfile'], null);
         enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
         router.push('/');

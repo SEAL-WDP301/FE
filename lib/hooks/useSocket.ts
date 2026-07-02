@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "http://localhost:3000";
 
@@ -12,14 +13,14 @@ export const useSocket = (namespace: string = "") => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const token = localStorage.getItem("access_token");
+    const token = useAuthStore.getState().accessToken;
     if (!token) return;
 
     if (!socketRef.current) {
       const url = namespace ? `${SOCKET_URL}${namespace.startsWith('/') ? namespace : `/${namespace}`}` : SOCKET_URL;
       socketRef.current = io(url, {
         auth: (cb) => {
-          cb({ token: localStorage.getItem("access_token") });
+          cb({ token: useAuthStore.getState().accessToken });
         },
         transports: ["websocket"],
       });

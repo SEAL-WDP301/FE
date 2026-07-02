@@ -113,7 +113,7 @@ export default function WorkspaceOverviewPage() {
   );
 
   const progressWidth =
-    lastParticipatedIdx >= 0
+    lastParticipatedIdx >= 0 && rounds.length > 0
       ? ((lastParticipatedIdx + (isEliminated ? 0 : 0.5)) / rounds.length) * 100
       : 0;
 

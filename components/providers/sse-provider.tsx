@@ -5,6 +5,7 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
@@ -24,7 +25,7 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Only connect if we have a token and are not on an auth page
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const token = useAuthStore.getState().accessToken;
     
     if (!token || pathname.startsWith('/auth')) {
       return;
