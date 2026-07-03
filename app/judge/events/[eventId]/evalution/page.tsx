@@ -265,6 +265,21 @@ export default function EvaluationPage() {
                 <SubmissionContentCard detail={submissionDetail} />
                 <div className="mt-8">
                   <h2 className="mb-6 text-3xl font-bold">Chấm điểm theo Rubric</h2>
+                  
+                  {scoringLocked && (
+                    <div className="mb-6 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-sm">Chức năng chấm điểm đang bị khóa</h4>
+                        <p className="text-sm mt-1 opacity-90">
+                          {roundStatus === "not_started" && "Vòng thi chưa bắt đầu."}
+                          {roundStatus === "results_published" && "Kết quả của vòng này đã được công bố, không thể thay đổi điểm."}
+                          {roundStatus === "open" && "Vòng thi đang mở và chưa qua thời hạn nộp bài. Giám khảo chỉ có thể chấm điểm khi đã hết hạn nộp hoặc vòng thi chuyển sang trạng thái Closed/Judging."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid gap-8 xl:grid-cols-12">
                     <div className="xl:col-span-8">
                       <CriteriaScoring

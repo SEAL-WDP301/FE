@@ -28,6 +28,21 @@ export function RoundTabs({
   const sorted = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
   const uniqueSorted = Array.from(new Map(sorted.map(r => [r.roundId, r])).values());
 
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "open":
+        return "bg-green-500/20 text-green-500 border-green-500/30";
+      case "results_published":
+        return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+      case "closed":
+      case "judging":
+        return "bg-orange-500/20 text-orange-500 border-orange-500/30";
+      case "not_started":
+      default:
+        return "bg-muted text-muted-foreground border-border";
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-3">
       {uniqueSorted.map((round) => {
@@ -46,7 +61,7 @@ export function RoundTabs({
             <div className="flex flex-col gap-1 items-start">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{round.roundName}</span>
-                <Badge variant="outline" className="text-xs capitalize">
+                <Badge variant="outline" className={`text-[10px] capitalize border px-2 py-0.5 ${getStatusStyle(round.roundStatus)}`}>
                   {round.roundStatus.replace("_", " ")}
                 </Badge>
               </div>
