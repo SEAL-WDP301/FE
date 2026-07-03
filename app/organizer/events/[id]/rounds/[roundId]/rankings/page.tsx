@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
@@ -252,7 +252,27 @@ export default function RankingsPage() {
   });
 
   const round = data?.round;
-  const tracks = data?.tracks ?? [];
+  
+  const tracks = useMemo(() => {
+    if (!data?.tracks) return [];
+    
+    // Create an "All Tracks" object
+    const allEntries = data.tracks.flatMap((t: any) => t.entries);
+    allEntries.sort((a: any, b: any) => {
+      if (a.finalScore === null && b.finalScore === null) return 0;
+      if (a.finalScore === null) return 1;
+      if (b.finalScore === null) return -1;
+      return b.finalScore - a.finalScore;
+    });
+
+    const allTracksGroup = {
+      track: { id: -1, name: "Tất cả Tracks" },
+      entries: allEntries
+    };
+
+    return [allTracksGroup, ...data.tracks];
+  }, [data]);
+
   const selectedTrack = tracks[selectedTrackIdx];
   const entries = selectedTrack?.entries ?? [];
 
@@ -275,11 +295,11 @@ export default function RankingsPage() {
 
   const handleAutoSelect = () => {
     const next = new Set<number>();
-    tracks.forEach(trackGroup => {
+    data?.tracks?.forEach((trackGroup: any) => {
       const topEntries = trackGroup.entries
-        .filter(e => e.finalScore !== null)
+        .filter((e: any) => e.finalScore !== null)
         .slice(0, autoSelectTopN);
-      topEntries.forEach(e => next.add(e.teamId));
+      topEntries.forEach((e: any) => next.add(e.teamId));
     });
     setSelectedTeamIds(next);
     enqueueSnackbar(`Auto-selected top ${autoSelectTopN} teams for all tracks.`, { variant: "info" });
@@ -329,7 +349,7 @@ export default function RankingsPage() {
       </div>
 
       {/* Track Tabs */}
-      {tracks.length > 1 && (
+      {tracks.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {tracks.map((t, idx) => (
             <button
