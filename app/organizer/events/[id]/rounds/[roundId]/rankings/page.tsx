@@ -243,6 +243,7 @@ export default function RankingsPage() {
       enqueueSnackbar("Round results published successfully!", { variant: "success" });
       setShowConfirmModal(false);
       queryClient.invalidateQueries({ queryKey: ["detailedRankings", eventId, roundId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.message || "Failed to publish results";

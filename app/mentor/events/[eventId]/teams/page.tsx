@@ -21,7 +21,10 @@ function initials(name: string) {
 export default function MentorTeamsPage() {
   const params = useParams();
   const [search, setSearch] = useState("");
-  const query = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
+  const query = useQuery({ 
+    queryKey: ["mentorTeams", params.eventId], 
+    queryFn: () => getMentorTeams(params.eventId as string) 
+  });
   const teams = useMemo(() => query.data || [], [query.data]);
   const filteredTeams = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -48,8 +51,18 @@ export default function MentorTeamsPage() {
       ) : (
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filteredTeams.map((team) => (
-            <GlassCard key={team.id} className="rounded-[24px] bg-card p-5">
-              <div className="flex items-center gap-3">
+            <GlassCard key={team.id} className="relative rounded-[24px] bg-card p-5">
+              <div className="absolute top-5 right-5">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  team.status === 'approved' ? "bg-green-500/10 text-green-500" :
+                  team.status === 'rejected' ? "bg-red-500/10 text-red-500" :
+                  team.status === 'disqualified' ? "bg-gray-500/10 text-gray-500" :
+                  "bg-amber-500/10 text-amber-500"
+                }`}>
+                  {team.status || "pending"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 pr-16">
                 <Avatar className="h-14 w-14"><AvatarFallback>{initials(team.name)}</AvatarFallback></Avatar>
                 <div><h2 className="text-lg font-semibold">{team.name}</h2><p className="text-sm text-muted-foreground">{team.track?.name || "No track"}</p></div>
               </div>
@@ -57,7 +70,6 @@ export default function MentorTeamsPage() {
                 <p>Event: <span className="text-foreground">{team.event?.name || "N/A"}</span></p>
                 <p>Leader: <span className="text-foreground">{team.leader?.name || team.leader?.email || "N/A"}</span></p>
                 <p>Members: <span className="text-foreground">{team.members?.length || 0}</span></p>
-                <p>Status: <span className="capitalize text-foreground">{team.status || "N/A"}</span></p>
               </div>
               <Button asChild variant="orange" size="sm" className="mt-5 rounded-xl"><Link href={`/mentor/events/${params.eventId}/teams/${team.id}`}>View Team</Link></Button>
             </GlassCard>

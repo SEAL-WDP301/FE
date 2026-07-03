@@ -156,7 +156,12 @@ export function TeamListPanel({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h4 className="font-semibold truncate">{team.teamName}</h4>
+                          <h4 
+                            className="font-semibold truncate"
+                            title={`Đã chấm ${team.scoredCriteria}/${team.totalCriteria} criteria`}
+                          >
+                            {team.teamName}
+                          </h4>
                           <p className="text-xs text-muted-foreground truncate">
                             {team.track?.name}
                           </p>

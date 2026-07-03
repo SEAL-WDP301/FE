@@ -65,6 +65,8 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
               enqueueSnackbar(data.title || "Bạn có thông báo mới!", {
                 variant: "info",
                 autoHideDuration: 5000,
+                key: data.id ? `notification-${data.id}` : undefined,
+                preventDuplicate: true,
               });
 
               queryClient.invalidateQueries({ queryKey: ["userNotifications"] });

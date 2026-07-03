@@ -123,6 +123,7 @@ export default function EventStakeholdersPage() {
     onSuccess: () => {
       enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
       setIsMentorModalOpen(false);
       resetForms();
     },
@@ -139,6 +140,7 @@ export default function EventStakeholdersPage() {
     onSuccess: (data, variables) => {
       enqueueSnackbar('Mentor unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
       if (drawerUser) {
         const updatedUser = { ...drawerUser, mentorAssignments: drawerUser.mentorAssignments.filter((ma: any) => ma.teamId !== variables.teamId) };
         setDrawerUser(updatedUser);

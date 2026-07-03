@@ -127,7 +127,7 @@ export default function EventForm({ initialData }: EventFormProps) {
         status: initialData?.status || "draft",
         registrationDeadline: initialData?.registrationDeadline ? new Date(initialData.registrationDeadline).toISOString().slice(0, 16) : "",
         startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
-        githubOrgUrl: initialData?.githubOrgUrl || "",
+        githubOrgUrl: initialData?.githubOrgUrl || "https://github.com/DEMO-SEAL-HackaThon-ORG",
         prize1st: initialData?.prize1st || "",
         prize2nd: initialData?.prize2nd || "",
         prize3rd: initialData?.prize3rd || "",

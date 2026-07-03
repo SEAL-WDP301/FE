@@ -6,7 +6,10 @@ import { Loader2 } from "lucide-react";
 import { axiosClient } from "@/lib/axios";
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
 
+import { useParams } from "next/navigation";
+
 export function JudgeDashboardHeader() {
+  const params = useParams();
   const { data: user } = useQuery({
     queryKey: ["userProfile"],
     queryFn: async () => {
@@ -15,7 +18,7 @@ export function JudgeDashboardHeader() {
     },
   });
 
-  const { stats, isLoading } = useJudgeWorkspace();
+  const { stats, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   if (isLoading) {
     return (

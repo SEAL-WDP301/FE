@@ -56,20 +56,26 @@ async function fetchWorkspaceSubmissions(
   return batches.flat();
 }
 
-export function useJudgeWorkspace() {
+export function useJudgeWorkspace(eventId?: string | number) {
   const eventsQuery = useQuery({
     queryKey: ["judge", "events"],
     queryFn: judgeApi.getAssignedEvents,
   });
 
+  const filteredEvents = useMemo(() => {
+    if (!eventsQuery.data) return [];
+    if (!eventId) return eventsQuery.data;
+    return eventsQuery.data.filter((e) => e.id.toString() === eventId.toString());
+  }, [eventsQuery.data, eventId]);
+
   const submissionsQuery = useQuery({
     queryKey: [
       "judge",
       "workspace-submissions",
-      eventsQuery.data?.map((event) => event.id).join(",") ?? "",
+      filteredEvents.map((event) => event.id).join(",") ?? "",
     ],
-    queryFn: () => fetchWorkspaceSubmissions(eventsQuery.data ?? []),
-    enabled: !!eventsQuery.data?.length,
+    queryFn: () => fetchWorkspaceSubmissions(filteredEvents),
+    enabled: !!filteredEvents.length,
   });
 
   const submissions = submissionsQuery.data ?? [];

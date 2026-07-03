@@ -10,7 +10,7 @@ import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
 
 export function QuickSubmission() {
   const params = useParams();
-  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace();
+  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const focus =
     pendingSubmissions[0] ??

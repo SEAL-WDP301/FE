@@ -12,6 +12,8 @@ import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
+import { LayoutDashboard } from 'lucide-react';
+import { getRoleHomePath } from '@/components/auth/role-guard';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
 import { useAuthStore } from '@/lib/stores/auth.store';
@@ -77,6 +79,19 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                             <NotificationsMenu />
                             
                             <ThemeToggle />
+                            {(user.role === 'admin' || user.role === 'organizer') && (
+                                <Button
+                                    asChild
+                                    variant="soft"
+                                    size="sm"
+                                    className="hidden sm:flex h-9 rounded-full px-3 text-primary hover:bg-primary/15"
+                                >
+                                    <Link href={getRoleHomePath(user.role)}>
+                                        <LayoutDashboard className="size-4 mr-1.5" />
+                                        <span>Dashboard</span>
+                                    </Link>
+                                </Button>
+                            )}
                             <div className="hidden flex-col items-end sm:flex pl-2">
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                 <span className="text-xs text-muted-foreground">{user.email}</span>
