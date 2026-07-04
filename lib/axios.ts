@@ -1,4 +1,5 @@
 import axios, { AxiosHeaders, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from './stores/auth.store';
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
@@ -8,7 +9,6 @@ export const axiosClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
 // Variables for refresh token queue
@@ -30,7 +30,7 @@ axiosClient.interceptors.request.use(
   (config) => {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
+      const token = useAuthStore.getState().accessToken;
       if (token) {
         config.headers = AxiosHeaders.from(config.headers);
         config.headers.set('Authorization', `Bearer ${token}`);
@@ -54,8 +54,8 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       // Don't intercept refresh calls to avoid infinite loops
       if (originalRequest.url?.includes('/auth/refresh')) {
+        useAuthStore.getState().clearAccessToken();
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
           window.dispatchEvent(new Event('auth-unauthorized'));
         }
         return Promise.reject(error);
@@ -80,13 +80,21 @@ axiosClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Because withCredentials is true, the refresh_token HttpOnly cookie is sent automatically
-        const res = await axiosClient.post('/auth/refresh');
+        const currentRefreshToken = useAuthStore.getState().refreshToken;
+        if (!currentRefreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const res = await axiosClient.post('/auth/refresh', { refreshToken: currentRefreshToken });
         const newAccessToken = res.data?.data?.accessToken;
+        const newRefreshToken = res.data?.data?.refreshToken;
 
         if (newAccessToken) {
+          useAuthStore.getState().setAccessToken(newAccessToken);
+          if (newRefreshToken) {
+            useAuthStore.getState().setRefreshToken(newRefreshToken);
+          }
           if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', newAccessToken);
             window.dispatchEvent(new Event('token-refreshed'));
           }
           
@@ -104,8 +112,8 @@ axiosClient.interceptors.response.use(
         processQueue(refreshError, null);
         
         // If refresh fails, log the user out
+        useAuthStore.getState().clearAccessToken();
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
           window.dispatchEvent(new Event('auth-unauthorized'));
         }
         return Promise.reject(refreshError);

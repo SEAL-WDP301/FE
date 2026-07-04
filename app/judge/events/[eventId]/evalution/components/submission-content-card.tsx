@@ -46,8 +46,8 @@ export function SubmissionContentCard({
           </div>
           {resolvedGithub ? (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Link mã nguồn có sẵn (URL ẩn để tránh lộ danh tính team).
+              <p className="text-sm text-muted-foreground font-mono break-all line-clamp-2">
+                {resolvedGithub}
               </p>
               <Button variant="outline" size="sm" asChild>
                 <a href={resolvedGithub} target="_blank" rel="noopener noreferrer">

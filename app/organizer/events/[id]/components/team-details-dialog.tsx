@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Users, UserPlus, Trash2, Phone } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
 import { enqueueSnackbar } from "notistack";
 
 interface TeamDetailsDialogProps {
@@ -123,6 +124,11 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                             <Phone className="w-3 h-3" /> {team.leader.studentProfile.phone}
                         </span>
                     )}
+                    {team.leader.studentProfile.githubUsername && (
+                        <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                            <FaGithub className="w-3 h-3" /> {team.leader.studentProfile.githubUsername}
+                        </span>
+                    )}
                   </p>
                 )}
               </div>
@@ -168,6 +174,11 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
                                 {member.user.studentProfile.phone && (
                                     <span className="flex items-center gap-1 text-blue-400">
                                         <Phone className="w-3 h-3" /> {member.user.studentProfile.phone}
+                                    </span>
+                                )}
+                                {member.user.studentProfile.githubUsername && (
+                                    <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                                        <FaGithub className="w-3 h-3" /> {member.user.studentProfile.githubUsername}
                                     </span>
                                 )}
                               </p>

@@ -117,12 +117,13 @@ export default function EventStakeholdersPage() {
 
   const assignMentorMutation = useMutation({
     mutationFn: async (data: { stakeholderId: number, teamIds: number[] }) => {
-      const res = await axiosClient.post(`/organizer/teams/events/${eventId}/mentors/bulk-assign`, data);
+      const res = await axiosClient.post(`/organizer/assignments/events/${eventId}/mentors/bulk-assign`, data);
       return res.data;
     },
     onSuccess: () => {
       enqueueSnackbar('Mentor assigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
       setIsMentorModalOpen(false);
       resetForms();
     },
@@ -139,6 +140,7 @@ export default function EventStakeholdersPage() {
     onSuccess: (data, variables) => {
       enqueueSnackbar('Mentor unassigned successfully', { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ["organizerStakeholders", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
       if (drawerUser) {
         const updatedUser = { ...drawerUser, mentorAssignments: drawerUser.mentorAssignments.filter((ma: any) => ma.teamId !== variables.teamId) };
         setDrawerUser(updatedUser);

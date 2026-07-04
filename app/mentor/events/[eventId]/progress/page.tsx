@@ -15,7 +15,10 @@ import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "@/app/me
 
 export default function TeamProgressPage() {
   const params = useParams();
-  const query = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
+  const query = useQuery({ 
+    queryKey: ["mentorTeams", params.eventId], 
+    queryFn: () => getMentorTeams(params.eventId as string) 
+  });
   if (query.isLoading) return <MentorLoadingState />;
   if (query.isError) return <MentorErrorState />;
 

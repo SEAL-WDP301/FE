@@ -10,13 +10,14 @@ import { NotificationsMenu } from "./notifications-menu";
 import Logo from "@/components/ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterContent?: React.ReactNode, showDesktopLogo?: boolean }) {
     // Fetch Current User
     const { data: user } = useQuery({
         queryKey: ['userProfile'],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
+            const token = useAuthStore.getState().accessToken;
             if (!token) return null;
             const res = await axiosClient.get('/users/profile');
             return res.data?.data;
@@ -105,7 +106,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                         <DropdownMenuItem 
                             className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
                             onClick={() => {
-                                localStorage.removeItem('access_token');
+                                useAuthStore.getState().clearAccessToken();
                                 window.dispatchEvent(new Event('auth-unauthorized'));
                                 window.location.href = '/login';
                             }}

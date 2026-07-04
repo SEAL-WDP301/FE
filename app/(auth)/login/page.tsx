@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Mail, Shield } from "lucide-react";
 import { isAxiosError } from "axios";
 import { axiosClient } from "@/lib/axios";
+import { useAuthStore } from "@/lib/stores/auth.store";
 import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
@@ -24,6 +25,7 @@ import { getOAuthUrl } from "@/lib/auth-oauth";
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -43,7 +45,11 @@ export default function LoginPage() {
 
       // Save token (if any frontend handling is needed, though axios handles bearer auto now)
       if (res.data?.data?.accessToken) {
-        localStorage.setItem("access_token", res.data.data.accessToken);
+        console.log("[DEV] Logged in successfully. Access Token:", res.data.data.accessToken);
+        setAccessToken(res.data.data.accessToken);
+        if (res.data.data.refreshToken) {
+          useAuthStore.getState().setRefreshToken(res.data.data.refreshToken);
+        }
       }
 
       enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });

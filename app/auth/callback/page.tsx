@@ -7,18 +7,24 @@ import { enqueueSnackbar } from "notistack";
 import { axiosClient } from "@/lib/axios";
 import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const refreshToken = searchParams.get("refreshToken");
 
     if (token) {
-      localStorage.setItem("access_token", token);
+      setAccessToken(token);
+      if (refreshToken) {
+        useAuthStore.getState().setRefreshToken(refreshToken);
+      }
       axiosClient.get("/users/profile")
       .then(res => {
         const user = res.data?.data;

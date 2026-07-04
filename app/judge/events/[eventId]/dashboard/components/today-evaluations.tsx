@@ -13,7 +13,7 @@ import { mapScoringStatusLabel } from "@/lib/api/judge.api";
 
 export function TodayEvaluations() {
   const params = useParams();
-  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace();
+  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const displayTeams = pendingSubmissions.length
     ? pendingSubmissions.slice(0, 6)

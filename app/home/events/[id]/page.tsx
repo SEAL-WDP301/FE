@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { enqueueSnackbar } from 'notistack';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { getStudentAssignedMentor, getMentorTeams } from '@/lib/api/mentor.api';
+import { useAuthStore } from '@/lib/stores/auth.store';
 
 type EventTrack = {
   id: number | string;
@@ -569,7 +570,7 @@ export default function EventDetailPage() {
   const { data: user } = useQuery<UserAccount | null>({
     queryKey: ['userProfile'],
     queryFn: async () => {
-      const token = localStorage.getItem('access_token');
+      const token = useAuthStore.getState().accessToken;
       if (!token) return null;
       const res = await axiosClient.get('/users/profile');
       return res.data?.data;
@@ -638,14 +639,19 @@ export default function EventDetailPage() {
   const isJudgeForEvent = judgeEvents?.some((e) => Number(e.id) === Number(eventId));
   const isMentorForEvent = mentorTeams?.some((t) => Number(t.event?.id) === Number(eventId) || Number(t.eventId) === Number(eventId));
 
+  const notificationShown = useRef(false);
+
   useEffect(() => {
-    if (userRole === 'stakeholder') {
+    if (userRole === 'stakeholder' && !notificationShown.current) {
       if (isJudgeForEvent && isMentorForEvent) {
-        enqueueSnackbar('Bạn đã được chỉ định làm Mentor và Judge cho sự kiện này!', { variant: 'info' });
+        enqueueSnackbar('Bạn đã được chỉ định làm Mentor và Judge cho sự kiện này!', { variant: 'info', preventDuplicate: true });
+        notificationShown.current = true;
       } else if (isJudgeForEvent) {
-        enqueueSnackbar('Bạn đã được chỉ định làm Judge cho sự kiện này!', { variant: 'info' });
+        enqueueSnackbar('Bạn đã được chỉ định làm Judge cho sự kiện này!', { variant: 'info', preventDuplicate: true });
+        notificationShown.current = true;
       } else if (isMentorForEvent) {
-        enqueueSnackbar('Bạn đã được chỉ định làm Mentor cho sự kiện này!', { variant: 'info' });
+        enqueueSnackbar('Bạn đã được chỉ định làm Mentor cho sự kiện này!', { variant: 'info', preventDuplicate: true });
+        notificationShown.current = true;
       }
     }
   }, [userRole, isJudgeForEvent, isMentorForEvent]);

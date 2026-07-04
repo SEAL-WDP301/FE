@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, type ReactNode, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { axiosClient } from "@/lib/axios";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 export type AppRole = "admin" | "organizer" | "student" | "stakeholder" | "judge";
 
@@ -35,11 +36,15 @@ export function getRoleHomePath(role?: string) {
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const hasToken = useSyncExternalStore(
-    subscribeToAuthChanges,
-    getTokenSnapshot,
-    getServerTokenSnapshot
-  );
+  const accessToken = useAuthStore(state => state.accessToken);
+  
+  // To avoid hydration mismatch if needed, we can use a small state, 
+  // but Zustand handles it well. 
+  // If undefined on server, we wait.
+  const hasToken = accessToken ? true : false;
+  // Let's use a mounted flag to wait for client
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const {
     data: user,
@@ -49,7 +54,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   } = useQuery<UserProfile | null>({
     queryKey: ["userProfile"],
     queryFn: async () => {
-      const token = localStorage.getItem("access_token");
+      const token = useAuthStore.getState().accessToken;
       if (!token) return null;
 
       const res = await axiosClient.get("/users/profile");
@@ -80,7 +85,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     }
   }, [allowedRoles, hasToken, isError, isFetching, isLoading, pathname, router, user]);
 
-  if (hasToken === null || !hasToken || isLoading || isFetching || isError) {
+  if (!mounted || !hasToken || isLoading || isFetching || isError) {
     return <RoleGuardFallback />;
   }
 
@@ -90,26 +95,6 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   }
 
   return <>{children}</>;
-}
-
-function subscribeToAuthChanges(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener("token-refreshed", callback);
-  window.addEventListener("auth-unauthorized", callback);
-
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener("token-refreshed", callback);
-    window.removeEventListener("auth-unauthorized", callback);
-  };
-}
-
-function getTokenSnapshot(): boolean | null {
-  return !!localStorage.getItem("access_token");
-}
-
-function getServerTokenSnapshot(): boolean | null {
-  return null;
 }
 
 function RoleGuardFallback() {

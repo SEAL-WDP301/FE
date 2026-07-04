@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 export default function RoundWorkspaceLayout({
   children,
@@ -30,19 +31,29 @@ export default function RoundWorkspaceLayout({
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
+  const { data: teams } = useQuery({
+    queryKey: ["organizerTeams", eventId],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/organizer/teams/events/${eventId}`);
+      return res.data.data;
+    },
+  });
+
+  const unreadTeamsCount = teams?.filter((t: any) => t.unreadCount > 0).length || 0;
+
   const roundNavItems = [
     { name: "Teams", href: `${baseUrl}/teams`, icon: Users },
     { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
     { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
     { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
     { name: "Rankings", href: `${baseUrl}/rankings`, icon: BarChart3 },
-    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare },
+    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare, badge: unreadTeamsCount },
   ];
 
   const { data: user } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
-        const token = localStorage.getItem('access_token');
+        const token = useAuthStore.getState().accessToken;
         if (!token) return null;
         const res = await axiosClient.get('/users/profile');
         const profile = res.data?.data;
@@ -53,7 +64,7 @@ export default function RoundWorkspaceLayout({
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
+    useAuthStore.getState().clearAccessToken();
     queryClient.setQueryData(['userProfile'], null);
     enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
     router.push('/');
@@ -101,7 +112,12 @@ export default function RoundWorkspaceLayout({
               >
                 <item.icon className={cn("shrink-0", isActive ? "text-blue-500" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-6 w-6")} />
                 {isSidebarExpanded && (
-                  <span className="truncate relative z-10">{item.name}</span>
+                  <span className="truncate relative z-10 flex-1">{item.name}</span>
+                )}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <div className={cn("flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px]", isSidebarExpanded ? "h-5 min-w-5 px-1 ml-2" : "absolute top-1 right-1 h-4 min-w-4 px-0.5")}>
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </div>
                 )}
                 {isActive && (
                   <motion.div

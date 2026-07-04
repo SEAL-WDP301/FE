@@ -193,8 +193,9 @@ export async function updateMentorProfile(
   return unwrapData<MentorProfile>(response);
 }
 
-export async function getMentorTeams() {
-  const response = await axiosClient.get("/mentor/teams");
+export async function getMentorTeams(eventId?: string | number) {
+  const url = eventId ? `/mentor/teams?eventId=${eventId}` : "/mentor/teams";
+  const response = await axiosClient.get(url);
   return unwrapData<MentorTeam[]>(response) || [];
 }
 

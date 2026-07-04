@@ -46,6 +46,9 @@ const getMenus = (eventId: string) => {
     ];
 };
 
+import { useQuery } from "@tanstack/react-query";
+import { axiosClient } from "@/lib/axios";
+
 export function JudgeSidebar({
     collapsed,
     setCollapsed,
@@ -54,6 +57,19 @@ export function JudgeSidebar({
     const params = useParams();
     const eventId = params.eventId as string || "1";
     const menus = getMenus(eventId);
+
+    const { data: event } = useQuery({
+        queryKey: ["judgeEvent", eventId],
+        queryFn: async () => {
+            const { data } = await axiosClient.get(`/public/events/${eventId}`);
+            return data.data;
+        },
+        enabled: !!eventId,
+    });
+
+    const currentRound = event?.rounds?.find((r: any) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
+    const isRoundHasDates = !!(currentRound?.startDate || currentRound?.endDate);
+    const shouldDisable = isRoundHasDates && currentRound?.status === 'not_started';
 
     return (
         <aside
@@ -81,11 +97,12 @@ export function JudgeSidebar({
                         const Icon = item.icon;
 
                         const active = pathname === item.href;
+                        const isDisabled = shouldDisable && item.label === 'Evalution';
 
-                        return (
+                        const linkContent = (
                             <Link
                                 key={item.href}
-                                href={item.href}
+                                href={isDisabled ? "#" : item.href}
                                 className={cn(
                                     "flex items-center rounded-2xl text-sm font-medium transition-all duration-300",
                                     collapsed
@@ -93,7 +110,8 @@ export function JudgeSidebar({
                                         : "gap-3 px-4 py-3",
                                     active
                                         ? "bg-orange-500/15 text-orange-400 shadow-[0_0_30px_rgba(243,112,33,0.15)] ring-1 ring-orange-500/20"
-                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                    isDisabled && "opacity-50 cursor-not-allowed pointer-events-none"
                                 )}
                             >
                                 <Icon className="h-5 w-5 shrink-0" />
@@ -110,6 +128,12 @@ export function JudgeSidebar({
                                 </span>
                             </Link>
                         );
+
+                        return isDisabled ? (
+                            <div key={item.href} title="Round has not started yet">
+                                {linkContent}
+                            </div>
+                        ) : linkContent;
                     })}
                 </nav>
             </div>

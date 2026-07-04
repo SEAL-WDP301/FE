@@ -23,9 +23,10 @@ interface FloatingTeamChatProps {
   teamId: number;
   inline?: boolean;
   defaultOpen?: boolean;
+  teamName?: string;
 }
 
-export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false }: FloatingTeamChatProps) {
+export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, teamName }: FloatingTeamChatProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [message, setMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
@@ -301,15 +302,15 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false }
             }
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-orange-500" />
-                <h3 className="font-semibold">Team Discussion</h3>
-                <Badge variant="outline" className={isConnected ? "text-green-500 border-green-500/30" : "text-zinc-500"}>
-                  {isConnected ? "Live" : "Connecting..."}
-                </Badge>
-              </div>
-              {!inline && (
+            {!inline && (
+              <div className="flex items-center justify-between border-b border-border bg-muted/30 p-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-orange-500" />
+                  <h3 className="font-semibold">{teamName || "Team Discussion"}</h3>
+                  <Badge variant="outline" className={isConnected ? "text-green-500 border-green-500/30" : "text-zinc-500"}>
+                    {isConnected ? "Live" : "Connecting..."}
+                  </Badge>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -318,8 +319,8 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false }
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto" ref={scrollRef} onScroll={handleScroll}>

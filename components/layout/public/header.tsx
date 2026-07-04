@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '../dashboard/theme-toggle';
 import { getRoleHomePath } from '@/components/auth/role-guard';
+import { useAuthStore } from '@/lib/stores/auth.store';
 
 export default function Navigation() {
     const router = useRouter();
@@ -21,7 +22,7 @@ export default function Navigation() {
     const { data: user, isLoading, isError } = useQuery({
         queryKey: ['userProfile'],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
+            const token = useAuthStore.getState().accessToken;
             if (!token) return null;
             const res = await axiosClient.get('/users/profile');
             const profile = res.data?.data;
@@ -40,7 +41,7 @@ export default function Navigation() {
     }, [queryClient]);
 
     const handleLogout = () => {
-        localStorage.removeItem('access_token');
+        useAuthStore.getState().clearAccessToken();
         queryClient.setQueryData(['userProfile'], null);
         enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
         router.push('/');

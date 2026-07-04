@@ -10,9 +10,11 @@ import {
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
+import { useParams } from "next/navigation";
 
 export function JudgeStats() {
-  const { stats, isLoading } = useJudgeWorkspace();
+  const params = useParams();
+  const { stats, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const items = [
     {

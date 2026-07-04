@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 import { SseProvider } from "../components/providers/sse-provider";
+import { AuthProvider } from "../components/providers/auth-provider";
 
 export default function RootLayout({
   children,
@@ -34,9 +35,11 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <SnackbarProvider>
-              <SseProvider>
-                {children}
-              </SseProvider>
+              <AuthProvider>
+                <SseProvider>
+                  {children}
+                </SseProvider>
+              </AuthProvider>
             </SnackbarProvider>
           </ThemeProvider>
         </QueryProvider>

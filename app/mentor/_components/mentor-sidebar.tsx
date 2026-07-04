@@ -18,8 +18,11 @@ import {
 
 import Logo from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMentorFeedback, getMentorSubmissions } from "@/lib/api/mentor.api";
+import { axiosClient } from "@/lib/axios";
+import { useSocket } from "@/lib/hooks/useSocket";
+import { useEffect } from "react";
 
 interface MentorSidebarProps {
   collapsed: boolean;
@@ -39,9 +42,10 @@ const getNavItems = (eventId: string): NavItem[] => {
   return [
     { label: "Dashboard", href: base, icon: LayoutDashboard },
     { label: "My Teams", href: `${base}/teams`, icon: UsersRound },
+    { label: "Messages", href: `${base}/messages`, icon: MessageSquareText, id: "messages" },
     { label: "Team Progress", href: `${base}/progress`, icon: ChartNoAxesCombined },
     { label: "Mentoring Sessions", href: `${base}/sessions`, icon: Video },
-    { label: "Feedback", href: `${base}/feedback`, icon: MessageSquareText, id: "feedback" },
+    { label: "Feedback", href: `${base}/feedback`, icon: ClipboardCheck, id: "feedback" },
     { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
     { label: "Announcements", href: `${base}/announcements`, icon: Megaphone },
     { label: "Settings", href: `${base}/settings`, icon: Settings },
@@ -53,6 +57,17 @@ export function MentorSidebar({
   setCollapsed,
 }: MentorSidebarProps) {
   const pathname = usePathname();
+  const params = useParams();
+  const eventId = params.eventId as string || "1";
+
+  const { data: event } = useQuery({
+    queryKey: ["mentorEvent", eventId],
+    queryFn: async () => {
+      const { data } = await axiosClient.get(`/public/events/${eventId}`);
+      return data.data;
+    },
+    enabled: !!eventId,
+  });
 
   const { data: feedbacks } = useQuery({
     queryKey: ["mentor-feedbacks"],
@@ -67,14 +82,79 @@ export function MentorSidebar({
   const feedbackCount = feedbacks?.length || 0;
   const submissionsCount = submissions?.length || 0;
 
-  const params = useParams();
-  const eventId = params.eventId as string || "1"; // Fallback to 1 if not present for some reason
+
+  const queryClient = useQueryClient();
+  const { socket, isConnected } = useSocket("/chat");
+
+  const { data: teams } = useQuery({
+    queryKey: ["mentorTeams", eventId],
+    queryFn: async () => {
+      const { data } = await axiosClient.get(`/mentor/teams?eventId=${eventId}`);
+      return data.data || [];
+    },
+    enabled: !!eventId,
+  });
+
+  // Global socket listener for mentor's teams
+  useEffect(() => {
+    if (!socket || !isConnected || !teams || teams.length === 0) return;
+
+    // Join all team rooms
+    teams.forEach((team: any) => {
+      socket.emit("join_team_room", team.id);
+    });
+
+    const handleReceiveMessage = (newMessage: any) => {
+      queryClient.setQueryData(["mentorTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === newMessage.teamId) {
+            return {
+              ...t,
+              unreadCount: (t.unreadCount || 0) + 1,
+              lastMessageAt: newMessage.createdAt,
+            };
+          }
+          return t;
+        });
+      });
+    };
+
+    const handleMessagesReadUpdated = (updatedMessages: any[]) => {
+      if (!updatedMessages || updatedMessages.length === 0) return;
+      const teamId = updatedMessages[0].teamId;
+      queryClient.setQueryData(["mentorTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === teamId) {
+            return { ...t, unreadCount: 0 };
+          }
+          return t;
+        });
+      });
+    };
+
+    socket.on("receive_chat_message", handleReceiveMessage);
+    socket.on("messages_read_updated", handleMessagesReadUpdated);
+
+    return () => {
+      teams.forEach((team: any) => {
+        socket.emit("leave_team_room", team.id);
+      });
+      socket.off("receive_chat_message", handleReceiveMessage);
+      socket.off("messages_read_updated", handleMessagesReadUpdated);
+    };
+  }, [socket, isConnected, teams, queryClient, eventId]);
+
+  const unreadMessagesCount = teams?.reduce((acc: number, team: any) => acc + (team.unreadCount > 0 ? 1 : 0), 0) || 0;
 
   const navItems = getNavItems(eventId).map((item) => {
     if (item.id === "feedback" && feedbackCount > 0)
       return { ...item, badge: feedbackCount > 99 ? "99+" : feedbackCount.toString() };
     if (item.id === "submissions" && submissionsCount > 0)
       return { ...item, badge: submissionsCount > 99 ? "99+" : submissionsCount.toString() };
+    if (item.id === "messages" && unreadMessagesCount > 0)
+      return { ...item, badge: unreadMessagesCount > 99 ? "99+" : unreadMessagesCount.toString() };
     return item;
   });
 
@@ -102,18 +182,25 @@ export function MentorSidebar({
               item.href === `/mentor/events/${eventId}`
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                
+            const currentRound = event?.rounds?.find((r: any) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
+            const isRoundHasDates = !!(currentRound?.startDate || currentRound?.endDate);
+            const shouldDisable = isRoundHasDates && currentRound?.status === 'not_started';
+            
+            const isDisabled = shouldDisable && (item.label === "Submissions Review" || item.label === "Team Progress" || item.label === "Mentoring Sessions");
 
-            return (
+            const linkContent = (
               <Link
                 key={item.href}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
+                href={isDisabled ? "#" : item.href}
+                title={collapsed && !isDisabled ? item.label : undefined}
                 className={cn(
                   "relative flex items-center rounded-2xl text-sm font-medium transition-all duration-300",
                   collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
                   active
                     ? "bg-orange-500/15 text-orange-400 shadow-[0_0_30px_rgba(243,112,33,0.15)] ring-1 ring-orange-500/20"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isDisabled && "opacity-50 cursor-not-allowed pointer-events-none"
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -135,6 +222,12 @@ export function MentorSidebar({
                 )}
               </Link>
             );
+
+            return isDisabled ? (
+              <div key={item.href} title="Round has not started yet">
+                {linkContent}
+              </div>
+            ) : linkContent;
           })}
         </nav>
       </div>

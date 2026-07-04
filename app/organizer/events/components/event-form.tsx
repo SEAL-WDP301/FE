@@ -50,10 +50,6 @@ const createEventSchema = (isEdit: boolean) => z.object({
         submissionDeadline: z.string().optional(),
         maxFileSizeMb: z.coerce.number().int().min(1, "Must be >= 1").max(500, "Max 500MB").default(20),
         isTrackSpecific: z.boolean().default(true),
-        trackId: z.preprocess(
-            (value) => (value === "" || value === null ? undefined : value),
-            z.coerce.number().int().positive().optional()
-        ).optional(),
     })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }])
 }).superRefine((data, ctx) => {
     const now = new Date();
@@ -131,7 +127,7 @@ export default function EventForm({ initialData }: EventFormProps) {
         status: initialData?.status || "draft",
         registrationDeadline: initialData?.registrationDeadline ? new Date(initialData.registrationDeadline).toISOString().slice(0, 16) : "",
         startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
-        githubOrgUrl: initialData?.githubOrgUrl || "",
+        githubOrgUrl: initialData?.githubOrgUrl || "https://github.com/DEMO-SEAL-HackaThon-ORG",
         prize1st: initialData?.prize1st || "",
         prize2nd: initialData?.prize2nd || "",
         prize3rd: initialData?.prize3rd || "",
@@ -147,7 +143,6 @@ export default function EventForm({ initialData }: EventFormProps) {
             submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : "",
             maxFileSizeMb: r.maxFileSizeMb || 20,
             isTrackSpecific: r.isTrackSpecific !== undefined ? r.isTrackSpecific : true,
-            trackId: r.trackId ?? undefined,
         })) || [{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }]
     };
 
@@ -224,7 +219,6 @@ export default function EventForm({ initialData }: EventFormProps) {
                     submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString() : undefined,
                     maxFileSizeMb: r.maxFileSizeMb,
                     isTrackSpecific: r.isTrackSpecific,
-                    trackId: r.trackId ? Number(r.trackId) : undefined,
                 }))
             };
 
@@ -509,33 +503,6 @@ export default function EventForm({ initialData }: EventFormProps) {
                                         <div className="md:col-span-5 flex justify-between items-end gap-3">
                                             <FormField control={control} name={`rounds.${index}.submissionDeadline`} render={({ field }) => (
                                                 <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-6">
-                                            <FormField control={control} name={`rounds.${index}.trackId`} render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Track</FormLabel>
-                                                    <Select
-                                                        onValueChange={(value) => field.onChange(value === "none" ? undefined : Number(value))}
-                                                        value={field.value ? String(field.value) : "none"}
-                                                        disabled={!watchedTracks?.some((track) => track.id)}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger className="bg-card/50 rounded-lg">
-                                                                <SelectValue placeholder="Select a track (optional)" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent className="rounded-xl">
-                                                            <SelectItem value="none">No track</SelectItem>
-                                                            {watchedTracks?.filter((track) => track.id).map((track) => (
-                                                                <SelectItem key={track.id} value={String(track.id)}>
-                                                                    {track.name}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
                                             )} />
                                         </div>
                                         <div className="md:col-span-4">

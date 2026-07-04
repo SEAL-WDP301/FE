@@ -4,8 +4,11 @@ import { AlarmClock, Loader2 } from "lucide-react";
 
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
 
+import { useParams } from "next/navigation";
+
 export default function UpcomingDeadlines() {
-  const { events, isLoading } = useJudgeWorkspace();
+  const params = useParams();
+  const { events, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const rounds = events.flatMap((event) =>
     event.rounds.map((round) => ({

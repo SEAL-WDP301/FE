@@ -12,8 +12,11 @@ import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
+import { LayoutDashboard } from 'lucide-react';
+import { getRoleHomePath } from '@/components/auth/role-guard';
 import { InvitationsMenu } from './invitations-menu';
 import { NotificationsMenu } from './notifications-menu';
+import { useAuthStore } from '@/lib/stores/auth.store';
 
 // ORGANIZER_MENUS removed per user request
 
@@ -25,7 +28,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     const { data: user, isLoading, isError } = useQuery({
         queryKey: ['userProfile'],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
+            const token = useAuthStore.getState().accessToken;
             if (!token) return null;
             const res = await axiosClient.get('/users/profile');
             const profile = res.data?.data;
@@ -44,7 +47,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     }, [queryClient]);
 
     const handleLogout = () => {
-        localStorage.removeItem('access_token');
+        useAuthStore.getState().clearAccessToken();
         queryClient.setQueryData(['userProfile'], null);
         enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
         router.push('/');
@@ -76,6 +79,19 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                             <NotificationsMenu />
                             
                             <ThemeToggle />
+                            {(user.role === 'admin' || user.role === 'organizer') && (
+                                <Button
+                                    asChild
+                                    variant="soft"
+                                    size="sm"
+                                    className="hidden sm:flex h-9 rounded-full px-3 text-primary hover:bg-primary/15"
+                                >
+                                    <Link href={getRoleHomePath(user.role)}>
+                                        <LayoutDashboard className="size-4 mr-1.5" />
+                                        <span>Dashboard</span>
+                                    </Link>
+                                </Button>
+                            )}
                             <div className="hidden flex-col items-end sm:flex pl-2">
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                 <span className="text-xs text-muted-foreground">{user.email}</span>

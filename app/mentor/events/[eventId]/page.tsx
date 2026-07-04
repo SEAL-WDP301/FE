@@ -18,7 +18,10 @@ import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "@/app/me
 export default function MentorDashboardPage() {
   const params = useParams();
   const profileQuery = useQuery({ queryKey: ["mentorProfile"], queryFn: getMentorProfile });
-  const teamsQuery = useQuery({ queryKey: ["mentorTeams"], queryFn: getMentorTeams });
+  const teamsQuery = useQuery({ 
+    queryKey: ["mentorTeams", params.eventId], 
+    queryFn: () => getMentorTeams(params.eventId as string) 
+  });
   const notificationsQuery = useQuery({ queryKey: ["userNotifications"], queryFn: getMentorNotifications });
 
   if (

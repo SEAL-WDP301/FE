@@ -24,6 +24,14 @@ export default function RoundMessagesPage() {
     },
   });
 
+  const sortedTeams = teams ? [...teams].sort((a, b) => {
+    if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+    if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+    const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+    const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    return bDate - aDate;
+  }) : [];
+
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
       {/* Left side: Teams list */}
@@ -35,12 +43,17 @@ export default function RoundMessagesPage() {
         
         {isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>
-        ) : teams?.map((team: any) => (
+        ) : sortedTeams.map((team: any) => (
           <Card 
             key={team.id}
             onClick={() => setSelectedTeamId(team.id)}
-            className={`p-4 cursor-pointer transition-all hover:border-orange-500/50 hover:shadow-md ${selectedTeamId === team.id ? 'border-orange-500 ring-1 ring-orange-500 shadow-md bg-orange-50/50 dark:bg-orange-500/10' : ''}`}
+            className={`relative p-4 cursor-pointer transition-all hover:border-orange-500/50 hover:shadow-md ${selectedTeamId === team.id ? 'border-orange-500 ring-1 ring-orange-500 shadow-md bg-orange-50/50 dark:bg-orange-500/10' : ''}`}
           >
+            {team.unreadCount > 0 && (
+              <div className="absolute -top-2 -right-2 z-10 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white border-2 border-background rounded-full shadow-sm text-xs font-bold animate-pulse">
+                {team.unreadCount > 99 ? '99+' : team.unreadCount}
+              </div>
+            )}
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-semibold text-base line-clamp-1">{team.name}</h3>
               {team.track && <Badge variant="outline" className="shrink-0 text-[10px] h-5">{team.track.name}</Badge>}

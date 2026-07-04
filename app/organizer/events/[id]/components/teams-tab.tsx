@@ -56,13 +56,9 @@ export default function TeamsTab({ event }: { event: any }) {
         },
         onSuccess: () => {
             enqueueSnackbar('Team status updated successfully', { variant: 'success' });
-            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId, roundId] });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id] });
             setTeamToEliminate(null);
             setEliminationReason("");
-            // Update selected team details if open
-            if (selectedTeamForDetails) {
-                queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id, selectedTrackId, roundId] });
-            }
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
