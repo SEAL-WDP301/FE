@@ -4,12 +4,14 @@ import { useState } from "react";
 import { ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
+import { FaGithub } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
-import { AuthCard, AuthFooterLink, AuthHeader } from "../_components/auth-card";
+import { AuthCard, AuthDivider, AuthFooterLink, AuthHeader } from "../_components/auth-card";
 import { AuthField } from "../_components/auth-controls";
 import { axiosClient } from "@/lib/axios";
 import { enqueueSnackbar } from "notistack";
+import { getOAuthUrl } from "@/lib/auth-oauth";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -138,6 +140,23 @@ export function RegisterForm() {
             </Button>
           </div>
         </form>
+
+        <AuthDivider />
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <a href={getOAuthUrl("google")} className="block w-full">
+            <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
+              <span className="text-lg font-semibold">G</span>
+              Google
+            </Button>
+          </a>
+          <a href={getOAuthUrl("github")} className="block w-full">
+            <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
+              <FaGithub className="size-4" />
+              GitHub
+            </Button>
+          </a>
+        </div>
 
         <AuthFooterLink
           label="Đã có tài khoản?"

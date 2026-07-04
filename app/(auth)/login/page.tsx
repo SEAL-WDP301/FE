@@ -9,6 +9,7 @@ import { axiosClient } from "@/lib/axios";
 import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
+import { FaGithub } from "react-icons/fa";
 
 import {
   AuthCard,
@@ -18,6 +19,7 @@ import {
 } from "../_components/auth-card";
 import { Button } from "@/components/ui/button";
 import { AuthField } from "../_components/auth-controls";
+import { getOAuthUrl } from "@/lib/auth-oauth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -128,16 +130,18 @@ export default function LoginPage() {
         <AuthDivider />
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <a href="http://localhost:3000/api/auth/google" className="block w-full">
+          <a href={getOAuthUrl("google")} className="block w-full">
             <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
               <span className="text-lg font-semibold">G</span>
               Google
             </Button>
           </a>
-          <Button variant="authSecondary" size="auth" type="button" className="font-medium">
-            <span className="size-4 rounded-full border-[0.4rem] border-white" />
-            GitHub
-          </Button>
+          <a href={getOAuthUrl("github")} className="block w-full">
+            <Button variant="authSecondary" size="auth" type="button" className="w-full font-medium">
+              <FaGithub className="size-4" />
+              GitHub
+            </Button>
+          </a>
         </div>
 
         <AuthFooterLink

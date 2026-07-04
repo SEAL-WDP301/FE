@@ -3,27 +3,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
-import { axiosClient } from '@/lib/axios';
 import Link from 'next/link';
+import { getPublicEvents } from "@/lib/api/public-events.api";
+import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
 const EVENT_SEASONS = ["All", "Spring", "Summer", "Fall"];
 
 export default function PastEvents() {
     const [activeTab, setActiveTab] = useState("All");
 
-    const { data: events, isLoading } = useQuery({
+    const { data: events, isLoading, isError } = useQuery({
       queryKey: ['publicEvents'],
-      queryFn: async () => {
-        const res = await axiosClient.get('/public/events');
-        return res.data.data;
-      },
+      queryFn: getPublicEvents,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
     const filteredEvents = !events ? [] : activeTab === "All" 
         ? events 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        : events.filter((event: any) => event.season === activeTab);
+        : events.filter((event) => event.season === activeTab);
 
     return (
         <section className="bg-background py-20">
@@ -58,11 +55,22 @@ export default function PastEvents() {
                     </div>
                 )}
 
+                {isError && (
+                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-5 text-sm text-red-200">
+                        Không tải được danh sách event. Kiểm tra backend API `/public/events` và biến môi trường `NEXT_PUBLIC_API_BASE_URL`.
+                    </div>
+                )}
+
+                {!isLoading && !isError && filteredEvents.length === 0 && (
+                    <div className="rounded-2xl border border-border bg-card/50 px-6 py-8 text-sm text-muted-foreground">
+                        Chưa có event public nào cho bộ lọc này. Nếu bạn vừa tạo event trong organizer, hãy kiểm tra status của event không còn là draft.
+                    </div>
+                )}
+
                 {/* Grid */}
-                {!isLoading && events && (
+                {!isLoading && !isError && filteredEvents.length > 0 && (
                     <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {filteredEvents.map((event: any) => (
+                        {filteredEvents.map((event: OrganizerEvent) => (
                             <div 
                                 key={event.id} 
                                 className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"

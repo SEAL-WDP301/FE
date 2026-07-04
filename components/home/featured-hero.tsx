@@ -5,16 +5,13 @@ import Link from "next/link";
 import { CalendarDays, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { axiosClient } from "@/lib/axios";
 import { format } from "date-fns";
+import { getPublicEvents } from "@/lib/api/public-events.api";
 
 export default function FeaturedHero() {
     const { data: events, isLoading } = useQuery({
         queryKey: ['publicEvents'],
-        queryFn: async () => {
-            const res = await axiosClient.get('/public/events');
-            return res.data.data;
-        },
+        queryFn: getPublicEvents,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
@@ -44,7 +41,7 @@ export default function FeaturedHero() {
         if (latestEvent.registration_deadline) {
             formattedDate = `Deadline: ${format(new Date(latestEvent.registration_deadline), "MMM dd, yyyy")}`;
         }
-    } catch (e) {
+    } catch {
         // fallback to season/year if parsing fails
     }
 
