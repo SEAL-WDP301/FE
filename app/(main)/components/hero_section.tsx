@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { HeroVariableTitle } from "./hero_variable_title";
 
 export default function Hero() {
     return (
@@ -41,14 +42,7 @@ export default function Hero() {
                 </div>
 
                 {/* Heading */}
-                <h1 className="mt-8 text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-foreground sm:text-6xl md:text-7xl lg:text-[88px]">
-                    Software Engineering
-                    <br />
-
-                    <span className="text-gradient-orange">
-                        Agile League.
-                    </span>
-                </h1>
+                <HeroVariableTitle />
 
                 {/* Description */}
                 <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
