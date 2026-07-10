@@ -1,10 +1,11 @@
-import { ChevronDown, Search } from "lucide-react"; // Thêm Menu icon nếu cần trigger sidebar sau này
+"use client";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationsMenu } from "./notifications-menu";
 import Logo from "@/components/ui/logo";
@@ -13,6 +14,7 @@ import { axiosClient } from "@/lib/axios";
 import { useAuthStore } from "@/lib/stores/auth.store";
 
 export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterContent?: React.ReactNode, showDesktopLogo?: boolean }) {
+    const pathname = usePathname();
     // Fetch Current User
     const { data: user } = useQuery({
         queryKey: ['userProfile'],
@@ -28,6 +30,18 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
     const getInitials = (name?: string) => {
         if (!name) return "U";
         return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
+    };
+
+    const getProfileHref = () => {
+        const role = user?.role?.toLowerCase();
+        if (role === "student") return "/student/profile";
+        if (role === "judge") return "/judge/profile";
+        if (role === "stakeholder") {
+            const mentorEventMatch = pathname.match(/^\/mentor\/events\/([^/]+)/);
+            return mentorEventMatch ? `/mentor/events/${mentorEventMatch[1]}/settings` : "/mentor/profile";
+        }
+        if (role === "admin" || role === "organizer") return "/organizer/profile";
+        return "/home";
     };
 
     return (
@@ -86,7 +100,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                         <DropdownMenuSeparator />
 
                         <DropdownMenuItem asChild>
-                            <Link href="/student/profile">
+                            <Link href={getProfileHref()}>
                                 Profile
                             </Link>
                         </DropdownMenuItem>

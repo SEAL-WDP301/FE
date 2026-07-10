@@ -1,12 +1,11 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { enqueueSnackbar } from 'notistack';
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
 
 import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,6 @@ import { useAuthStore } from '@/lib/stores/auth.store';
 
 export default function HomeHeader({ customCenterContent }: { customCenterContent?: React.ReactNode } = {}) {
     const router = useRouter();
-    const pathname = usePathname();
     const queryClient = useQueryClient();
 
     const { data: user, isLoading, isError } = useQuery({
@@ -55,6 +53,14 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
     
     const rawAvatarUrl = user?.avatarUrl;
     const avatarUrl = typeof rawAvatarUrl === 'string' ? rawAvatarUrl.trim() : '';
+    const getProfileHref = () => {
+        const role = user?.role?.toLowerCase();
+        if (role === 'student') return '/student/profile';
+        if (role === 'judge') return '/judge/profile';
+        if (role === 'stakeholder') return '/mentor/profile';
+        if (role === 'admin' || role === 'organizer') return '/organizer/profile';
+        return '/home';
+    };
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
@@ -96,7 +102,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
                                 <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                 <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
-                            <Link href="/home" className="cursor-pointer transition-transform hover:scale-105">
+                            <Link href={getProfileHref()} className="cursor-pointer transition-transform hover:scale-105">
                                 <Avatar className="h-9 w-9 ring-2 ring-orange-500/30">
                                     {avatarUrl ? (
                                         <AvatarImage

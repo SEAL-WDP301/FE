@@ -56,6 +56,14 @@ export default function Navigation() {
     ];
     const rawAvatarUrl = user?.avatarUrl;
     const avatarUrl = typeof rawAvatarUrl === 'string' ? rawAvatarUrl.trim() : '';
+    const getProfileHref = () => {
+        const role = user?.role?.toLowerCase();
+        if (role === 'student') return '/student/profile';
+        if (role === 'judge') return '/judge/profile';
+        if (role === 'stakeholder') return '/mentor/profile';
+        if (role === 'admin' || role === 'organizer') return '/organizer/profile';
+        return '/home';
+    };
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
@@ -114,7 +122,25 @@ export default function Navigation() {
                                         {user.email}
                                     </p>
                                 </div>
-                                <Avatar className="h-8 w-8 ring-2 ring-orange-500/20">
+                                <Link href={getProfileHref()} className="transition-transform hover:scale-105">
+                                    <Avatar className="h-8 w-8 ring-2 ring-orange-500/20">
+                                        {avatarUrl ? (
+                                            <AvatarImage
+                                                key={avatarUrl}
+                                                src={avatarUrl}
+                                                alt={user.name}
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        ) : null}
+                                        <AvatarFallback>
+                                            {user.name?.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Link>
+                            </div>
+
+                            <Link href={getProfileHref()} className="transition-transform hover:scale-105 xl:hidden">
+                                <Avatar className="h-9 w-9 ring-2 ring-orange-500/20">
                                     {avatarUrl ? (
                                         <AvatarImage
                                             key={avatarUrl}
@@ -123,26 +149,12 @@ export default function Navigation() {
                                             referrerPolicy="no-referrer"
                                         />
                                     ) : null}
+
                                     <AvatarFallback>
                                         {user.name?.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
-                            </div>
-
-                            <Avatar className="h-9 w-9 ring-2 ring-orange-500/20 xl:hidden">
-                                {avatarUrl ? (
-                                    <AvatarImage
-                                        key={avatarUrl}
-                                        src={avatarUrl}
-                                        alt={user.name}
-                                        referrerPolicy="no-referrer"
-                                    />
-                                ) : null}
-
-                                <AvatarFallback>
-                                    {user.name?.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                            </Link>
 
                             <Button
                                 variant="ghost"

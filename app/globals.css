@@ -216,6 +216,18 @@
   }
 }
 
+@keyframes seal-shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes profile-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* =========================
    COMPONENTS
 ========================== */

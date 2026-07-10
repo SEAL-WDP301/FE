@@ -1,107 +1,182 @@
-import { UserPlus, Users, FileCheck, MessageSquare, Trophy, Award } from 'lucide-react';
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+const steps = [
+  {
+    marker: "START",
+    title: "Registration",
+    description:
+      "Create your SEAL profile, choose your track, and confirm eligibility before the event opens.",
+  },
+  {
+    marker: "TEAM",
+    title: "Team Formation",
+    description:
+      "Build a balanced team of makers, engineers, designers, and presenters ready for the hackathon sprint.",
+  },
+  {
+    marker: "ROUND 1",
+    title: "Qualification Round",
+    description:
+      "Submit your first prototype and receive the initial review that decides who advances to deeper rounds.",
+  },
+  {
+    marker: "MENTOR",
+    title: "Mentoring",
+    description:
+      "Work with mentors on architecture, product scope, code quality, pitching, and execution risks.",
+  },
+  {
+    marker: "FINAL",
+    title: "Final Round",
+    description:
+      "Present your complete solution to judges with a live demo, technical evidence, and product story.",
+  },
+  {
+    marker: "AWARDS",
+    title: "Awards Ceremony",
+    description:
+      "Celebrate winners, publish rankings, and turn the best projects into future opportunities.",
+  },
+];
 
 export default function CompetitionFlowSection() {
-    const steps = [
-        {
-            icon: UserPlus,
-            title: 'Registration',
-            description: 'Sign up individually and create your profile'
-        },
-        {
-            icon: Users,
-            title: 'Team Formation',
-            description: 'Form teams of 3-5 members before deadline'
-        },
-        {
-            icon: FileCheck,
-            title: 'Qualification Round',
-            description: 'Submit initial project prototype for review'
-        },
-        {
-            icon: MessageSquare,
-            title: 'Mentoring',
-            description: 'Get guidance from industry experts'
-        },
-        {
-            icon: Trophy,
-            title: 'Final Round',
-            description: 'Present complete solution to judges'
-        },
-        {
-            icon: Award,
-            title: 'Awards Ceremony',
-            description: 'Winners announced and prizes awarded'
-        },
-    ];
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [maxTranslate, setMaxTranslate] = useState(0);
 
-    return (
-        <section className="relative overflow-hidden bg-background py-24">
-            {/* Background Glow */}
-            <div className="absolute left-1/2 top-1/2 h-full w-full max-w-5xl -translate-x-1/2 -translate-y-1/2">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-500/10 to-orange-500/5 blur-3xl" />
-            </div>
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
 
-            <div className="container relative z-10 mx-auto px-4">
-                {/* Header */}
-                <div className="mb-20 text-center">
-                    <h2 className="mb-4 text-4xl font-black md:text-5xl">
-                        <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                            Competition Flow
-                        </span>
-                    </h2>
+  const x = useTransform(scrollYProgress, [0, 1], [0, -maxTranslate]);
 
-                    <p className="text-lg text-muted-foreground">
-                        Your journey from registration to
-                        victory
-                    </p>
-                </div>
+  useEffect(() => {
+    const updateMeasurements = () => {
+      const viewportWidth = viewportRef.current?.clientWidth ?? 0;
+      const trackWidth = trackRef.current?.scrollWidth ?? 0;
+      setMaxTranslate(Math.max(trackWidth - viewportWidth, 0));
+    };
 
-                {/* Timeline */}
-                <div className="relative mx-auto max-w-7xl">
-                    {/* Connection Line */}
-                    <div className="absolute left-0 right-0 top-12 hidden h-0.5 bg-gradient-to-r from-orange-500/10 via-orange-500 to-orange-500/10 lg:block" />
+    updateMeasurements();
+    window.addEventListener("resize", updateMeasurements);
+    return () => window.removeEventListener("resize", updateMeasurements);
+  }, []);
 
-                    {/* Steps */}
-                    <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
-                        {steps.map((step, index) => {
-                            const Icon = step.icon;
+  return (
+    <section
+      ref={sectionRef}
+      className="relative bg-[#f9f5ec] text-[#111111] transition-colors duration-300 dark:bg-[#0f0d0b] dark:text-[#f5eee5]"
+      style={{ height: `calc(100vh + ${maxTranslate}px)` }}
+    >
+      <div
+        ref={viewportRef}
+        className="sticky top-0 flex h-screen w-full flex-col justify-center overflow-hidden px-5 py-10 sm:px-8 lg:px-12"
+      >
+        <div className="mb-14 text-center">
+          <h2 className="text-[clamp(3.4rem,9vw,8rem)] font-black leading-[0.85] tracking-normal text-[#111111] dark:text-[#f5eee5]">
+            Competition Flow
+          </h2>
+        </div>
 
-                            return (
-                                <div
-                                    key={index}
-                                    className="group relative flex flex-col items-center text-center"
-                                >
-                                    {/* Icon Area */}
-                                    <div className="relative mb-6">
-                                        {/* Glow */}
-                                        <div className="absolute inset-0 rounded-2xl bg-orange-500 blur-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-30" />
+        <motion.div
+          ref={trackRef}
+          style={{ x }}
+          className="flex w-max items-start gap-14 pr-[20vw] will-change-transform"
+        >
+          {steps.map((step, index) => (
+            <article
+              key={step.marker}
+              className="relative w-[78vw] max-w-[470px] shrink-0 sm:w-[430px] lg:w-[520px]"
+            >
+              {index < steps.length - 1 ? (
+                <FlowConnector />
+              ) : null}
 
-                                        {/* Icon Box */}
-                                        <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-2xl shadow-orange-500/25 transition-transform duration-300 group-hover:scale-110">
-                                            <Icon className="text-4xl text-foreground" />
-                                        </div>
+              <div className="relative">
+                <FlowMarker label={step.marker} />
+              </div>
 
-                                        {/* Step Number */}
-                                        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-orange-500 bg-background text-sm font-bold text-foreground shadow-lg">
-                                            {index + 1}
-                                        </div>
-                                    </div>
+              <h3 className="text-2xl font-black leading-none tracking-normal md:text-3xl">
+                {step.title}
+              </h3>
+              <p className="mt-5 max-w-[390px] text-base font-black leading-tight text-[#73706c] dark:text-[#b3aaa1] md:text-lg">
+                {step.description}
+              </p>
+            </article>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
-                                    {/* Title */}
-                                    <h3 className="mb-2 text-lg font-semibold text-foreground">
-                                        {step.title}
-                                    </h3>
+function FlowMarker({ label }: { label: string }) {
+  return (
+    <div className="relative mb-5 h-[138px] w-[250px]">
+      <svg
+        viewBox="0 0 250 138"
+        className="absolute inset-0 h-full w-full overflow-visible"
+        aria-hidden="true"
+      >
+        <path
+          d="M22 78 C26 25 99 18 170 26 C226 33 237 60 218 94 C198 127 112 130 57 118 C21 110 10 95 22 78 Z"
+          fill="none"
+          stroke="#ff7300"
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M174 25 C198 28 219 36 231 49"
+          fill="none"
+          stroke="#ff7300"
+          strokeWidth="12"
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center pb-2">
+        <span
+          className={cn(
+            "rotate-[-4deg] font-black leading-none tracking-normal text-[#111111] dark:text-[#f5eee5]",
+            label.length > 6 ? "text-[1.85rem]" : "text-[2.45rem]",
+          )}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-                                    {/* Description */}
-                                    <p className="text-sm leading-7 text-muted-foreground">
-                                        {step.description}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
+function FlowConnector() {
+  return (
+    <svg
+      viewBox="0 0 300 165"
+      className="pointer-events-none absolute left-[250px] top-[-18px] z-0 hidden h-[165px] w-[300px] overflow-visible lg:block"
+      aria-hidden="true"
+    >
+      <path
+        d="M0 96 C65 96 125 94 150 62 C171 35 168 8 144 8 C115 8 114 50 143 73 C178 101 224 98 253 98"
+        fill="none"
+        stroke="#ff7300"
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M241 72 L284 98 L241 124"
+        fill="none"
+        stroke="#ff7300"
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
