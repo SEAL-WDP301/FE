@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, ExternalLink } from "lucide-react";
+import { useAdminSocket } from "@/hooks/use-admin-socket";
+import { useEffect } from "react";
+import { enqueueSnackbar } from "notistack";
 
 export default function EventSubmissionsPage() {
   const params = useParams();
   const eventId = params.id as string;
   const roundId = params.roundId as string;
   const [selectedTrackId, setSelectedTrackId] = useState<number | "">("");
+  const queryClient = useQueryClient();
 
   // Fetch event to get tracks and rounds for filters
   const { data: event } = useQuery({
@@ -37,11 +41,36 @@ export default function EventSubmissionsPage() {
 
   const currentRound = event?.rounds?.find((r: any) => r.id === Number(roundId));
 
+  const { socket, isConnected } = useAdminSocket({ eventId, roundId });
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSubmissionCreated = (data: any) => {
+      enqueueSnackbar(`📁 New submission from team: ${data.teamName}`, { variant: "info" });
+      queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
+    };
+
+    socket.on("submission.created", handleSubmissionCreated);
+
+    return () => {
+      socket.off("submission.created", handleSubmissionCreated);
+    };
+  }, [socket, eventId, queryClient]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
+            {isConnected && (
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider border border-green-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                Live
+              </span>
+            )}
+          </div>
           <div className="text-muted-foreground mt-2 space-y-1">
             <p>Review team submissions across all active rounds.</p>
             {currentRound?.submissionDeadline && (

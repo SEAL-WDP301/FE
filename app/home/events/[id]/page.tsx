@@ -631,8 +631,8 @@ export default function EventDetailPage() {
   });
 
   const { data: mentorTeams } = useQuery<MentorTeam[]>({
-    queryKey: ['mentorTeams'],
-    queryFn: getMentorTeams,
+    queryKey: ['mentorTeams', eventId],
+    queryFn: () => getMentorTeams(eventId),
     enabled: !!user && userRole === 'stakeholder',
   });
 

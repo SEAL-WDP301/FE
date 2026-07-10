@@ -149,7 +149,7 @@ export default function MentorWorkspacePage() {
       label: "Current round",
       value: (() => {
         if (selectedRoundId) {
-          const rs = (data.roundSubmissions || []).find(
+          const rs = (data.submissions || []).find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (e: any) => e.round?.id === selectedRoundId
           );
