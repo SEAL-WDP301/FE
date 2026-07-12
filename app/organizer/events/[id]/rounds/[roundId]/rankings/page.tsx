@@ -12,12 +12,15 @@ import { Button } from "@/components/ui/button";
 import {
   Trophy, Medal, ChevronDown, ChevronUp, AlertTriangle,
   CheckCircle2, TrendingUp, TrendingDown, Minus,
-  BarChart3, Users, Loader2, Gavel, Send
+  BarChart3, Users, Loader2, Gavel, Send,
+  Star, Zap, Flame, Sparkles
 } from "lucide-react";
 import {
   getDetailedRoundRankings,
   publishRoundResults,
   DetailedRankedTeamEntry,
+  PublishResultsPayload,
+  AwardType
 } from "@/lib/api/organizer-events.api";
 import { format } from "date-fns";
 
@@ -25,24 +28,24 @@ const ANOMALY_THRESHOLD = 1.5;
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return (
-    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/20 ring-2 ring-yellow-500/40">
-      <Trophy className="w-4 h-4 text-yellow-500" />
-    </span>
+    <div title="Top 1 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/10 ring-1 ring-yellow-500/30 shadow-[0_0_8px_rgba(234,179,8,0.2)]">
+      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+    </div>
   );
   if (rank === 2) return (
-    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-400/20 ring-2 ring-slate-400/40">
-      <Medal className="w-4 h-4 text-slate-400" />
-    </span>
+    <div title="Top 2 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300/10 ring-1 ring-slate-400/30">
+      <Zap className="w-4 h-4 text-slate-400 fill-slate-400/50" />
+    </div>
   );
   if (rank === 3) return (
-    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700/20 ring-2 ring-orange-700/40">
-      <Medal className="w-4 h-4 text-orange-700" />
-    </span>
+    <div title="Top 3 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/10 ring-1 ring-orange-500/30">
+      <Flame className="w-4 h-4 text-orange-400 fill-orange-400/50" />
+    </div>
   );
   return (
-    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-muted ring-1 ring-border text-sm font-bold text-muted-foreground">
+    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/30 ring-1 ring-border text-sm font-bold text-muted-foreground">
       {rank}
-    </span>
+    </div>
   );
 }
 
@@ -69,41 +72,106 @@ function TeamRow({
   entry, 
   rank, 
   isSelected, 
-  onToggle 
+  onToggle,
+  isPublished,
+  isFinalRound,
+  awardValue,
+  onAwardChange
 }: { 
   entry: DetailedRankedTeamEntry; 
   rank: number;
   isSelected: boolean;
   onToggle: () => void;
+  isPublished: boolean;
+  isFinalRound?: boolean;
+  awardValue?: AwardType | null;
+  onAwardChange?: (val: AwardType | null) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
 
+  const isPassed = isPublished && entry.status === "advanced";
+  const isEliminated = isPublished && entry.status === "eliminated";
+  const isSelecting = !isPublished && isSelected;
+
   return (
-    <div className={`border rounded-xl overflow-hidden mb-3 transition-all ${isSelected ? "border-emerald-500/50" : "border-border"}`}>
+    <div 
+      className={`rounded-xl overflow-hidden mb-3 transition-all duration-300 ease-in-out
+        ${isPassed ? "border-y border-r border-l-4 border-border border-l-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)] relative" : 
+          isSelecting ? "border-2 border-dashed border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]" :
+          isEliminated ? "border border-border opacity-50 grayscale-[50%] hover:grayscale-0 hover:opacity-100" :
+          "border border-border"
+        }`}
+    >
+      {/* Background Glow for Passed */}
+      {isPassed && <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />}
+
       {/* Team Header Row */}
       <div
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
-          isSelected ? "bg-emerald-500/10" : "bg-card hover:bg-muted/20"
-        }`}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors relative z-10
+          ${isPassed ? "bg-transparent" : 
+            isSelecting ? "bg-emerald-500/5" :
+            "bg-card hover:bg-muted/20"
+          }`}
       >
-        <div className="shrink-0 pt-1">
-          <input 
-            type="checkbox" 
-            checked={isSelected}
-            onChange={onToggle}
-            className="w-5 h-5 rounded border-border text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-          />
-        </div>
+        {!isPublished && !isFinalRound && (
+          <div className="shrink-0 pt-1">
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={onToggle}
+              className="w-5 h-5 rounded border-border text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            />
+          </div>
+        )}
+        {!isPublished && isFinalRound && (
+          <div className="shrink-0">
+             <select 
+               className="bg-background border border-border text-sm rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500"
+               value={awardValue || ""}
+               onChange={(e) => {
+                 const val = e.target.value as AwardType;
+                 onAwardChange?.(val || null);
+               }}
+             >
+               <option value="">No Award</option>
+               <option value="first_prize">1st Prize</option>
+               <option value="second_prize">2nd Prize</option>
+               <option value="third_prize">3rd Prize</option>
+               <option value="honorable_mention">Honorable</option>
+             </select>
+          </div>
+        )}
         
         <RankBadge rank={rank} />
 
         <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-base truncate">{entry.teamName}</span>
-            {isSelected && (
-              <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10 text-[10px] px-1.5 py-0">
-                <CheckCircle2 className="w-3 h-3 mr-1" />Advances
+            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-50 drop-shadow-md" : isEliminated ? "text-muted-foreground" : "text-foreground"}`}>
+              {entry.teamName}
+            </span>
+            {isSelecting && (
+              <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 text-[10px] px-1.5 py-0 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                <CheckCircle2 className="w-3 h-3 mr-1 animate-pulse" />Selected
+              </Badge>
+            )}
+            {isPassed && !isFinalRound && (
+              <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-emerald-500/20 text-[10px] px-2 py-0.5 shadow-[0_0_10px_rgba(16,185,129,0.3)] backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 mr-1.5 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" /> Passed
+              </Badge>
+            )}
+            {isPublished && isFinalRound && entry.award && (
+              <Badge variant="outline" className="text-yellow-400 border-yellow-500/50 bg-yellow-500/20 text-[10px] px-2 py-0.5 shadow-[0_0_10px_rgba(234,179,8,0.3)] backdrop-blur-sm">
+                <Trophy className="w-3 h-3 mr-1.5 text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" /> 
+                {entry.award === "first_prize" && "1st Prize"}
+                {entry.award === "second_prize" && "2nd Prize"}
+                {entry.award === "third_prize" && "3rd Prize"}
+                {entry.award === "honorable_mention" && "Honorable Mention"}
+              </Badge>
+            )}
+            {isEliminated && !isFinalRound && (
+              <Badge variant="outline" className="text-muted-foreground border-border bg-muted/50 text-[10px] px-1.5 py-0">
+                <Minus className="w-3 h-3 mr-1" />Eliminated
               </Badge>
             )}
             {hasAnomalous && (
@@ -229,6 +297,7 @@ export default function RankingsPage() {
   const [selectedTrackIdx, setSelectedTrackIdx] = useState(0);
   const [autoSelectTopN, setAutoSelectTopN] = useState(3);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(new Set());
+  const [teamAwards, setTeamAwards] = useState<Record<number, AwardType | null>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
@@ -238,9 +307,24 @@ export default function RankingsPage() {
   });
 
   const { mutate: publish, isPending: isPublishing } = useMutation({
-    mutationFn: () => publishRoundResults(eventId, roundId, Array.from(selectedTeamIds)),
-    onSuccess: () => {
-      enqueueSnackbar("Round results published successfully!", { variant: "success" });
+    mutationFn: () => {
+       const payload: PublishResultsPayload = {};
+       if (data?.round?.isFinalRound) {
+         payload.awards = Object.entries(teamAwards).map(([teamId, award]) => ({
+           teamId: Number(teamId),
+           award
+         }));
+       } else {
+         payload.advancingTeamIds = Array.from(selectedTeamIds);
+       }
+       return publishRoundResults(eventId, roundId, payload);
+    },
+    onSuccess: (res: any) => {
+      if (res.repoSyncStarted) {
+        enqueueSnackbar("Results published! GitHub repositories are being provisioned in the background.", { variant: "info", autoHideDuration: 5000 });
+      } else {
+        enqueueSnackbar("Round results published successfully!", { variant: "success" });
+      }
       setShowConfirmModal(false);
       queryClient.invalidateQueries({ queryKey: ["detailedRankings", eventId, roundId] });
       queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
@@ -252,6 +336,7 @@ export default function RankingsPage() {
   });
 
   const round = data?.round;
+  const isResultsPublished = round?.status === "results_published";
   
   const tracks = useMemo(() => {
     if (!data?.tracks) return [];
@@ -274,7 +359,17 @@ export default function RankingsPage() {
   }, [data]);
 
   const selectedTrack = tracks[selectedTrackIdx];
-  const entries = selectedTrack?.entries ?? [];
+  const entries = useMemo(() => {
+    let raw = selectedTrack?.entries ?? [];
+    if (isResultsPublished) {
+      raw = [...raw].sort((a: any, b: any) => {
+        if (a.status === "advanced" && b.status !== "advanced") return -1;
+        if (a.status !== "advanced" && b.status === "advanced") return 1;
+        return (a.rank || 0) - (b.rank || 0);
+      });
+    }
+    return raw;
+  }, [selectedTrack, isResultsPublished]);
 
   const roundStatusColor: Record<string, string> = {
     not_started: "text-muted-foreground",
@@ -405,7 +500,14 @@ export default function RankingsPage() {
           <div>
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-4 mb-5 pb-4 border-b border-border text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Advance to next round</span>
+              {!isResultsPublished ? (
+                <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Selected to Advance</span>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Passed (Advanced)</span>
+                  <span className="flex items-center gap-1"><Minus className="w-3.5 h-3.5 text-red-500" /> Eliminated</span>
+                </>
+              )}
               <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Anomalous grading (deviation ≥ {ANOMALY_THRESHOLD})</span>
               <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> Above average</span>
               <span className="flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5 text-blue-400" /> Below average</span>
@@ -415,9 +517,13 @@ export default function RankingsPage() {
               <TeamRow 
                 key={entry.teamId} 
                 entry={entry} 
-                rank={idx + 1} 
+                rank={entry.rank || idx + 1} 
                 isSelected={selectedTeamIds.has(entry.teamId)}
                 onToggle={() => handleToggleTeam(entry.teamId)}
+                isPublished={isResultsPublished}
+                isFinalRound={round?.isFinalRound}
+                awardValue={teamAwards[entry.teamId]}
+                onAwardChange={(val) => setTeamAwards(prev => ({ ...prev, [entry.teamId]: val }))}
               />
             ))}
           </div>
