@@ -12,7 +12,6 @@ import {
   MessageSquareText,
   Settings,
   UsersRound,
-  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +36,27 @@ interface NavItem {
   badge?: string;
 }
 
+interface MentorTeamNavItem {
+  id: number;
+  unreadCount?: number;
+  lastMessageAt?: string;
+}
+
+interface ChatMessageEvent {
+  teamId: number;
+  createdAt?: string;
+}
+
+interface MentorEventRound {
+  status?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
+interface MentorEventSummary {
+  rounds?: MentorEventRound[];
+}
+
 const getNavItems = (eventId: string): NavItem[] => {
   const base = `/mentor/events/${eventId}`;
   return [
@@ -44,7 +64,6 @@ const getNavItems = (eventId: string): NavItem[] => {
     { label: "My Teams", href: `${base}/teams`, icon: UsersRound },
     { label: "Messages", href: `${base}/messages`, icon: MessageSquareText, id: "messages" },
     { label: "Team Progress", href: `${base}/progress`, icon: ChartNoAxesCombined },
-    { label: "Mentoring Sessions", href: `${base}/sessions`, icon: Video },
     { label: "Feedback", href: `${base}/feedback`, icon: ClipboardCheck, id: "feedback" },
     { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
     { label: "Announcements", href: `${base}/announcements`, icon: Megaphone },
@@ -60,11 +79,11 @@ export function MentorSidebar({
   const params = useParams();
   const eventId = params.eventId as string || "1";
 
-  const { data: event } = useQuery({
+  const { data: event } = useQuery<MentorEventSummary | null>({
     queryKey: ["mentorEvent", eventId],
     queryFn: async () => {
       const { data } = await axiosClient.get(`/public/events/${eventId}`);
-      return data.data;
+      return data.data ?? null;
     },
     enabled: !!eventId,
   });
@@ -86,7 +105,7 @@ export function MentorSidebar({
   const queryClient = useQueryClient();
   const { socket, isConnected } = useSocket("/chat");
 
-  const { data: teams } = useQuery({
+  const { data: teams } = useQuery<MentorTeamNavItem[]>({
     queryKey: ["mentorTeams", eventId],
     queryFn: async () => {
       const { data } = await axiosClient.get(`/mentor/teams?eventId=${eventId}`);
@@ -100,14 +119,14 @@ export function MentorSidebar({
     if (!socket || !isConnected || !teams || teams.length === 0) return;
 
     // Join all team rooms
-    teams.forEach((team: any) => {
+    teams.forEach((team) => {
       socket.emit("join_team_room", team.id);
     });
 
-    const handleReceiveMessage = (newMessage: any) => {
-      queryClient.setQueryData(["mentorTeams", eventId], (oldData: any) => {
+    const handleReceiveMessage = (newMessage: ChatMessageEvent) => {
+      queryClient.setQueryData<MentorTeamNavItem[]>(["mentorTeams", eventId], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.map((t: any) => {
+        return oldData.map((t) => {
           if (t.id === newMessage.teamId) {
             return {
               ...t,
@@ -120,12 +139,12 @@ export function MentorSidebar({
       });
     };
 
-    const handleMessagesReadUpdated = (updatedMessages: any[]) => {
+    const handleMessagesReadUpdated = (updatedMessages: ChatMessageEvent[]) => {
       if (!updatedMessages || updatedMessages.length === 0) return;
       const teamId = updatedMessages[0].teamId;
-      queryClient.setQueryData(["mentorTeams", eventId], (oldData: any) => {
+      queryClient.setQueryData<MentorTeamNavItem[]>(["mentorTeams", eventId], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.map((t: any) => {
+        return oldData.map((t) => {
           if (t.id === teamId) {
             return { ...t, unreadCount: 0 };
           }
@@ -138,7 +157,7 @@ export function MentorSidebar({
     socket.on("messages_read_updated", handleMessagesReadUpdated);
 
     return () => {
-      teams.forEach((team: any) => {
+      teams.forEach((team) => {
         socket.emit("leave_team_room", team.id);
       });
       socket.off("receive_chat_message", handleReceiveMessage);
@@ -146,7 +165,7 @@ export function MentorSidebar({
     };
   }, [socket, isConnected, teams, queryClient, eventId]);
 
-  const unreadMessagesCount = teams?.reduce((acc: number, team: any) => acc + (team.unreadCount > 0 ? 1 : 0), 0) || 0;
+  const unreadMessagesCount = teams?.reduce((acc, team) => acc + ((team.unreadCount ?? 0) > 0 ? 1 : 0), 0) || 0;
 
   const navItems = getNavItems(eventId).map((item) => {
     if (item.id === "feedback" && feedbackCount > 0)
@@ -183,11 +202,11 @@ export function MentorSidebar({
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 
-            const currentRound = event?.rounds?.find((r: any) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
+            const currentRound = event?.rounds?.find((r) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
             const isRoundHasDates = !!(currentRound?.startDate || currentRound?.endDate);
             const shouldDisable = isRoundHasDates && currentRound?.status === 'not_started';
             
-            const isDisabled = shouldDisable && (item.label === "Submissions Review" || item.label === "Team Progress" || item.label === "Mentoring Sessions");
+            const isDisabled = shouldDisable && (item.label === "Submissions Review" || item.label === "Team Progress");
 
             const linkContent = (
               <Link

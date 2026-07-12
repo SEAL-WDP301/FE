@@ -1,38 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { AlertCircle, Calendar, Search } from "lucide-react";
 
-import { Calendar, Crown, Award, Upload } from "lucide-react";
-
+import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 
-import { EventFilters } from "./components/event-filter";
-import { EventsGrid } from "./components/event-grid";
-
-import {
-    events,
-    FILTERS,
-} from "./components/constants";
-
-type FilterType = (typeof FILTERS)[number];
-
 export default function StudentEventsPage() {
-    const [filter, setFilter] =
-        useState<FilterType>("All");
-
-    const filteredEvents = useMemo(() => {
-        if (filter === "All") {
-            return events;
-        }
-
-        return events.filter(
-            (event) => event.status === filter
-        );
-    }, [filter]);
-
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div>
                 <p className="text-sm font-medium uppercase tracking-[0.3em] text-orange-400">
                     My Events
@@ -43,77 +19,39 @@ export default function StudentEventsPage() {
                 </h1>
 
                 <p className="mt-2 text-sm text-muted-foreground">
-                    Every SEAL event you have participated in.
+                    Your participated event history will appear here once the backend exposes a student events endpoint.
                 </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {[
-                    {
-                        label: "Total Events",
-                        value: "6",
-                        icon: Calendar,
-                        sub: "Across 3 seasons",
-                    },
+            <GlassCard className="border border-border">
+                <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10">
+                        <Calendar className="h-8 w-8 text-orange-400" />
+                    </div>
 
-                    {
-                        label: "Highest Rank",
-                        value: "#1",
-                        icon: Crown,
-                        sub: "Spring 2026 Champion",
-                    },
+                    <h2 className="mt-6 text-2xl font-semibold text-foreground">
+                        Event history API is not available
+                    </h2>
 
-                    {
-                        label: "Submissions",
-                        value: "12",
-                        icon: Upload,
-                        sub: "11 approved",
-                    },
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                        This page no longer shows hardcoded event history. Add a backend endpoint for the current student&apos;s registered events, teams, ranks, and submissions to enable this view.
+                    </p>
 
-                    {
-                        label: "Awards",
-                        value: "4",
-                        icon: Award,
-                        sub: "1 gold · 3 finalist",
-                    },
-                ].map((item) => (
-                    <GlassCard
-                        key={item.label}
-                        className="border border-border"
-                    >
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">
-                                    {item.label}
-                                </p>
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <Button asChild variant="orange" className="rounded-xl">
+                            <Link href="/home">
+                                <Search className="mr-2 h-4 w-4" />
+                                Browse public events
+                            </Link>
+                        </Button>
 
-                                <h3 className="mt-2 text-3xl font-bold text-orange-400">
-                                    {item.value}
-                                </h3>
-
-                                <p className="mt-1 text-xs text-zinc-500">
-                                    {item.sub}
-                                </p>
-                            </div>
-
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10">
-                                <item.icon className="h-5 w-5 text-orange-400" />
-                            </div>
+                        <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+                            <AlertCircle className="h-4 w-4 text-orange-400" />
+                            Waiting for student event history API
                         </div>
-                    </GlassCard>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <EventFilters
-                filters={FILTERS}
-                active={filter}
-                onChange={setFilter}
-            />
-
-            {/* Events Grid */}
-            <EventsGrid events={filteredEvents} />
+                    </div>
+                </div>
+            </GlassCard>
         </div>
     );
 }

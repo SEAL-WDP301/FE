@@ -34,8 +34,12 @@ const threadItems = [
 
 export default function AboutSealSection() {
   return (
-    <section className="relative overflow-hidden bg-[#0a0806] px-5 py-20 text-[#f5f2ec] sm:px-8 lg:px-12 lg:py-24">
-      <div className="mx-auto max-w-[1360px]">
+    <section
+      className="relative overflow-hidden bg-[#fff8ec] px-5 py-20 text-[#1e1712] [--seal-node-bg:#fff8ec] [--seal-node-ring:#fff8ec] [--seal-satellite-stroke:#ff7a1a] [--seal-thread:rgba(180,82,12,0.32)] dark:bg-[#0a0806] dark:text-[#f5f2ec] dark:[--seal-node-bg:#14100c] dark:[--seal-node-ring:#0a0806] dark:[--seal-satellite-stroke:#ff9a3c] dark:[--seal-thread:rgba(255,154,60,0.24)] sm:px-8 lg:px-12 lg:py-24"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,154,60,0.22),transparent_28%),radial-gradient(circle_at_78%_28%,rgba(255,106,26,0.16),transparent_30%)] dark:bg-[radial-gradient(circle_at_18%_18%,rgba(255,154,60,0.1),transparent_28%),radial-gradient(circle_at_78%_28%,rgba(255,106,26,0.08),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,122,26,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,122,26,0.06)_1px,transparent_1px)] bg-[size:48px_48px] dark:bg-[linear-gradient(rgba(255,122,26,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,122,26,0.025)_1px,transparent_1px)]" />
+      <div className="relative mx-auto max-w-[1360px]">
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <motion.div
@@ -54,7 +58,7 @@ export default function AboutSealSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.4 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-              className="max-w-3xl text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold leading-[1.06] tracking-normal"
+              className="max-w-3xl text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold leading-[1.06] tracking-normal text-[#1e1712] dark:text-[#f5f2ec]"
             >
               Software Engineering{" "}
               <span className="animate-[seal-shine_5s_linear_infinite] bg-[linear-gradient(120deg,#ff9a3c,#ff6a1a,#ff9a3c)] bg-[length:200%_auto] bg-clip-text text-transparent">
@@ -67,7 +71,7 @@ export default function AboutSealSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.4 }}
               transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-              className="mt-6 max-w-[46ch] text-lg leading-[1.65] text-[#a39c8f]"
+              className="mt-6 max-w-[46ch] text-lg leading-[1.65] text-[#6f6258] dark:text-[#a39c8f]"
             >
               SEAL (Software Engineering Agile League) is an annual academic hackathon
               series that brings together talented students from FPT University and
@@ -116,7 +120,7 @@ function HubGraphic() {
             x2={x2}
             y2={y2}
             fill="none"
-            stroke="rgba(255,154,60,0.22)"
+            stroke="var(--seal-thread)"
             strokeWidth="1.4"
             strokeDasharray="6 6"
             animate={{ strokeDashoffset: -60 }}
@@ -141,7 +145,7 @@ function HubGraphic() {
             [243, 67],
           ].map(([x, y]) => (
             <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
-              <circle r="16" fill="#14100c" stroke="#ff9a3c" strokeWidth="1.6" />
+              <circle r="16" fill="var(--seal-node-bg)" stroke="var(--seal-satellite-stroke)" strokeWidth="1.9" />
               <circle r="5" fill="#ff9a3c" />
             </g>
           ))}
@@ -171,7 +175,8 @@ function HubGraphic() {
           textAnchor="middle"
           fontSize="11"
           fontWeight="600"
-          fill="#6f685c"
+          fill="currentColor"
+          className="text-[#6f6258] dark:text-[#6f685c]"
         >
           20+ partner universities
         </text>
@@ -194,7 +199,7 @@ function ThreadTimeline() {
           visible: { scaleX: 1 },
         }}
         transition={{ duration: 1.4, ease: [0.22, 0.61, 0.36, 1] }}
-        className="absolute left-0 right-0 top-1/2 z-0 hidden h-0.5 origin-left bg-[linear-gradient(90deg,transparent,#ff9a3c,#ff6a1a,#ff9a3c,transparent)] md:block"
+        className="absolute left-0 right-0 top-1/2 z-0 hidden h-0.5 origin-left bg-[linear-gradient(90deg,transparent,rgba(255,154,60,0.65),#ff6a1a,rgba(255,154,60,0.65),transparent)] md:block"
       />
 
       {threadItems.map((item, index) => {
@@ -235,7 +240,7 @@ function ThreadTimeline() {
                 type: "spring",
                 bounce: 0.45,
               }}
-              className="relative z-10 mx-auto flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] shadow-[0_0_0_8px_#0a0806,0_0_0_9px_rgba(255,154,60,0.22)] transition-shadow hover:shadow-[0_0_0_8px_#0a0806,0_0_0_9px_#ff9a3c,0_0_24px_-2px_rgba(255,122,26,0.35)] md:row-start-2"
+              className="relative z-10 mx-auto flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] shadow-[0_0_0_8px_var(--seal-node-ring),0_0_0_10px_rgba(255,122,26,0.28),0_10px_28px_rgba(255,122,26,0.22)] transition-shadow hover:shadow-[0_0_0_8px_var(--seal-node-ring),0_0_0_10px_#ff9a3c,0_0_28px_-2px_rgba(255,122,26,0.38)] md:row-start-2"
               style={{ gridColumnStart: index + 1 }}
             >
               <Icon className="h-5 w-5 text-[#1a0e04]" />
@@ -274,8 +279,8 @@ function TimelineText({
 }) {
   return (
     <>
-      <h3 className="text-base font-bold text-[#f5f2ec]">{title}</h3>
-      <p className="mt-1.5 text-sm leading-6 text-[#a39c8f]">{description}</p>
+      <h3 className="text-base font-bold text-[#241812] dark:text-[#f5f2ec]">{title}</h3>
+      <p className="mt-1.5 text-sm leading-6 text-[#74675d] dark:text-[#a39c8f]">{description}</p>
     </>
   );
 }
