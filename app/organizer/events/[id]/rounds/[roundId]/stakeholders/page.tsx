@@ -345,9 +345,18 @@ export default function EventStakeholdersPage() {
       {/* Drawer for Details */}
       <Sheet open={!!drawerUser} onOpenChange={(open) => !open && setDrawerUser(null)}>
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto bg-card border-l border-border">
-          <SheetHeader className="mb-6">
-            <SheetTitle className="text-2xl">{drawerUser?.name}</SheetTitle>
-            <SheetDescription>{drawerUser?.email}</SheetDescription>
+          <SheetHeader className="mb-6 flex flex-row items-center gap-4">
+            {drawerUser?.avatarUrl ? (
+              <img src={drawerUser.avatarUrl} alt={drawerUser.name} className="w-16 h-16 rounded-full border-2 border-border object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground border-2 border-border">
+                {drawerUser?.name?.[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="flex flex-col text-left">
+              <SheetTitle className="text-2xl mt-0">{drawerUser?.name}</SheetTitle>
+              <SheetDescription>{drawerUser?.email}</SheetDescription>
+            </div>
           </SheetHeader>
           
           <div className="space-y-6">

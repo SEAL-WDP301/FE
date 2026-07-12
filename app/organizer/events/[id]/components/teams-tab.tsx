@@ -8,7 +8,8 @@ import { enqueueSnackbar } from "notistack";
 import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TeamDetailsDialog } from "./team-details-dialog";
-
+import { useAdminSocket } from "@/hooks/use-admin-socket";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +44,28 @@ export default function TeamsTab({ event }: { event: any }) {
         },
         enabled: true,
     });
+
+    const { socket, isConnected } = useAdminSocket({ eventId: event.id, roundId });
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleTeamRegistered = (data: any) => {
+            // Only alert if we are in the general teams tab or round 1 teams tab
+            // The user wanted this for round 1
+            const isRound1 = event.rounds?.find((r: any) => r.id === Number(roundId))?.roundNumber === 1;
+            if (!roundId || isRound1) {
+                enqueueSnackbar(`🎉 New team registered: ${data.teamName} (${data.trackName})`, { variant: "info" });
+                queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id] });
+            }
+        };
+
+        socket.on("team.registered", handleTeamRegistered);
+
+        return () => {
+            socket.off("team.registered", handleTeamRegistered);
+        };
+    }, [socket, event, roundId, queryClient]);
 
 
 
@@ -145,8 +168,16 @@ export default function TeamsTab({ event }: { event: any }) {
             {/* Header & Controls */}
             <div className="p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h3 className="text-lg font-semibold text-foreground">Team Management</h3>
-                    <p className="text-muted-foreground text-sm">Review and approve teams registered for the tracks.</p>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-foreground">Team Management</h3>
+                        {isConnected && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider border border-green-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                Live
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-muted-foreground text-sm mt-1">Review and approve teams registered for the tracks.</p>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-4">
@@ -243,7 +274,22 @@ export default function TeamsTab({ event }: { event: any }) {
                                         />
                                     </td>
                                     <td className="px-6 py-4 font-medium text-foreground">
-                                        {team.name}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span>{team.name}</span>
+                                            {roundId && team.teamRounds && (
+                                                (() => {
+                                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                    const tr = team.teamRounds.find((r: any) => r.roundId === Number(roundId));
+                                                    if (tr?.status === 'advanced') {
+                                                        return <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap">PASSED</span>
+                                                    }
+                                                    if (tr?.status === 'eliminated') {
+                                                        return <span className="px-2 py-0.5 bg-red-500/10 text-red-500 rounded text-[10px] font-bold border border-red-500/20 whitespace-nowrap">ELIMINATED</span>
+                                                    }
+                                                    return null;
+                                                })()
+                                            )}
+                                        </div>
                                         {selectedTrackId === "all" && team.track && (
                                             <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{team.track.name}</div>
                                         )}
