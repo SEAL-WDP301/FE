@@ -764,7 +764,7 @@ export default function SubmissionsPage() {
         ) : (
           <CheckCircle2 className="h-5 w-5 mr-2" />
         )}
-        {latestSubmission ? "Resubmit Project" : "Submit Project"}
+        {latestSubmission ? (isGithubRound ? "Update Submission Info" : "Resubmit Project") : "Submit Project"}
       </Button>
     </form>
   </div>
