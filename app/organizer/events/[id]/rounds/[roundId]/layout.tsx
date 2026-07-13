@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import { useSocket } from "@/lib/hooks/useSocket";
+import { useEffect } from "react";
 
 export default function RoundWorkspaceLayout({
   children,
@@ -39,17 +41,6 @@ export default function RoundWorkspaceLayout({
     },
   });
 
-  const unreadTeamsCount = teams?.filter((t: any) => t.unreadCount > 0).length || 0;
-
-  const roundNavItems = [
-    { name: "Teams", href: `${baseUrl}/teams`, icon: Users },
-    { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
-    { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
-    { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
-    { name: "Rankings", href: `${baseUrl}/rankings`, icon: BarChart3 },
-    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare, badge: unreadTeamsCount },
-  ];
-
   const { data: user } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
@@ -62,6 +53,65 @@ export default function RoundWorkspaceLayout({
             : null;
     },
   });
+
+  const { socket, isConnected } = useSocket("/chat");
+
+  useEffect(() => {
+    if (!socket || !isConnected || !teams || teams.length === 0) return;
+
+    teams.forEach((team: any) => {
+      socket.emit("join_team_room", team.id);
+    });
+
+    const handleReceiveMessage = (newMessage: any) => {
+      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === newMessage.teamId) {
+            return {
+              ...t,
+              unreadCount: (t.unreadCount || 0) + (newMessage.senderId !== user?.id ? 1 : 0),
+              lastMessageAt: newMessage.createdAt,
+            };
+          }
+          return t;
+        });
+      });
+    };
+
+    const handleMessagesReadUpdated = (updatedMessages: any[]) => {
+      if (!updatedMessages || updatedMessages.length === 0) return;
+      const teamId = updatedMessages[0].teamId;
+      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === teamId) {
+            return { ...t, unreadCount: 0 };
+          }
+          return t;
+        });
+      });
+    };
+
+    socket.on("receive_chat_message", handleReceiveMessage);
+    socket.on("messages_read_updated", handleMessagesReadUpdated);
+
+    return () => {
+      socket.off("receive_chat_message", handleReceiveMessage);
+      socket.off("messages_read_updated", handleMessagesReadUpdated);
+    };
+  }, [socket, isConnected, teams, queryClient, eventId, user?.id]);
+
+  const unreadTeamsCount = teams?.reduce((acc: number, team: any) => acc + (team.unreadCount > 0 ? 1 : 0), 0) || 0;
+
+  const roundNavItems = [
+    { name: "Teams", href: `${baseUrl}/teams`, icon: Users },
+    { name: "Mentors & Judges", href: `${baseUrl}/stakeholders`, icon: GraduationCap },
+    { name: "Submissions", href: `${baseUrl}/submissions`, icon: FileText },
+    { name: "Grading Criteria", href: `${baseUrl}/criteria`, icon: Award },
+    { name: "Rankings", href: `${baseUrl}/rankings`, icon: BarChart3 },
+    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquare, badge: unreadTeamsCount },
+  ];
 
   const handleLogout = () => {
     useAuthStore.getState().clearAccessToken();
