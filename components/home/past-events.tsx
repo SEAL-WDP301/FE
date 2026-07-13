@@ -78,9 +78,19 @@ export default function PastEvents() {
                             >
                                 {/* Header Image (16:9) */}
                                 <div className="relative aspect-video w-full overflow-hidden bg-muted flex items-center justify-center">
-                                    {/* Fallback pattern for events without images */}
-                                    <div className="absolute inset-0 opacity-20 seal-grid"></div>
-                                    <span className="text-4xl font-bold text-muted-foreground/30 relative z-10">{event.season} {event.year}</span>
+                                    {(event.imageUrl || event.image_url || event.icons?.[0]?.url) ? (
+                                        <img 
+                                            src={event.imageUrl || event.image_url || event.icons?.[0]?.url || ""} 
+                                            alt={event.name} 
+                                            className="absolute inset-0 h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <>
+                                            {/* Fallback pattern for events without images */}
+                                            <div className="absolute inset-0 opacity-20 seal-grid"></div>
+                                            <span className="text-4xl font-bold text-muted-foreground/30 relative z-10">{event.season} {event.year}</span>
+                                        </>
+                                    )}
                                     
                                     {/* Gradient Overlay */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
