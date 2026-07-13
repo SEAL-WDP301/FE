@@ -5,20 +5,20 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { motion, AnimatePresence } from "framer-motion";
-import { axiosClient } from "@/lib/axios";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Trophy, Medal, ChevronDown, ChevronUp, AlertTriangle,
+  Award, Crown, Medal, ChevronDown, ChevronUp, AlertTriangle,
   CheckCircle2, TrendingUp, TrendingDown, Minus,
   BarChart3, Users, Loader2, Gavel, Send,
-  Star, Zap, Flame, Sparkles
+  Sparkles, type LucideIcon
 } from "lucide-react";
 import {
   getDetailedRoundRankings,
   publishRoundResults,
   DetailedRankedTeamEntry,
+  DetailedRankingsResponse,
   PublishResultsPayload,
   AwardType
 } from "@/lib/api/organizer-events.api";
@@ -26,26 +26,208 @@ import { format } from "date-fns";
 
 const ANOMALY_THRESHOLD = 1.5;
 
-function RankBadge({ rank }: { rank: number }) {
+const AWARD_PRESENTATION = {
+  first_prize: {
+    label: "1st Prize",
+    icon: Crown,
+    rowClass: "border border-yellow-300 bg-yellow-50/70 shadow-sm dark:border-yellow-400/50 dark:bg-yellow-950/30 dark:bg-gradient-to-r dark:from-yellow-500/10 dark:via-yellow-500/5 dark:to-transparent dark:shadow-[0_0_18px_rgba(234,179,8,0.14)]",
+    headerClass: "bg-transparent",
+    badgeClass: "text-yellow-900 border-yellow-300 bg-yellow-100/80 dark:text-yellow-100 dark:border-yellow-300/60 dark:bg-yellow-500/20 dark:shadow-[0_0_14px_rgba(250,204,21,0.28)]",
+    iconClass: "text-yellow-500 fill-yellow-500 dark:text-yellow-300 dark:fill-yellow-300",
+    scoreClass: "text-yellow-700 dark:text-yellow-200 dark:drop-shadow-[0_0_8px_rgba(250,204,21,0.35)]",
+    titleClass: "text-yellow-950 dark:text-yellow-50",
+    ringClass: "bg-yellow-100 ring-yellow-300 dark:bg-yellow-500/20 dark:ring-yellow-300/60 dark:shadow-[0_0_16px_rgba(250,204,21,0.3)]",
+  },
+  second_prize: {
+    label: "2nd Prize",
+    icon: Medal,
+    rowClass: "border border-slate-300 bg-slate-50/80 shadow-sm dark:border-slate-400/40 dark:bg-slate-900/80 dark:bg-gradient-to-r dark:from-slate-300/10 dark:via-slate-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(203,213,225,0.1)]",
+    headerClass: "bg-transparent",
+    badgeClass: "text-slate-700 border-slate-300 bg-slate-100/80 dark:text-slate-100 dark:border-slate-300/60 dark:bg-slate-300/20 dark:shadow-[0_0_12px_rgba(203,213,225,0.2)]",
+    iconClass: "text-slate-500 dark:text-slate-200",
+    scoreClass: "text-slate-700 dark:text-slate-100 dark:drop-shadow-[0_0_8px_rgba(226,232,240,0.25)]",
+    titleClass: "text-slate-900 dark:text-slate-50",
+    ringClass: "bg-slate-100 ring-slate-300 dark:bg-slate-300/20 dark:ring-slate-300/60 dark:shadow-[0_0_14px_rgba(203,213,225,0.2)]",
+  },
+  third_prize: {
+    label: "3rd Prize",
+    icon: Award,
+    rowClass: "border border-orange-300 bg-orange-50/70 shadow-sm dark:border-orange-500/40 dark:bg-orange-950/30 dark:bg-gradient-to-r dark:from-orange-500/10 dark:via-orange-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(249,115,22,0.1)]",
+    headerClass: "bg-transparent",
+    badgeClass: "text-orange-900 border-orange-300 bg-orange-100/80 dark:text-orange-100 dark:border-orange-400/50 dark:bg-orange-500/20 dark:shadow-[0_0_12px_rgba(251,146,60,0.2)]",
+    iconClass: "text-orange-500 dark:text-orange-300",
+    scoreClass: "text-orange-700 dark:text-orange-100 dark:drop-shadow-[0_0_8px_rgba(251,146,60,0.25)]",
+    titleClass: "text-orange-950 dark:text-orange-50",
+    ringClass: "bg-orange-100 ring-orange-300 dark:bg-orange-500/20 dark:ring-orange-400/50 dark:shadow-[0_0_14px_rgba(251,146,60,0.18)]",
+  },
+  honorable_mention: {
+    label: "Honorable Mention",
+    icon: Sparkles,
+    rowClass: "border border-sky-300 bg-sky-50/70 shadow-sm dark:border-sky-400/40 dark:bg-sky-950/30 dark:bg-gradient-to-r dark:from-sky-500/10 dark:via-cyan-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(56,189,248,0.1)]",
+    headerClass: "bg-transparent",
+    badgeClass: "text-sky-900 border-sky-300 bg-sky-100/80 dark:text-sky-100 dark:border-sky-300/50 dark:bg-sky-500/20 dark:shadow-[0_0_10px_rgba(56,189,248,0.16)]",
+    iconClass: "text-sky-500 dark:text-sky-200",
+    scoreClass: "text-sky-700 dark:text-sky-100",
+    titleClass: "text-sky-950 dark:text-sky-50",
+    ringClass: "bg-sky-100 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-300/50 dark:shadow-[0_0_12px_rgba(56,189,248,0.16)]",
+  },
+} satisfies Record<AwardType, {
+  label: string;
+  icon: LucideIcon;
+  rowClass: string;
+  headerClass: string;
+  badgeClass: string;
+  iconClass: string;
+  scoreClass: string;
+  titleClass: string;
+  ringClass: string;
+}>;
+
+const AWARD_PRIORITY: Record<AwardType, number> = {
+  first_prize: 1,
+  second_prize: 2,
+  third_prize: 3,
+  honorable_mention: 4,
+};
+
+type RankingTrackGroup = DetailedRankingsResponse["tracks"][number];
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const response = (error as { response?: { data?: { message?: string } } }).response;
+    return response?.data?.message || fallback;
+  }
+
+  return error instanceof Error ? error.message : fallback;
+}
+
+const RANK_PRESENTATION: Record<1 | 2 | 3, {
+  rowClass: string;
+  headerClass: string;
+  iconClass: string;
+  scoreClass: string;
+  titleClass: string;
+  ringClass: string;
+}> = {
+  1: {
+    rowClass: "border border-yellow-300 bg-yellow-50/50 shadow-sm dark:border-yellow-400/40 dark:bg-yellow-950/25 dark:bg-gradient-to-r dark:from-yellow-500/10 dark:to-transparent dark:shadow-[0_0_12px_rgba(234,179,8,0.1)]",
+    headerClass: "bg-transparent",
+    iconClass: "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400",
+    scoreClass: "text-yellow-700 dark:text-yellow-100",
+    titleClass: "text-yellow-950 dark:text-yellow-50",
+    ringClass: "bg-yellow-100 ring-yellow-300 dark:bg-yellow-500/10 dark:ring-yellow-400/50 dark:shadow-[0_0_12px_rgba(250,204,21,0.18)]",
+  },
+  2: {
+    rowClass: "border border-slate-300 bg-slate-50/50 shadow-sm dark:border-slate-400/40 dark:bg-slate-900/70 dark:bg-gradient-to-r dark:from-slate-300/10 dark:to-transparent",
+    headerClass: "bg-transparent",
+    iconClass: "text-slate-500 dark:text-slate-300",
+    scoreClass: "text-slate-700 dark:text-slate-100",
+    titleClass: "text-slate-900 dark:text-slate-50",
+    ringClass: "bg-slate-100 ring-slate-300 dark:bg-slate-300/10 dark:ring-slate-300/40",
+  },
+  3: {
+    rowClass: "border border-orange-300 bg-orange-50/50 shadow-sm dark:border-orange-500/40 dark:bg-orange-950/25 dark:bg-gradient-to-r dark:from-orange-500/10 dark:to-transparent",
+    headerClass: "bg-transparent",
+    iconClass: "text-orange-500 dark:text-orange-300",
+    scoreClass: "text-orange-700 dark:text-orange-100",
+    titleClass: "text-orange-950 dark:text-orange-50",
+    ringClass: "bg-orange-100 ring-orange-300 dark:bg-orange-500/10 dark:ring-orange-400/40",
+  },
+};
+
+function getAwardPresentation(award?: AwardType | null) {
+  return award ? AWARD_PRESENTATION[award] : null;
+}
+
+function getRankPresentation(rank: number) {
+  return rank === 1 || rank === 2 || rank === 3 ? RANK_PRESENTATION[rank] : null;
+}
+
+function getAwardPriority(award?: AwardType | null) {
+  return award ? AWARD_PRIORITY[award] : Number.POSITIVE_INFINITY;
+}
+
+function RankBadge({ rank, award }: { rank: number; award?: AwardType | null }) {
+  const awardPresentation = getAwardPresentation(award);
+  const rankPresentation = getRankPresentation(rank);
+
+  if (awardPresentation) {
+    const Icon = awardPresentation.icon;
+    const isChampion = award === "first_prize";
+
+    return (
+      <motion.div
+        title={awardPresentation.label}
+        animate={isChampion ? { y: [0, -2, 0], rotate: [-2, 2, -2] } : undefined}
+        transition={isChampion ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" } : undefined}
+        className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-1 ${awardPresentation.ringClass}`}
+      >
+        {isChampion && (
+          <motion.span
+            className="absolute -right-1 -top-1"
+            animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.55, 1, 0.55] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-yellow-200" />
+          </motion.span>
+        )}
+        <Icon className={`h-5 w-5 ${awardPresentation.iconClass}`} />
+      </motion.div>
+    );
+  }
+
   if (rank === 1) return (
-    <div title="Top 1 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/10 ring-1 ring-yellow-500/30 shadow-[0_0_8px_rgba(234,179,8,0.2)]">
-      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-    </div>
+    <motion.div
+      title="Top 1 of Track"
+      animate={{ y: [0, -2, 0] }}
+      transition={{ duration: 1.9, repeat: Infinity, ease: "easeInOut" }}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ${rankPresentation?.ringClass}`}
+    >
+      <Crown className={`h-4 w-4 ${rankPresentation?.iconClass}`} />
+    </motion.div>
   );
   if (rank === 2) return (
-    <div title="Top 2 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300/10 ring-1 ring-slate-400/30">
-      <Zap className="w-4 h-4 text-slate-400 fill-slate-400/50" />
+    <div title="Top 2 of Track" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ${rankPresentation?.ringClass}`}>
+      <Medal className={`h-4 w-4 ${rankPresentation?.iconClass}`} />
     </div>
   );
   if (rank === 3) return (
-    <div title="Top 3 of Track" className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/10 ring-1 ring-orange-500/30">
-      <Flame className="w-4 h-4 text-orange-400 fill-orange-400/50" />
+    <div title="Top 3 of Track" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ${rankPresentation?.ringClass}`}>
+      <Award className={`h-4 w-4 ${rankPresentation?.iconClass}`} />
     </div>
   );
   return (
     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/30 ring-1 ring-border text-sm font-bold text-muted-foreground">
       {rank}
     </div>
+  );
+}
+
+function AwardBadge({ award, isPreview }: { award: AwardType; isPreview?: boolean }) {
+  const awardPresentation = AWARD_PRESENTATION[award];
+  const Icon = awardPresentation.icon;
+
+  return (
+    <Badge
+      variant="outline"
+      className={`text-[10px] px-2 py-0.5 backdrop-blur-sm ${awardPresentation.badgeClass}`}
+    >
+      <Icon className={`w-3 h-3 mr-1.5 ${awardPresentation.iconClass}`} />
+      {awardPresentation.label}
+      {isPreview && <span className="ml-1 opacity-70">(draft)</span>}
+    </Badge>
+  );
+}
+
+function AnomalyIndicator() {
+  return (
+    <span
+      title={`Score variance detected: at least one judge deviates by ${ANOMALY_THRESHOLD} or more from the team average.`}
+      className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300 bg-amber-50 text-amber-600 shadow-sm dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-300"
+    >
+      <AlertTriangle className="h-3.5 w-3.5" />
+      <span className="sr-only">Score variance detected</span>
+    </span>
   );
 }
 
@@ -60,10 +242,10 @@ function DeviationBadge({ deviation }: { deviation: number }) {
     </span>
   );
   return (
-    <span className={`flex items-center gap-1 text-xs font-bold ${isAnomaly ? "text-red-500" : isPositive ? "text-emerald-500" : "text-blue-400"}`}>
+    <span className={`flex items-center gap-1 text-xs font-bold ${isAnomaly ? "text-amber-600 dark:text-amber-300" : isPositive ? "text-emerald-500" : "text-blue-400"}`}>
       {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
       {isPositive ? "+" : ""}{deviation.toFixed(2)}
-      {isAnomaly && <AlertTriangle className="w-3 h-3 text-red-500 ml-0.5" />}
+      {isAnomaly && <AlertTriangle className="w-3 h-3 ml-0.5" />}
     </span>
   );
 }
@@ -89,30 +271,47 @@ function TeamRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
+  const activeAward = isFinalRound ? ((isPublished ? entry.award : awardValue) ?? null) : null;
+  const awardPresentation = getAwardPresentation(activeAward);
+  const rankPresentation = getRankPresentation(rank);
 
-  const isPassed = isPublished && entry.status === "advanced";
-  const isEliminated = isPublished && entry.status === "eliminated";
+  const isPassed = !isFinalRound && isPublished && entry.status === "advanced";
+  const isEliminated = !isFinalRound && isPublished && entry.status === "eliminated";
   const isSelecting = !isPublished && isSelected;
+  const rowClass = awardPresentation
+    ? awardPresentation.rowClass
+    : isPassed
+      ? "border-y border-r border-l-4 border-border border-l-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+      : isSelecting
+        ? "border-2 border-dashed border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+        : isEliminated
+          ? "border border-border opacity-50 grayscale-[50%] hover:grayscale-0 hover:opacity-100"
+          : rankPresentation?.rowClass ?? "border border-border";
+  const headerClass = awardPresentation
+    ? awardPresentation.headerClass
+    : isPassed
+      ? "bg-transparent"
+      : isSelecting
+        ? "bg-emerald-500/5"
+        : rankPresentation?.headerClass ?? "bg-card hover:bg-muted/20";
+  const titleClass = isEliminated
+    ? "text-muted-foreground"
+    : awardPresentation?.titleClass ?? rankPresentation?.titleClass ?? "text-foreground";
+  const scoreClass = awardPresentation?.scoreClass ?? rankPresentation?.scoreClass ?? "text-foreground";
 
   return (
     <div 
-      className={`rounded-xl overflow-hidden mb-3 transition-all duration-300 ease-in-out
-        ${isPassed ? "border-y border-r border-l-4 border-border border-l-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)] relative" : 
-          isSelecting ? "border-2 border-dashed border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]" :
-          isEliminated ? "border border-border opacity-50 grayscale-[50%] hover:grayscale-0 hover:opacity-100" :
-          "border border-border"
-        }`}
+      className={`relative rounded-xl overflow-hidden mb-3 transition-all duration-300 ease-in-out ${rowClass}`}
     >
       {/* Background Glow for Passed */}
       {isPassed && <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />}
+      {awardPresentation && (
+        <div className="pointer-events-none absolute inset-0 hidden dark:block dark:bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,0.1),transparent_28%)]" />
+      )}
 
       {/* Team Header Row */}
       <div
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors relative z-10
-          ${isPassed ? "bg-transparent" : 
-            isSelecting ? "bg-emerald-500/5" :
-            "bg-card hover:bg-muted/20"
-          }`}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors relative z-10 ${headerClass}`}
       >
         {!isPublished && !isFinalRound && (
           <div className="shrink-0 pt-1">
@@ -143,11 +342,11 @@ function TeamRow({
           </div>
         )}
         
-        <RankBadge rank={rank} />
+        <RankBadge rank={rank} award={activeAward} />
 
         <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-50 drop-shadow-md" : isEliminated ? "text-muted-foreground" : "text-foreground"}`}>
+            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-50 drop-shadow-md" : titleClass}`}>
               {entry.teamName}
             </span>
             {isSelecting && (
@@ -160,25 +359,15 @@ function TeamRow({
                 <Sparkles className="w-3 h-3 mr-1.5 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" /> Passed
               </Badge>
             )}
-            {isPublished && isFinalRound && entry.award && (
-              <Badge variant="outline" className="text-yellow-400 border-yellow-500/50 bg-yellow-500/20 text-[10px] px-2 py-0.5 shadow-[0_0_10px_rgba(234,179,8,0.3)] backdrop-blur-sm">
-                <Trophy className="w-3 h-3 mr-1.5 text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" /> 
-                {entry.award === "first_prize" && "1st Prize"}
-                {entry.award === "second_prize" && "2nd Prize"}
-                {entry.award === "third_prize" && "3rd Prize"}
-                {entry.award === "honorable_mention" && "Honorable Mention"}
-              </Badge>
+            {activeAward && (
+              <AwardBadge award={activeAward} isPreview={!isPublished} />
             )}
             {isEliminated && !isFinalRound && (
               <Badge variant="outline" className="text-muted-foreground border-border bg-muted/50 text-[10px] px-1.5 py-0">
                 <Minus className="w-3 h-3 mr-1" />Eliminated
               </Badge>
             )}
-            {hasAnomalous && (
-              <Badge variant="outline" className="text-red-500 border-red-500/30 bg-red-500/10 text-[10px] px-1.5 py-0">
-                <AlertTriangle className="w-3 h-3 mr-1" />Anomalous Grading
-              </Badge>
-            )}
+            {hasAnomalous && <AnomalyIndicator />}
           </div>
           <div className="text-xs text-muted-foreground mt-0.5">
             Track: {entry.trackName} · Submitted: {format(new Date(entry.submittedAt), "MMM dd, HH:mm")}
@@ -186,7 +375,7 @@ function TeamRow({
         </div>
 
         <div className="text-right shrink-0">
-          <div className="text-2xl font-bold tabular-nums text-foreground">
+          <div className={`text-2xl font-bold tabular-nums ${scoreClass}`}>
             {entry.finalScore !== null ? entry.finalScore.toFixed(2) : "—"}
           </div>
           <div className="text-[10px] text-muted-foreground">/ 10.00</div>
@@ -253,7 +442,7 @@ function TeamRow({
                     {entry.judges.map(j => {
                       const isAnomaly = Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD;
                       return (
-                        <div key={j.judgeId} className={`rounded-lg p-3 border ${isAnomaly ? "border-red-500/30 bg-red-500/5" : "border-border bg-muted/20"}`}>
+                        <div key={j.judgeId} className={`rounded-lg p-3 border ${isAnomaly ? "border-amber-400/40 bg-amber-50/60 dark:bg-amber-400/10" : "border-border bg-muted/20"}`}>
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <span className="text-sm font-semibold truncate max-w-[150px]">{j.judgeName}</span>
                             <div className="flex items-center gap-3 shrink-0">
@@ -263,7 +452,7 @@ function TeamRow({
                           </div>
                           {j.comment && (
                             <p className="text-[11px] text-muted-foreground italic border-t border-border/50 pt-2 mt-1 line-clamp-2">
-                              "{j.comment}"
+                              &ldquo;{j.comment}&rdquo;
                             </p>
                           )}
                           {/* Per-criteria breakdown */}
@@ -299,6 +488,11 @@ export default function RankingsPage() {
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(new Set());
   const [teamAwards, setTeamAwards] = useState<Record<number, AwardType | null>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const awardedTeamEntries = useMemo(
+    () => Object.entries(teamAwards).filter((entry): entry is [string, AwardType] => Boolean(entry[1])),
+    [teamAwards],
+  );
+  const awardedCount = awardedTeamEntries.length;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["detailedRankings", eventId, roundId],
@@ -307,19 +501,20 @@ export default function RankingsPage() {
   });
 
   const { mutate: publish, isPending: isPublishing } = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
        const payload: PublishResultsPayload = {};
        if (data?.round?.isFinalRound) {
-         payload.awards = Object.entries(teamAwards).map(([teamId, award]) => ({
+         payload.awards = awardedTeamEntries.map(([teamId, award]) => ({
            teamId: Number(teamId),
            award
          }));
        } else {
          payload.advancingTeamIds = Array.from(selectedTeamIds);
        }
-       return publishRoundResults(eventId, roundId, payload);
+       const result = await publishRoundResults(eventId, roundId, payload);
+       return result as { repoSyncStarted?: boolean };
     },
-    onSuccess: (res: any) => {
+    onSuccess: (res: { repoSyncStarted?: boolean }) => {
       if (res.repoSyncStarted) {
         enqueueSnackbar("Results published! GitHub repositories are being provisioned in the background.", { variant: "info", autoHideDuration: 5000 });
       } else {
@@ -329,21 +524,20 @@ export default function RankingsPage() {
       queryClient.invalidateQueries({ queryKey: ["detailedRankings", eventId, roundId] });
       queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || "Failed to publish results";
-      enqueueSnackbar(msg, { variant: "error" });
+    onError: (err: unknown) => {
+      enqueueSnackbar(getErrorMessage(err, "Failed to publish results"), { variant: "error" });
     },
   });
 
   const round = data?.round;
   const isResultsPublished = round?.status === "results_published";
   
-  const tracks = useMemo(() => {
+  const tracks = useMemo<RankingTrackGroup[]>(() => {
     if (!data?.tracks) return [];
     
     // Create an "All Tracks" object
-    const allEntries = data.tracks.flatMap((t: any) => t.entries);
-    allEntries.sort((a: any, b: any) => {
+    const allEntries = data.tracks.flatMap((trackGroup) => trackGroup.entries);
+    allEntries.sort((a, b) => {
       if (a.finalScore === null && b.finalScore === null) return 0;
       if (a.finalScore === null) return 1;
       if (b.finalScore === null) return -1;
@@ -359,17 +553,27 @@ export default function RankingsPage() {
   }, [data]);
 
   const selectedTrack = tracks[selectedTrackIdx];
-  const entries = useMemo(() => {
+  const entries = useMemo<DetailedRankedTeamEntry[]>(() => {
     let raw = selectedTrack?.entries ?? [];
-    if (isResultsPublished) {
-      raw = [...raw].sort((a: any, b: any) => {
+    if (isResultsPublished && round?.isFinalRound) {
+      raw = [...raw].sort((a, b) => {
+        const awardDiff = getAwardPriority(a.award) - getAwardPriority(b.award);
+        if (awardDiff !== 0) return awardDiff;
+        if (a.finalScore === null && b.finalScore === null) return (a.rank || 0) - (b.rank || 0);
+        if (a.finalScore === null) return 1;
+        if (b.finalScore === null) return -1;
+        if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
+        return (a.rank || 0) - (b.rank || 0);
+      });
+    } else if (isResultsPublished) {
+      raw = [...raw].sort((a, b) => {
         if (a.status === "advanced" && b.status !== "advanced") return -1;
         if (a.status !== "advanced" && b.status === "advanced") return 1;
         return (a.rank || 0) - (b.rank || 0);
       });
     }
     return raw;
-  }, [selectedTrack, isResultsPublished]);
+  }, [selectedTrack, isResultsPublished, round?.isFinalRound]);
 
   const roundStatusColor: Record<string, string> = {
     not_started: "text-muted-foreground",
@@ -390,14 +594,36 @@ export default function RankingsPage() {
 
   const handleAutoSelect = () => {
     const next = new Set<number>();
-    data?.tracks?.forEach((trackGroup: any) => {
+    data?.tracks?.forEach((trackGroup) => {
       const topEntries = trackGroup.entries
-        .filter((e: any) => e.finalScore !== null)
+        .filter((entry) => entry.finalScore !== null)
         .slice(0, autoSelectTopN);
-      topEntries.forEach((e: any) => next.add(e.teamId));
+      topEntries.forEach((entry) => next.add(entry.teamId));
     });
     setSelectedTeamIds(next);
     enqueueSnackbar(`Auto-selected top ${autoSelectTopN} teams for all tracks.`, { variant: "info" });
+  };
+
+  const handleAwardChange = (teamId: number, award: AwardType | null) => {
+    setTeamAwards((prev) => {
+      const next = { ...prev };
+
+      if (!award) {
+        delete next[teamId];
+        return next;
+      }
+
+      if (award !== "honorable_mention") {
+        Object.entries(next).forEach(([id, existingAward]) => {
+          if (Number(id) !== teamId && existingAward === award) {
+            delete next[Number(id)];
+          }
+        });
+      }
+
+      next[teamId] = award;
+      return next;
+    });
   };
 
   return (
@@ -428,10 +654,10 @@ export default function RankingsPage() {
             <Button
               onClick={() => setShowConfirmModal(true)}
               className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-              disabled={selectedTeamIds.size === 0}
+              disabled={round?.isFinalRound ? awardedCount === 0 : selectedTeamIds.size === 0}
             >
               <Send className="w-4 h-4" />
-              Publish Results ({selectedTeamIds.size} teams)
+              Publish Results ({round?.isFinalRound ? awardedCount : selectedTeamIds.size} teams)
             </Button>
           </GlassCard>
         )}
@@ -464,7 +690,7 @@ export default function RankingsPage() {
       )}
 
       {/* Top-N Highlight Control */}
-      {round?.status === "closed" && (
+      {round?.status === "closed" && !round?.isFinalRound && (
         <div className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border border-border">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Auto-select Top</span>
@@ -500,7 +726,20 @@ export default function RankingsPage() {
           <div>
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-4 mb-5 pb-4 border-b border-border text-xs text-muted-foreground">
-              {!isResultsPublished ? (
+              {isResultsPublished && round?.isFinalRound ? (
+                <>
+                  {(["first_prize", "second_prize", "third_prize", "honorable_mention"] as AwardType[]).map((award) => {
+                    const awardPresentation = AWARD_PRESENTATION[award];
+                    const Icon = awardPresentation.icon;
+                    return (
+                      <span key={award} className="flex items-center gap-1">
+                        <Icon className={`w-3.5 h-3.5 ${awardPresentation.iconClass}`} />
+                        {awardPresentation.label}
+                      </span>
+                    );
+                  })}
+                </>
+              ) : !isResultsPublished ? (
                 <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Selected to Advance</span>
               ) : (
                 <>
@@ -508,7 +747,10 @@ export default function RankingsPage() {
                   <span className="flex items-center gap-1"><Minus className="w-3.5 h-3.5 text-red-500" /> Eliminated</span>
                 </>
               )}
-              <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Anomalous grading (deviation ≥ {ANOMALY_THRESHOLD})</span>
+              <span className="flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300" />
+                Score variance (deviation ≥ {ANOMALY_THRESHOLD})
+              </span>
               <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> Above average</span>
               <span className="flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5 text-blue-400" /> Below average</span>
             </div>
@@ -523,7 +765,7 @@ export default function RankingsPage() {
                 isPublished={isResultsPublished}
                 isFinalRound={round?.isFinalRound}
                 awardValue={teamAwards[entry.teamId]}
-                onAwardChange={(val) => setTeamAwards(prev => ({ ...prev, [entry.teamId]: val }))}
+                onAwardChange={(val) => handleAwardChange(entry.teamId, val)}
               />
             ))}
           </div>
@@ -544,9 +786,18 @@ export default function RankingsPage() {
               </div>
               <h3 className="text-xl font-bold mb-2">Xác nhận Publish Kết Quả</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Bạn đã chọn <strong>{selectedTeamIds.size} đội</strong> lọt vào vòng trong.
-                Các đội còn lại sẽ được đánh dấu là <strong>Bị loại (Eliminated)</strong>.<br/><br/>
-                Hành động này không thể hoàn tác và sẽ gửi email thông báo tới tất cả thí sinh. Bạn có chắc chắn?
+                {round?.isFinalRound ? (
+                  <>
+                    Bạn đã trao giải thưởng cho <strong>{awardedCount} đội</strong>.<br/><br/>
+                    Hành động này sẽ chốt kết quả chung cuộc của cuộc thi. Bạn có chắc chắn?
+                  </>
+                ) : (
+                  <>
+                    Bạn đã chọn <strong>{selectedTeamIds.size} đội</strong> lọt vào vòng trong.
+                    Các đội còn lại sẽ được đánh dấu là <strong>Bị loại (Eliminated)</strong>.<br/><br/>
+                    Hành động này không thể hoàn tác và sẽ gửi email thông báo tới tất cả thí sinh. Bạn có chắc chắn?
+                  </>
+                )}
               </p>
               <div className="flex items-center gap-3 w-full">
                 <Button 
