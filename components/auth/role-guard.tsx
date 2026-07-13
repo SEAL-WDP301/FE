@@ -37,7 +37,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const accessToken = useAuthStore(state => state.accessToken);
-  
+
   // To avoid hydration mismatch if needed, we can use a small state, 
   // but Zustand handles it well. 
   // If undefined on server, we wait.

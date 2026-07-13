@@ -2,8 +2,7 @@ import { axiosClient } from "@/lib/axios";
 import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
 export type PublicEvent = OrganizerEvent & {
-  image_url?: string | null;
-  registration_deadline?: string | null;
+  imageUrl?: string | null;
 };
 
 type PublicEventsResponse =
@@ -21,6 +20,11 @@ function normalizePublicEvents(payload: PublicEventsResponse): PublicEvent[] {
     return payload.data.events;
   }
   return [];
+}
+
+export function isAutomationEvent(event: PublicEvent): boolean {
+  const searchableText = `${event.name} ${event.description ?? ""}`;
+  return /\bE2E\b|automation scripts?/i.test(searchableText);
 }
 
 export async function getPublicEvents() {
