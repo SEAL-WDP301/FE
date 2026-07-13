@@ -14,12 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useSocket } from "@/lib/hooks/useSocket";
 
-export default function RoundMessagesPage() {
+export default function EventMessagesPage() {
   const params = useParams();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const eventId = params.id as string;
-  const roundId = params.roundId as string;
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { socket, isConnected } = useSocket("/chat");

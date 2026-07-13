@@ -9,8 +9,14 @@ import {
   LayoutDashboard,
   GitMerge,
   ChevronRight,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/stores/auth.store";
+import { useSocket } from "@/lib/hooks/useSocket";
+import { useEffect } from "react";
+import { axiosClient } from "@/lib/axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function EventDashboardLayout({
   children,
@@ -22,13 +28,25 @@ export default function EventDashboardLayout({
   const eventId = params.id as string;
   const roundId = params.roundId as string | undefined;
   const baseUrl = `/organizer/events/${eventId}`;
+  const queryClient = useQueryClient();
 
-  const currentTabMatch = pathname.match(/\/rounds\/\d+\/(teams|stakeholders|submissions|criteria)/);
+  const currentTabMatch = pathname.match(/\/rounds\/\d+\/(teams|stakeholders|submissions|criteria|rankings)/);
   const currentTab = currentTabMatch ? currentTabMatch[1] : "teams";
+
+  const { data: teams } = useQuery({
+    queryKey: ["organizerTeams", eventId],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/organizer/teams/events/${eventId}`);
+      return res.data.data;
+    },
+  });
+
+  const unreadTeamsCount = teams?.reduce((acc: number, team: any) => acc + (team.unreadCount > 0 ? 1 : 0), 0) || 0;
 
   const navItems = [
     { name: "Overview", href: `${baseUrl}/overview`, icon: LayoutDashboard },
     { name: "Tracks & Rounds", href: `${baseUrl}/tracks`, icon: GitMerge },
+    { name: "Messages", href: `${baseUrl}/messages`, icon: MessageSquareText, badge: unreadTeamsCount },
   ];
 
   const { data: event, isLoading, isError } = useQuery({
@@ -42,6 +60,67 @@ export default function EventDashboardLayout({
       ? "Event unavailable"
       : event?.name || "Event Control";
   const eventIconUrl = event?.icons?.[0]?.url;
+
+  const { data: user } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+        const token = useAuthStore.getState().accessToken;
+        if (!token) return null;
+        const res = await axiosClient.get('/users/profile');
+        const profile = res.data?.data;
+        return profile
+            ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
+            : null;
+    },
+  });
+
+  const { socket, isConnected } = useSocket("/chat");
+
+  useEffect(() => {
+    if (!socket || !isConnected || !teams || teams.length === 0) return;
+
+    teams.forEach((team: any) => {
+      socket.emit("join_team_room", team.id);
+    });
+
+    const handleReceiveMessage = (newMessage: any) => {
+      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === newMessage.teamId) {
+            return {
+              ...t,
+              unreadCount: (t.unreadCount || 0) + (newMessage.senderId !== user?.id ? 1 : 0),
+              lastMessageAt: newMessage.createdAt,
+            };
+          }
+          return t;
+        });
+      });
+    };
+
+    const handleMessagesReadUpdated = (updatedMessages: any[]) => {
+      if (!updatedMessages || updatedMessages.length === 0) return;
+      const teamId = updatedMessages[0].teamId;
+      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => {
+          if (t.id === teamId) {
+            return { ...t, unreadCount: 0 };
+          }
+          return t;
+        });
+      });
+    };
+
+    socket.on("receive_chat_message", handleReceiveMessage);
+    socket.on("messages_read_updated", handleMessagesReadUpdated);
+
+    return () => {
+      socket.off("receive_chat_message", handleReceiveMessage);
+      socket.off("messages_read_updated", handleMessagesReadUpdated);
+    };
+  }, [socket, isConnected, teams, queryClient, eventId, user?.id]);
 
   const sortedRounds = [...(event?.rounds || [])].sort((a, b) => a.roundNumber - b.roundNumber);
 
@@ -82,6 +161,11 @@ export default function EventDashboardLayout({
                 >
                   <item.icon className="h-4 w-4" />
                   {item.name}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm ml-1">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </div>
+                  )}
                   {isActive && (
                     <motion.div
                       layoutId="globalNavIndicator"
