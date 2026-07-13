@@ -2,11 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, MapPin } from "lucide-react";
+import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { getPublicEvents } from "@/lib/api/public-events.api";
+import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
+
+function getLocationLabel(location: unknown) {
+    if (typeof location === "string" && location.trim()) return location;
+    if (location && typeof location === "object") {
+        const value = location as { name?: string; venueName?: string; meetingPlatform?: string };
+        return value.name || value.venueName || value.meetingPlatform || "Online";
+    }
+    return "Online";
+}
 
 export default function FeaturedHero() {
     const { data: events, isLoading } = useQuery({
@@ -23,23 +32,20 @@ export default function FeaturedHero() {
         );
     }
 
-    const latestEvent = events?.[0];
+    const latestEvent = events?.find(
+        event => !isAutomationEvent(event) && (event.status === "active" || event.status === "ongoing")
+    ) ?? events?.find(event => !isAutomationEvent(event));
 
     if (!latestEvent) {
         return null; // or a fallback static hero
     }
 
-    // Generic highlight logic: Take the last two words and highlight them
-    const words = latestEvent.name ? latestEvent.name.split(' ') : ['Featured', 'Event'];
-    const highlightWords = words.length >= 2 ? words.slice(-2).join(' ') : words.slice(-1).join(' ');
-    const regularWords = words.length >= 2 ? words.slice(0, -2).join(' ') : '';
-
-    const imageUrl = latestEvent.imageUrl || latestEvent.image_url || "/images/rag_system.png";
+    const imageUrl = latestEvent.imageUrl || latestEvent.icons?.[0]?.url || "/images/rag_system.png";
     
     let formattedDate = `${latestEvent.season || ''} ${latestEvent.year || ''}`;
     try {
-        if (latestEvent.registration_deadline) {
-            formattedDate = `Deadline: ${format(new Date(latestEvent.registration_deadline), "MMM dd, yyyy")}`;
+        if (latestEvent.registrationDeadline) {
+            formattedDate = `Deadline: ${format(new Date(latestEvent.registrationDeadline), "MMM dd, yyyy")}`;
         }
     } catch {
         // fallback to season/year if parsing fails
@@ -62,13 +68,21 @@ export default function FeaturedHero() {
                         sizes="(max-width: 1024px) 100vw, 50vw"
                         priority
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/10" />
+                    <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-green-400/30 bg-background/80 px-4 py-2 text-sm font-semibold text-green-400 shadow-lg backdrop-blur-md">
+                        <span className="relative flex size-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                            <span className="relative inline-flex size-2 rounded-full bg-green-500" />
+                        </span>
+                        {latestEvent.status === "active" ? "LIVE" : "ONGOING"}
+                    </div>
                 </div>
 
                 {/* Right Column: Content */}
                 <div className="flex flex-col items-start text-left">
                     {/* Headlines */}
-                    <h1 className="mb-6 max-w-4xl font-sans text-5xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                        {regularWords} <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">{highlightWords}</span>
+                    <h1 className="mb-6 line-clamp-2 max-w-4xl font-sans text-5xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+                        {latestEvent.name}
                     </h1>
 
                     <p className="mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
@@ -83,21 +97,7 @@ export default function FeaturedHero() {
                         </div>
                         <div className="flex items-center gap-2 rounded-xl bg-card/50 px-4 py-2 border border-border backdrop-blur-sm">
                             <MapPin className="size-4 text-orange-500" />
-                            <span>Online / Innovation Hub</span>
-                        </div>
-                        {/* Status Badge */}
-                        <div className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-400 backdrop-blur-sm">
-                            {latestEvent.status === 'active' ? (
-                                <span className="relative flex size-2">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex size-2 rounded-full bg-green-500"></span>
-                                </span>
-                            ) : (
-                                <span className="relative flex size-2">
-                                    <span className="relative inline-flex size-2 rounded-full bg-muted-foreground"></span>
-                                </span>
-                            )}
-                            <span className="uppercase">{latestEvent.status === 'active' ? 'LIVE' : (latestEvent.status || 'CLOSED')}</span>
+                            <span>{getLocationLabel(latestEvent.location)}</span>
                         </div>
                     </div>
 
@@ -109,6 +109,7 @@ export default function FeaturedHero() {
                     >
                         <Link href={`/home/events/${latestEvent.id}`}>
                             View detail
+                            <ArrowRight className="size-5" aria-hidden="true" />
                         </Link>
                     </Button>
                 </div>
