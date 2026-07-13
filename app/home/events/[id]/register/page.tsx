@@ -7,7 +7,71 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { enqueueSnackbar } from 'notistack';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+
+interface PublicEvent {
+  id: number;
+  name: string;
+  status?: string | null;
+  registrationDeadline?: string | null;
+  startDate?: string | null;
+  tracks?: EventTrack[];
+}
+
+interface EventTrack {
+  id: number;
+  name: string;
+  maxMembersPerTeam?: number | null;
+}
+
+interface TeamMember {
+  role?: string | null;
+  user?: {
+    email?: string | null;
+  } | null;
+}
+
+interface RegisterPayload {
+  trackId: number;
+  teamName: string;
+  memberEmails: string[];
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat('en', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+function getRegistrationBlockReason(event?: PublicEvent | null) {
+  if (!event) return 'Event information is unavailable.';
+
+  const normalizedStatus = event.status?.toLowerCase();
+  if (normalizedStatus !== 'active') {
+    return 'Registration is closed because this event is not active.';
+  }
+
+  const now = new Date();
+  if (event.registrationDeadline) {
+    const deadline = new Date(event.registrationDeadline);
+    if (!Number.isNaN(deadline.getTime()) && now > deadline) {
+      return `Registration deadline passed on ${formatDateTime(event.registrationDeadline)}.`;
+    }
+  }
+
+  if (event.startDate) {
+    const startDate = new Date(event.startDate);
+    if (!Number.isNaN(startDate.getTime()) && now >= startDate) {
+      return `Registration is closed because the event started on ${formatDateTime(event.startDate)}.`;
+    }
+  }
+
+  return null;
+}
 
 export default function EventRegistrationPage() {
   const params = useParams();
@@ -23,7 +87,7 @@ export default function EventRegistrationPage() {
     queryKey: ['publicEvent', eventId],
     queryFn: async () => {
       const res = await axiosClient.get(`/public/events/${eventId}`);
-      return res.data.data;
+      return res.data.data as PublicEvent;
     },
   });
 
@@ -50,10 +114,8 @@ export default function EventRegistrationPage() {
       // Pre-fill member emails (excluding the current user / leader)
       if (studentInfo.teamInfo.team.members) {
         const otherMembers = studentInfo.teamInfo.team.members
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .filter((m: any) => m.role === 'member')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((m: any) => m.user?.email)
+          .filter((m: TeamMember) => m.role === 'member')
+          .map((m: TeamMember) => m.user?.email)
           .filter(Boolean);
           
         if (otherMembers.length > 0) {
@@ -67,21 +129,29 @@ export default function EventRegistrationPage() {
 
   const queryClient = useQueryClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selectedTrackData = event?.tracks?.find((t: any) => t.id === selectedTrack);
+  const registrationBlockReason = getRegistrationBlockReason(event);
+  const isRegistrationBlocked = Boolean(registrationBlockReason);
+  const selectedTrackData = event?.tracks?.find((t) => t.id === selectedTrack);
   const maxAdditionalMembers = selectedTrackData?.maxMembersPerTeam ? selectedTrackData.maxMembersPerTeam - 1 : 10;
 
   useEffect(() => {
     if (selectedTrackData?.maxMembersPerTeam && memberEmails.length > maxAdditionalMembers) {
-      setMemberEmails(prev => prev.slice(0, maxAdditionalMembers));
+      const frame = requestAnimationFrame(() => {
+        setMemberEmails(prev => prev.slice(0, maxAdditionalMembers));
+      });
       enqueueSnackbar(`The member list has been shortened to fit the Track limit (${selectedTrackData.maxMembersPerTeam} menber).`, { variant: 'info' });
+      return () => cancelAnimationFrame(frame);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTrackData?.id]);
 
   const registerMutation = useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: RegisterPayload) => {
+      const blockReason = getRegistrationBlockReason(event);
+      if (blockReason) {
+        throw new Error(blockReason);
+      }
+
       if (isEditing) {
         return axiosClient.put(`/student/teams/register/team/${eventId}`, data);
       }
@@ -92,9 +162,9 @@ export default function EventRegistrationPage() {
       queryClient.invalidateQueries({ queryKey: ['studentEventStatus', eventId] });
       router.push(`/home/events/${eventId}`);
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Registration failed';
+    onError: (error: unknown) => {
+      const apiError = error as { response?: { data?: { message?: string } }; message?: string };
+      const message = apiError.response?.data?.message || apiError.message || 'Registration failed';
       enqueueSnackbar(message, { variant: 'error' });
     }
   });
@@ -103,6 +173,12 @@ export default function EventRegistrationPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const blockReason = getRegistrationBlockReason(event);
+    if (blockReason) {
+      enqueueSnackbar(blockReason, { variant: 'warning' });
+      return;
+    }
+
     if (!selectedTrack) {
       enqueueSnackbar('Please select a track', { variant: 'warning' });
       return;
@@ -119,6 +195,11 @@ export default function EventRegistrationPage() {
   };
 
   const addEmailField = () => {
+    if (isRegistrationBlocked) {
+      enqueueSnackbar(registrationBlockReason, { variant: 'warning' });
+      return;
+    }
+
     if (!selectedTrack) {
       enqueueSnackbar('Please select a track before adding a member.', { variant: 'warning' });
       return;
@@ -168,18 +249,31 @@ export default function EventRegistrationPage() {
             <h1 className="text-3xl md:text-4xl font-black text-foreground mb-2">Team Registration</h1>
             <p className="text-muted-foreground mb-8">Register your team for <strong>{event.name}</strong></p>
 
+            {registrationBlockReason && (
+              <div className="mb-8 flex items-start gap-3 rounded-2xl border border-red-500/25 bg-red-500/10 p-4 text-sm text-red-200">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+                <div>
+                  <p className="font-semibold text-red-100">Registration unavailable</p>
+                  <p className="mt-1 text-red-100/80">{registrationBlockReason}</p>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Track Selection */}
               <div className="space-y-4">
                 <label className="text-sm font-semibold text-foreground">Select Competition Track *</label>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {event.tracks?.map((track: any) => (
+                  {event.tracks?.map((track) => (
                     <div 
                       key={track.id}
-                      onClick={() => setSelectedTrack(track.id)}
-                      className={`cursor-pointer p-4 rounded-xl border transition-all ${
+                      onClick={() => {
+                        if (!isRegistrationBlocked) setSelectedTrack(track.id);
+                      }}
+                      className={`p-4 rounded-xl border transition-all ${
+                        isRegistrationBlocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                      } ${
                         selectedTrack === track.id 
                           ? 'border-orange-500 bg-orange-500/10 ring-1 ring-orange-500' 
                           : 'border-border bg-muted/50 hover:border-orange-500/50'
@@ -200,8 +294,9 @@ export default function EventRegistrationPage() {
                   required
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
+                  disabled={isRegistrationBlocked}
                   placeholder="Enter your awesome team name"
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
@@ -215,7 +310,7 @@ export default function EventRegistrationPage() {
                     size="sm" 
                     onClick={addEmailField} 
                     className="h-8"
-                    disabled={!selectedTrack || memberEmails.length >= maxAdditionalMembers}
+                    disabled={isRegistrationBlocked || !selectedTrack || memberEmails.length >= maxAdditionalMembers}
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add Member
                   </Button>
@@ -232,14 +327,16 @@ export default function EventRegistrationPage() {
                         type="email" 
                         value={email}
                         onChange={(e) => updateEmail(index, e.target.value)}
+                        disabled={isRegistrationBlocked}
                         placeholder={`Member ${index + 1} Email`}
-                        className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                        className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 disabled:cursor-not-allowed disabled:opacity-60"
                       />
                       <Button 
                         type="button" 
                         variant="ghost" 
                         size="icon"
                         onClick={() => removeEmailField(index)}
+                        disabled={isRegistrationBlocked}
                         className="text-red-400 hover:text-red-500 hover:bg-red-400/10 rounded-xl"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -255,9 +352,9 @@ export default function EventRegistrationPage() {
                   type="submit" 
                   size="lg" 
                   className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white shadow-xl shadow-orange-500/20"
-                  disabled={registerMutation.isPending}
+                  disabled={isRegistrationBlocked || registerMutation.isPending}
                 >
-                  {registerMutation.isPending ? 'Registering...' : 'Submit Registration'}
+                  {registrationBlockReason ? 'Registration Closed' : registerMutation.isPending ? 'Registering...' : 'Submit Registration'}
                 </Button>
               </div>
 

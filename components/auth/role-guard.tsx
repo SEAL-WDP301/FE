@@ -25,7 +25,7 @@ const roleHomePath: Record<AppRole, string> = {
   organizer: "/organizer/events",
   student: "/home",
   stakeholder: "/home",
-  judge: "/judge/dashboard",
+  judge: "/judge/events",
 };
 
 export function getRoleHomePath(role?: string) {
@@ -44,7 +44,10 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const hasToken = accessToken ? true : false;
   // Let's use a mounted flag to wait for client
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const {
     data: user,

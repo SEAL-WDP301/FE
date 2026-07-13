@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
 import { useState, useMemo } from "react";
@@ -19,6 +19,100 @@ import {
     type OrganizerEvent,
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
+
+const defaultLocation = {
+    venueName: "FPT University Ho Chi Minh City",
+    room: "Innovation Hall",
+    address: "Lô E2a-7, Đường D1, Khu Công nghệ cao, TP. Thủ Đức, TP.HCM",
+    meetingPlatform: "Google Meet",
+    meetingUrl: "",
+    mapUrl: "",
+    note: "Teams will receive detailed room allocation before the event day.",
+};
+
+const defaultContacts = [
+    {
+        label: "Organizer Support",
+        name: "SEAL Organizing Committee",
+        email: "seal@fe.edu.vn",
+        phone: "",
+        detail: "Questions about registration, teams, schedules, and event logistics.",
+        responseTime: "Within 24 hours",
+    },
+    {
+        label: "Technical Support",
+        name: "SEAL Technical Team",
+        email: "tech.seal@fe.edu.vn",
+        phone: "",
+        detail: "Support for GitHub, submissions, file upload, and workspace access.",
+        responseTime: "During competition hours",
+    },
+];
+
+const defaultRuleGroups = [
+    {
+        title: "Team Rules",
+        itemsText: [
+            "Each team must follow the official team size configured for its track.",
+            "Participants must use their registered account and team workspace.",
+            "Team members are responsible for keeping project work original and transparent.",
+        ].join("\n"),
+    },
+    {
+        title: "Submission Rules",
+        itemsText: [
+            "Submit before the round deadline shown in the event workspace.",
+            "GitHub repositories or uploaded files must be accessible to organizers and judges.",
+            "Late, inaccessible, or incomplete submissions may not be evaluated.",
+        ].join("\n"),
+    },
+    {
+        title: "Judging Rules",
+        itemsText: [
+            "Projects are evaluated using the official rubric for each round.",
+            "Judge decisions are based on submitted work, presentation, and rule compliance.",
+            "Organizers may request clarification when submission evidence is unclear.",
+        ].join("\n"),
+    },
+];
+
+const defaultFaqItems = [
+    {
+        question: "Who can join this event?",
+        answer: "Students who meet the event eligibility rules can register individually or as part of a team, depending on organizer settings.",
+    },
+    {
+        question: "Can a team update its submission?",
+        answer: "Teams can update submissions while the round is still open. After the deadline, submissions are locked for evaluation.",
+    },
+    {
+        question: "Where will announcements be posted?",
+        answer: "Official announcements are posted in the event workspace and may also be sent through registered contact channels.",
+    },
+];
+
+function linesToList(value?: string) {
+    return (value || "")
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function normalizeRuleGroups(event?: OrganizerEvent) {
+    if (!event?.ruleGroups?.length) return defaultRuleGroups;
+    return event.ruleGroups.map((group) => ({
+        title: group.title || group.name || group.category || "Rules",
+        itemsText: (group.rules || []).join("\n"),
+    }));
+}
+
+function normalizeFaqItems(event?: OrganizerEvent) {
+    if (!event?.faqItems?.length) return defaultFaqItems;
+    return event.faqItems.map((faq) => ({
+        question: faq.question || faq.q || faq.title || "",
+        answer: faq.answer || faq.a || faq.content || "",
+    }));
+}
 
 const createEventSchema = (isEdit: boolean) => z.object({
     name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -50,7 +144,32 @@ const createEventSchema = (isEdit: boolean) => z.object({
         submissionDeadline: z.string().optional(),
         maxFileSizeMb: z.coerce.number().int().min(1, "Must be >= 1").max(500, "Max 500MB").default(20),
         isTrackSpecific: z.boolean().default(true),
-    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }])
+    })).min(1, "At least one round is required").default([{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }]),
+    location: z.object({
+        venueName: z.string().optional(),
+        room: z.string().optional(),
+        address: z.string().optional(),
+        meetingPlatform: z.string().optional(),
+        meetingUrl: z.string().url("Invalid meeting URL").optional().or(z.literal("")),
+        mapUrl: z.string().url("Invalid map URL").optional().or(z.literal("")),
+        note: z.string().optional(),
+    }).default(defaultLocation),
+    contacts: z.array(z.object({
+        label: z.string().optional(),
+        name: z.string().optional(),
+        email: z.string().email("Invalid email").optional().or(z.literal("")),
+        phone: z.string().optional(),
+        detail: z.string().optional(),
+        responseTime: z.string().optional(),
+    })).default(defaultContacts),
+    ruleGroups: z.array(z.object({
+        title: z.string().min(1, "Rule group title is required"),
+        itemsText: z.string().optional(),
+    })).default(defaultRuleGroups),
+    faqItems: z.array(z.object({
+        question: z.string().min(1, "Question is required"),
+        answer: z.string().min(1, "Answer is required"),
+    })).default(defaultFaqItems),
 }).superRefine((data, ctx) => {
     const now = new Date();
 
@@ -143,7 +262,21 @@ export default function EventForm({ initialData }: EventFormProps) {
             submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString().slice(0, 16) : "",
             maxFileSizeMb: r.maxFileSizeMb || 20,
             isTrackSpecific: r.isTrackSpecific !== undefined ? r.isTrackSpecific : true,
-        })) || [{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }]
+        })) || [{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }],
+        location: {
+            ...defaultLocation,
+            ...(initialData?.location || {}),
+        },
+        contacts: initialData?.contacts?.length ? initialData.contacts.map((contact) => ({
+            label: contact.label || contact.type || "",
+            name: contact.name || contact.title || "",
+            email: contact.email || "",
+            phone: contact.phone || "",
+            detail: contact.detail || "",
+            responseTime: contact.responseTime || "",
+        })) : defaultContacts,
+        ruleGroups: normalizeRuleGroups(initialData),
+        faqItems: normalizeFaqItems(initialData),
     };
 
     const eventSchema = useMemo(() => createEventSchema(isEdit), [isEdit]);
@@ -162,7 +295,6 @@ export default function EventForm({ initialData }: EventFormProps) {
     );
 
     const control = form.control;
-    const watchedTracks = useWatch({ control: form.control, name: "tracks" });
 
     const { fields: trackFields, append: appendTrack, remove: removeTrack } = useFieldArray({
         control: form.control,
@@ -172,6 +304,21 @@ export default function EventForm({ initialData }: EventFormProps) {
     const { fields: roundFields, append: appendRound, remove: removeRound } = useFieldArray({
         control: form.control,
         name: "rounds",
+    });
+
+    const { fields: contactFields, append: appendContact, remove: removeContact } = useFieldArray({
+        control: form.control,
+        name: "contacts",
+    });
+
+    const { fields: ruleGroupFields, append: appendRuleGroup, remove: removeRuleGroup } = useFieldArray({
+        control: form.control,
+        name: "ruleGroups",
+    });
+
+    const { fields: faqFields, append: appendFaq, remove: removeFaq } = useFieldArray({
+        control: form.control,
+        name: "faqItems",
     });
 
     const handleRemoveTrack = (index: number) => {
@@ -219,7 +366,38 @@ export default function EventForm({ initialData }: EventFormProps) {
                     submissionDeadline: r.submissionDeadline ? new Date(r.submissionDeadline).toISOString() : undefined,
                     maxFileSizeMb: r.maxFileSizeMb,
                     isTrackSpecific: r.isTrackSpecific,
-                }))
+                })),
+                location: {
+                    venueName: data.location.venueName || undefined,
+                    room: data.location.room || undefined,
+                    address: data.location.address || undefined,
+                    meetingPlatform: data.location.meetingPlatform || undefined,
+                    meetingUrl: data.location.meetingUrl || undefined,
+                    mapUrl: data.location.mapUrl || undefined,
+                    note: data.location.note || undefined,
+                },
+                contacts: data.contacts
+                    .filter((contact) => contact.label || contact.name || contact.email || contact.phone || contact.detail)
+                    .map((contact) => ({
+                        label: contact.label || undefined,
+                        name: contact.name || undefined,
+                        email: contact.email || undefined,
+                        phone: contact.phone || undefined,
+                        detail: contact.detail || undefined,
+                        responseTime: contact.responseTime || undefined,
+                    })),
+                ruleGroups: data.ruleGroups
+                    .map((group) => ({
+                        title: group.title,
+                        rules: linesToList(group.itemsText),
+                    }))
+                    .filter((group) => group.title && group.rules.length > 0),
+                faqItems: data.faqItems
+                    .filter((faq) => faq.question && faq.answer)
+                    .map((faq) => ({
+                        question: faq.question,
+                        answer: faq.answer,
+                    })),
             };
 
             if (isEdit && initialData?.id) {
@@ -390,8 +568,155 @@ export default function EventForm({ initialData }: EventFormProps) {
                     </div>
                 </motion.div>
 
-                {/* TRACKS */}
+                {/* EVENT DETAILS */}
                 <motion.div custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-yellow-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-orange-500/10 group-hover:to-yellow-500/10" />
+                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="p-3 bg-gradient-to-br from-orange-500/20 to-yellow-600/20 rounded-2xl text-orange-600 ring-1 ring-orange-500/20">
+                                <ListChecks className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-500">Event Details</h3>
+                                <p className="text-muted-foreground mt-1">Default public information. You can edit, add, or remove it before publishing.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="rounded-2xl border border-border/50 bg-background/50 p-5">
+                                <div className="mb-5 flex items-center gap-3">
+                                    <MapPin className="h-5 w-5 text-orange-500" />
+                                    <h4 className="font-semibold text-foreground">Location</h4>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                                    <FormField control={control} name="location.venueName" render={({ field }) => (
+                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Venue</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.room" render={({ field }) => (
+                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Room / Hall</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.address" render={({ field }) => (
+                                        <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Address</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.meetingPlatform" render={({ field }) => (
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Online Platform</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Google Meet / Zoom" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.meetingUrl" render={({ field }) => (
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Meeting URL</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.mapUrl" render={({ field }) => (
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Map URL</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={control} name="location.note" render={({ field }) => (
+                                        <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Location Note</FormLabel><FormControl><Textarea className="bg-card/50 rounded-lg min-h-[80px]" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border/50 bg-background/50 p-5">
+                                <div className="mb-5 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <Phone className="h-5 w-5 text-orange-500" />
+                                        <h4 className="font-semibold text-foreground">Contact</h4>
+                                    </div>
+                                    <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={() => appendContact({ label: "", name: "", email: "", phone: "", detail: "", responseTime: "" })}>
+                                        <Plus className="h-4 w-4" /> Add Contact
+                                    </Button>
+                                </div>
+                                <div className="space-y-4">
+                                    {contactFields.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-xl border border-border/50 bg-card/40 p-4">
+                                            <FormField control={control} name={`contacts.${index}.label`} render={({ field }) => (
+                                                <FormItem className="md:col-span-3"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Label</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={control} name={`contacts.${index}.name`} render={({ field }) => (
+                                                <FormItem className="md:col-span-3"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Name</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={control} name={`contacts.${index}.email`} render={({ field }) => (
+                                                <FormItem className="md:col-span-3"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Email</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={control} name={`contacts.${index}.phone`} render={({ field }) => (
+                                                <FormItem className="md:col-span-3"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Phone</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={control} name={`contacts.${index}.detail`} render={({ field }) => (
+                                                <FormItem className="md:col-span-8"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Detail</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={control} name={`contacts.${index}.responseTime`} render={({ field }) => (
+                                                <FormItem className="md:col-span-3"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Response Time</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <div className="md:col-span-1 flex items-end justify-end">
+                                                <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-100/50 hover:text-red-600" onClick={() => removeContact(index)} aria-label="Remove contact">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border/50 bg-background/50 p-5">
+                                <div className="mb-5 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="h-5 w-5 text-orange-500" />
+                                        <h4 className="font-semibold text-foreground">Rules</h4>
+                                    </div>
+                                    <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={() => appendRuleGroup({ title: "New Rule Group", itemsText: "" })}>
+                                        <Plus className="h-4 w-4" /> Add Rule Group
+                                    </Button>
+                                </div>
+                                <div className="space-y-4">
+                                    {ruleGroupFields.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-xl border border-border/50 bg-card/40 p-4">
+                                            <FormField control={control} name={`ruleGroups.${index}.title`} render={({ field }) => (
+                                                <FormItem className="md:col-span-11"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Group Title</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <div className="md:col-span-1 flex items-end justify-end">
+                                                <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-100/50 hover:text-red-600" onClick={() => removeRuleGroup(index)} aria-label="Remove rule group">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <FormField control={control} name={`ruleGroups.${index}.itemsText`} render={({ field }) => (
+                                                <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Rules, one per line</FormLabel><FormControl><Textarea className="bg-background/50 rounded-lg min-h-[120px]" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border/50 bg-background/50 p-5">
+                                <div className="mb-5 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <HelpCircle className="h-5 w-5 text-orange-500" />
+                                        <h4 className="font-semibold text-foreground">FAQ</h4>
+                                    </div>
+                                    <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={() => appendFaq({ question: "", answer: "" })}>
+                                        <Plus className="h-4 w-4" /> Add FAQ
+                                    </Button>
+                                </div>
+                                <div className="space-y-4">
+                                    {faqFields.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-xl border border-border/50 bg-card/40 p-4">
+                                            <FormField control={control} name={`faqItems.${index}.question`} render={({ field }) => (
+                                                <FormItem className="md:col-span-11"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Question</FormLabel><FormControl><Input className="bg-background/50 rounded-lg" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <div className="md:col-span-1 flex items-end justify-end">
+                                                <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-100/50 hover:text-red-600" onClick={() => removeFaq(index)} aria-label="Remove FAQ">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <FormField control={control} name={`faqItems.${index}.answer`} render={({ field }) => (
+                                                <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Answer</FormLabel><FormControl><Textarea className="bg-background/50 rounded-lg min-h-[90px]" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* TRACKS */}
+                <motion.div custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-emerald-500/10 group-hover:to-teal-500/10" />
                     <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
                         <div className="flex items-center justify-between mb-8">
@@ -458,7 +783,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                 </motion.div>
 
                 {/* ROUNDS */}
-                <motion.div custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-pink-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-rose-500/10 group-hover:to-pink-500/10" />
                     <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
                         <div className="flex items-center justify-between mb-8">

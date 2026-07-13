@@ -23,6 +23,44 @@ export interface OrganizerRoundInput {
   trackId?: number | null;
 }
 
+export interface OrganizerEventLocation {
+  name?: string;
+  venueName?: string;
+  room?: string;
+  address?: string;
+  meetingPlatform?: string;
+  meetingUrl?: string;
+  mapUrl?: string;
+  note?: string;
+}
+
+export interface OrganizerEventContact {
+  label?: string;
+  type?: string;
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  detail?: string;
+  responseTime?: string;
+}
+
+export interface OrganizerEventRuleGroup {
+  title?: string;
+  name?: string;
+  category?: string;
+  rules: string[];
+}
+
+export interface OrganizerEventFAQItem {
+  question?: string;
+  q?: string;
+  title?: string;
+  answer?: string;
+  a?: string;
+  content?: string;
+}
+
 export interface OrganizerEventPayload {
   name: string;
   description?: string;
@@ -38,6 +76,10 @@ export interface OrganizerEventPayload {
   prizeHonorable?: string;
   tracks: OrganizerTrackInput[];
   rounds: OrganizerRoundInput[];
+  location?: OrganizerEventLocation;
+  contacts?: OrganizerEventContact[];
+  ruleGroups?: OrganizerEventRuleGroup[];
+  faqItems?: OrganizerEventFAQItem[];
 }
 
 export interface OrganizerTrack extends OrganizerTrackInput {
@@ -230,7 +272,7 @@ export interface DetailedRankedTeamEntry {
 }
 
 export interface DetailedRankingsResponse {
-  round: any;
+  round: unknown;
   tracks: {
     track: { id: number; name: string };
     entries: DetailedRankedTeamEntry[];
@@ -266,7 +308,7 @@ export async function getRoundRankings(
   const res = await axiosClient.get(
     `/organizer/events/${eventId}/rounds/${roundId}/rankings${query ? `?${query}` : ""}`
   );
-  return unwrapData<any>(res);
+  return unwrapData<unknown>(res);
 }
 
 export type AwardType = "first_prize" | "second_prize" | "third_prize" | "honorable_mention";
@@ -285,6 +327,5 @@ export async function publishRoundResults(
     `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
     payload
   );
-  return unwrapData<any>(res);
+  return unwrapData<unknown>(res);
 }
-
