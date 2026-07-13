@@ -76,10 +76,6 @@ export interface OrganizerEventPayload {
   prizeHonorable?: string;
   tracks: OrganizerTrackInput[];
   rounds: OrganizerRoundInput[];
-  location?: OrganizerEventLocation;
-  contacts?: OrganizerEventContact[];
-  ruleGroups?: OrganizerEventRuleGroup[];
-  faqItems?: OrganizerEventFAQItem[];
 }
 
 export interface OrganizerTrack extends OrganizerTrackInput {
@@ -101,6 +97,10 @@ export interface OrganizerRound extends OrganizerRoundInput {
 
 export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds"> {
   id: number;
+  location?: OrganizerEventLocation;
+  contacts?: OrganizerEventContact[];
+  ruleGroups?: OrganizerEventRuleGroup[];
+  faqItems?: OrganizerEventFAQItem[];
   icons?: Array<{
     id?: number;
     url: string;

@@ -131,10 +131,6 @@ function buildEventPayload(
     prize2nd: event.prize2nd || undefined,
     prize3rd: event.prize3rd || undefined,
     prizeHonorable: event.prizeHonorable || undefined,
-    location: event.location,
-    contacts: event.contacts,
-    ruleGroups: event.ruleGroups,
-    faqItems: event.faqItems,
     tracks,
     rounds,
   };

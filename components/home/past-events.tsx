@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { getPublicEvents } from "@/lib/api/public-events.api";
+import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
 import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
 const EVENT_SEASONS = ["All", "Spring", "Summer", "Fall"];
@@ -18,12 +18,13 @@ export default function PastEvents() {
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    const filteredEvents = !events ? [] : activeTab === "All" 
-        ? events 
-        : events.filter((event) => event.season === activeTab);
+    const publicEvents = events?.filter(event => !isAutomationEvent(event)) ?? [];
+    const filteredEvents = activeTab === "All"
+        ? publicEvents
+        : publicEvents.filter((event) => event.season === activeTab);
 
     return (
-        <section className="bg-background py-20">
+        <section className="bg-background pb-32 pt-20 sm:pb-36">
             <div className="container mx-auto px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="mb-12 border-b border-border pb-6">

@@ -49,6 +49,20 @@ const defaultContacts = [
     },
 ];
 
+function toLocalDateInput(value?: string) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function localDateToIso(value: string, endOfDay = false) {
+    return new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`).toISOString();
+}
+
 const defaultRuleGroups = [
     {
         title: "Team Rules",
@@ -90,13 +104,6 @@ const defaultFaqItems = [
         answer: "Official announcements are posted in the event workspace and may also be sent through registered contact channels.",
     },
 ];
-
-function linesToList(value?: string) {
-    return (value || "")
-        .split(/\r?\n/)
-        .map((item) => item.trim())
-        .filter(Boolean);
-}
 
 function normalizeRuleGroups(event?: OrganizerEvent) {
     if (!event?.ruleGroups?.length) return defaultRuleGroups;
@@ -244,8 +251,8 @@ export default function EventForm({ initialData }: EventFormProps) {
         season: initialData?.season || "Spring",
         year: initialData?.year || new Date().getFullYear(),
         status: initialData?.status || "draft",
-        registrationDeadline: initialData?.registrationDeadline ? new Date(initialData.registrationDeadline).toISOString().slice(0, 16) : "",
-        startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
+        registrationDeadline: toLocalDateInput(initialData?.registrationDeadline),
+        startDate: toLocalDateInput(initialData?.startDate),
         githubOrgUrl: initialData?.githubOrgUrl || "https://github.com/DEMO-SEAL-HackaThon-ORG",
         prize1st: initialData?.prize1st || "",
         prize2nd: initialData?.prize2nd || "",
@@ -347,10 +354,18 @@ export default function EventForm({ initialData }: EventFormProps) {
         setIsLoading(true);
         try {
             const payload: OrganizerEventPayload = {
-                ...data,
-                registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
-                startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+                name: data.name,
+                description: data.description || undefined,
+                season: data.season,
+                year: data.year,
+                status: data.status,
+                registrationDeadline: data.registrationDeadline ? localDateToIso(data.registrationDeadline, true) : undefined,
+                startDate: data.startDate ? localDateToIso(data.startDate) : undefined,
                 githubOrgUrl: data.githubOrgUrl || undefined,
+                prize1st: data.prize1st || undefined,
+                prize2nd: data.prize2nd || undefined,
+                prize3rd: data.prize3rd || undefined,
+                prizeHonorable: data.prizeHonorable || undefined,
                 tracks: data.tracks?.map(t => ({
                     id: t.id,
                     name: t.name,
@@ -367,37 +382,6 @@ export default function EventForm({ initialData }: EventFormProps) {
                     maxFileSizeMb: r.maxFileSizeMb,
                     isTrackSpecific: r.isTrackSpecific,
                 })),
-                location: {
-                    venueName: data.location.venueName || undefined,
-                    room: data.location.room || undefined,
-                    address: data.location.address || undefined,
-                    meetingPlatform: data.location.meetingPlatform || undefined,
-                    meetingUrl: data.location.meetingUrl || undefined,
-                    mapUrl: data.location.mapUrl || undefined,
-                    note: data.location.note || undefined,
-                },
-                contacts: data.contacts
-                    .filter((contact) => contact.label || contact.name || contact.email || contact.phone || contact.detail)
-                    .map((contact) => ({
-                        label: contact.label || undefined,
-                        name: contact.name || undefined,
-                        email: contact.email || undefined,
-                        phone: contact.phone || undefined,
-                        detail: contact.detail || undefined,
-                        responseTime: contact.responseTime || undefined,
-                    })),
-                ruleGroups: data.ruleGroups
-                    .map((group) => ({
-                        title: group.title,
-                        rules: linesToList(group.itemsText),
-                    }))
-                    .filter((group) => group.title && group.rules.length > 0),
-                faqItems: data.faqItems
-                    .filter((faq) => faq.question && faq.answer)
-                    .map((faq) => ({
-                        question: faq.question,
-                        answer: faq.answer,
-                    })),
             };
 
             if (isEdit && initialData?.id) {
@@ -498,7 +482,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                 <FormItem className="md:col-span-6">
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Registration Deadline</FormLabel>
                                     <FormControl>
-                                        <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
+                                        <Input type="date" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -508,7 +492,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                 <FormItem className="md:col-span-6">
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Start Date</FormLabel>
                                     <FormControl>
-                                        <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
+                                        <Input type="date" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

@@ -66,7 +66,7 @@ const getNavItems = (eventId: string): NavItem[] => {
     { label: "Team Progress", href: `${base}/progress`, icon: ChartNoAxesCombined },
     { label: "Feedback", href: `${base}/feedback`, icon: ClipboardCheck, id: "feedback" },
     { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
-    { label: "Announcements", href: `${base}/announcements`, icon: Megaphone },
+
     { label: "Settings", href: `${base}/settings`, icon: Settings },
   ];
 };
@@ -201,11 +201,11 @@ export function MentorSidebar({
               item.href === `/mentor/events/${eventId}`
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
-                
+
             const currentRound = event?.rounds?.find((r) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
             const isRoundHasDates = !!(currentRound?.startDate || currentRound?.endDate);
             const shouldDisable = isRoundHasDates && currentRound?.status === 'not_started';
-            
+
             const isDisabled = shouldDisable && (item.label === "Submissions Review" || item.label === "Team Progress");
 
             const linkContent = (
