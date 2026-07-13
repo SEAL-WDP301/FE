@@ -10,6 +10,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useSocket } from "@/lib/hooks/useSocket";
 
 export default function MentorMessagesPage() {
   const params = useParams();
@@ -17,6 +20,16 @@ export default function MentorMessagesPage() {
   const queryClient = useQueryClient();
   const eventId = params.eventId as string;
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { socket, isConnected } = useSocket("/chat");
+
+  const { data: user } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/users/profile');
+      return res.data.data;
+    },
+  });
 
   const { data: teams, isLoading } = useQuery({
     queryKey: ["mentorTeams", eventId],
@@ -35,12 +48,27 @@ export default function MentorMessagesPage() {
     return bDate - aDate;
   }) : [];
 
+  const filteredTeams = sortedTeams.filter(t => 
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (t.track?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const maxRoundNumber = teams ? Math.max(...teams.flatMap((t: any) => t.teamRounds?.map((tr: any) => tr.round?.roundNumber || 0) || [0])) : 0;
+
   // Default select first team
   useEffect(() => {
     if (sortedTeams.length > 0 && !selectedTeamId) {
       setSelectedTeamId(sortedTeams[0].id);
     }
   }, [sortedTeams, selectedTeamId]);
+
+  // Join all team rooms to receive global notifications
+  useEffect(() => {
+    if (socket && isConnected && teams?.length > 0) {
+      const teamIds = teams.map((t: any) => t.id);
+      socket.emit("join_multiple_team_rooms", teamIds);
+    }
+  }, [socket, isConnected, teams]);
 
   const handleTeamSelect = (team: any) => {
     setSelectedTeamId(team.id);
@@ -58,15 +86,40 @@ export default function MentorMessagesPage() {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
       {/* Left side: Teams list */}
-      <div className="w-[280px] shrink-0 flex flex-col gap-2 overflow-y-auto pr-2 no-scrollbar">
-        <div className="mb-2">
-          <h2 className="text-lg font-bold tracking-tight">Messages</h2>
+      <div className="w-[280px] shrink-0 flex flex-col gap-3 min-h-0">
+        <div className="shrink-0">
+          <h2 className="text-lg font-bold tracking-tight mb-3">Messages</h2>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input 
+              placeholder="Search teams..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-xs bg-muted/50 border-transparent focus-visible:ring-1 focus-visible:ring-orange-500"
+            />
+          </div>
         </div>
         
-        {isLoading ? (
+        <div className="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-2">
+          {isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-orange-500" /></div>
-        ) : sortedTeams.map((team: any) => {
-          const currentRound = team.teamRounds?.[0]?.round;
+          ) : filteredTeams.map((team: any) => {
+          const latestTeamRound = team.teamRounds?.sort((a: any, b: any) => (b.round?.roundNumber || 0) - (a.round?.roundNumber || 0))?.[0];
+          const currentRound = latestTeamRound?.round;
+          const status = latestTeamRound?.status; // "competing", "advanced", "eliminated"
+          
+          let statusBadge = null;
+          if (status === "eliminated") {
+            statusBadge = <span className="text-[9px] font-semibold text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded-sm">Eliminated</span>;
+          } else if (status === "advanced") {
+            statusBadge = <span className="text-[9px] font-semibold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded-sm">Passed</span>;
+          } else if (status === "competing") {
+            if (currentRound?.roundNumber === maxRoundNumber) {
+              statusBadge = <span className="text-[9px] font-semibold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-sm">Current</span>;
+            } else {
+              statusBadge = <span className="text-[9px] font-semibold text-zinc-500 bg-zinc-500/10 px-1.5 py-0.5 rounded-sm">Past Round</span>;
+            }
+          }
 
           return (
             <Card 
@@ -76,7 +129,7 @@ export default function MentorMessagesPage() {
             >
               {team.unreadCount > 0 && (
                 <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[18px] h-4.5 px-1 bg-red-500 text-white border-2 border-background rounded-full shadow-sm text-[9px] font-bold">
-                  {team.unreadCount > 99 ? '99+' : team.unreadCount}
+                  {team.unreadCount > 99 ? '99+' : `+${team.unreadCount}`}
                 </div>
               )}
               <div className="flex justify-between items-start mb-1">
@@ -85,9 +138,18 @@ export default function MentorMessagesPage() {
               </div>
               
               {currentRound && (
-                <div className="text-[10px] text-muted-foreground mb-1.5 flex items-center gap-1">
-                  <Target className="h-2.5 w-2.5" />
-                  <span className="truncate">{currentRound.name}</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Target className="h-2.5 w-2.5" />
+                    <span className="truncate max-w-[120px]">{currentRound.name}</span>
+                  </div>
+                  {statusBadge}
+                </div>
+              )}
+
+              {team.lastMessage && (
+                <div className="text-[11px] text-muted-foreground mb-2 line-clamp-1 pr-4" title={team.lastMessage.content}>
+                  <span className="font-medium text-foreground/80">{team.lastMessage.sender?.id === user?.id ? 'Bạn' : (team.lastMessage.sender?.name || 'System')}:</span> <span className={team.unreadCount > 0 ? "text-foreground font-medium" : ""}>{team.lastMessage.content}</span>
                 </div>
               )}
               
@@ -112,12 +174,18 @@ export default function MentorMessagesPage() {
               </div>
             </Card>
           );
-        })}
-        {teams?.length === 0 && (
-           <div className="text-center py-10 text-muted-foreground text-sm">
-             No teams found.
-           </div>
-        )}
+          })}
+          {teams?.length === 0 && (
+             <div className="text-center py-10 text-muted-foreground text-sm">
+               No teams found.
+             </div>
+          )}
+          {teams?.length > 0 && filteredTeams.length === 0 && (
+             <div className="text-center py-10 text-muted-foreground text-sm">
+               No teams match your search.
+             </div>
+          )}
+        </div>
       </div>
 
       {/* Right side: Chat */}
@@ -130,7 +198,13 @@ export default function MentorMessagesPage() {
                   <MessageSquare className="h-4 w-4 text-orange-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[15px] leading-tight">{selectedTeamData?.name}</h3>
+                  <h3 className="font-semibold text-[15px] leading-tight flex items-center gap-2">
+                    {selectedTeamData?.name}
+                    <span className="flex h-2 w-2 relative" title="Live Chat Connection Active">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                  </h3>
                   <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Target className="h-3 w-3" />
                     <span>{selectedTeamData?.track?.name || 'Hackathon Team'}</span>
@@ -146,7 +220,7 @@ export default function MentorMessagesPage() {
                 View Team <ExternalLink className="h-3 w-3" />
               </Button>
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-0">
               <FloatingTeamChat teamId={selectedTeamId} teamName={selectedTeamData?.name} inline={true} defaultOpen={true} />
             </div>
           </>
