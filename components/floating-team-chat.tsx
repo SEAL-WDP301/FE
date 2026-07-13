@@ -136,17 +136,40 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
         );
       }
 
-      queryClient.setQueryData(["team-messages", teamId], (oldData: any) => {
-        if (!oldData) return oldData;
-        // Check if message already exists
-        const exists = oldData.pages.some((page: TeamMessage[]) => page.find(m => m.id === newMessage.id));
-        if (!exists) {
-          const newPages = [...oldData.pages];
-          newPages[0] = [...newPages[0], newMessage];
-          return { ...oldData, pages: newPages };
-        }
-        return oldData;
-      });
+      if (newMessage.teamId === teamId) {
+        queryClient.setQueryData(["team-messages", teamId], (oldData: any) => {
+          if (!oldData) return oldData;
+          // Check if message already exists
+          const exists = oldData.pages.some((page: TeamMessage[]) => page.find(m => m.id === newMessage.id));
+          if (!exists) {
+            const newPages = [...oldData.pages];
+            newPages[0] = [...newPages[0], newMessage];
+            return { ...oldData, pages: newPages };
+          }
+          return oldData;
+        });
+      }
+
+      // Update mentorTeams and organizerTeams cache for the sidebar preview
+      const updateTeamListCache = (queryKeyPrefix: string) => {
+        queryClient.setQueriesData({ queryKey: [queryKeyPrefix] }, (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((t: any) => {
+            if (t.id === newMessage.teamId) {
+              const shouldIncrementUnread = newMessage.senderId !== user?.id && (!isOpenRef.current || newMessage.teamId !== teamId);
+              return {
+                ...t,
+                lastMessage: newMessage,
+                lastMessageAt: newMessage.createdAt,
+                unreadCount: shouldIncrementUnread ? (t.unreadCount || 0) + 1 : (t.unreadCount || 0)
+              };
+            }
+            return t;
+          });
+        });
+      };
+      updateTeamListCache("mentorTeams");
+      updateTeamListCache("organizerTeams");
     };
 
     const handleMessagesReadUpdated = (updatedMessages: TeamMessage[]) => {
@@ -188,7 +211,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
     socket.on("chat_message_deleted", handleMessageDeleted);
 
     return () => {
-      socket.emit("leave_team_room", teamId);
+      // Intentionally NOT leaving the team room so we can continue receiving notifications globally
       socket.off("receive_chat_message", handleReceiveMessage);
       socket.off("messages_read_updated", handleMessagesReadUpdated);
       socket.off("chat_message_edited", handleMessageEdited);

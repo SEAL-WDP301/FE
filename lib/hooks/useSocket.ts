@@ -6,6 +6,8 @@ import { useAuthStore } from "@/lib/stores/auth.store";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "http://localhost:3000";
 
+const socketInstances: Record<string, Socket> = {};
+
 export const useSocket = (namespace: string = "") => {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -16,18 +18,25 @@ export const useSocket = (namespace: string = "") => {
     const token = useAuthStore.getState().accessToken;
     if (!token) return;
 
-    if (!socketRef.current) {
-      const url = namespace ? `${SOCKET_URL}${namespace.startsWith('/') ? namespace : `/${namespace}`}` : SOCKET_URL;
-      socketRef.current = io(url, {
+    const url = namespace ? `${SOCKET_URL}${namespace.startsWith('/') ? namespace : `/${namespace}`}` : SOCKET_URL;
+
+    if (!socketInstances[url]) {
+      socketInstances[url] = io(url, {
         auth: (cb) => {
           cb({ token: useAuthStore.getState().accessToken });
         },
         transports: ["websocket"],
       });
-
-      socketRef.current.on("connect", () => setIsConnected(true));
-      socketRef.current.on("disconnect", () => setIsConnected(false));
     }
+
+    socketRef.current = socketInstances[url];
+
+    if (socketRef.current.connected) {
+      setIsConnected(true);
+    }
+    
+    socketRef.current.on("connect", () => setIsConnected(true));
+    socketRef.current.on("disconnect", () => setIsConnected(false));
 
     const handleTokenRefresh = () => {
       if (socketRef.current) {
@@ -39,6 +48,7 @@ export const useSocket = (namespace: string = "") => {
     const handleAuthUnauthorized = () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
+        delete socketInstances[url];
       }
     };
 
@@ -48,13 +58,14 @@ export const useSocket = (namespace: string = "") => {
     return () => {
       window.removeEventListener("token-refreshed", handleTokenRefresh);
       window.removeEventListener("auth-unauthorized", handleAuthUnauthorized);
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-        setIsConnected(false);
-      }
+      
+      // Do not disconnect the singleton socket on unmount, 
+      // otherwise other components using it will lose connection.
+      // We just clean up the local reference.
+      socketRef.current = null;
+      setIsConnected(false);
     };
-  }, []);
+  }, [namespace]);
 
   return { socket: socketRef.current, isConnected };
 };
