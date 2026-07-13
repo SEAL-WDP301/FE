@@ -209,9 +209,12 @@ export default function EventRoundsPage() {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       enqueueSnackbar("Round status updated", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["detailedRankings", eventId, String(variables.roundId)] });
+      queryClient.invalidateQueries({ queryKey: ["organizerTeams", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId, String(variables.roundId)] });
     },
     onError: (error) => {
       enqueueSnackbar(getApiMessage(error, "Failed to update round status"), {
