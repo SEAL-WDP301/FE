@@ -185,12 +185,28 @@ function getRuleIcon(title: string) {
   return FileText;
 }
 
+function parseJsonSafe<T>(jsonStr: string | null | undefined, fallback: T): T {
+  if (!jsonStr) return fallback;
+  try {
+    return JSON.parse(jsonStr) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function normalizeRuleGroups(event: EventDetail): RuleGroup[] {
-  const groupSource = event.ruleGroups ?? (Array.isArray(event.rules) && typeof event.rules[0] === 'object' ? event.rules as ApiRuleGroup[] : undefined);
+  let groupSource = event.ruleGroups ?? (Array.isArray(event.rules) && typeof event.rules[0] === 'object' ? event.rules as ApiRuleGroup[] : undefined);
+
+  if (!groupSource && typeof event.rules === 'string') {
+    const parsed = parseJsonSafe<any>(event.rules, null);
+    if (Array.isArray(parsed)) {
+      groupSource = parsed;
+    }
+  }
 
   if (groupSource?.length) {
     return groupSource
-      .map((group) => {
+      .map((group: any) => {
         const title = group.title || group.name || group.category || 'Rules';
         const items = [
           ...(group.items ?? []),
@@ -205,7 +221,7 @@ function normalizeRuleGroups(event: EventDetail): RuleGroup[] {
           items,
         };
       })
-      .filter((group) => group.items.length > 0);
+      .filter((group: any) => group.items.length > 0);
   }
 
   if (Array.isArray(event.rules) || typeof event.rules === 'string') {
@@ -239,8 +255,12 @@ function normalizeFaqItems(event: EventDetail): FAQItem[] {
 function normalizeLocation(event: EventDetail): ApiLocation | null {
   const location = event.location ?? event.venue;
   if (!location) return null;
-  if (typeof location === 'string') return { name: location };
-  return location;
+  if (typeof location === 'string') {
+    const parsed = parseJsonSafe<any>(location, null);
+    if (parsed && typeof parsed === 'object') return parsed;
+    return { name: location };
+  }
+  return location as ApiLocation;
 }
 
 function parseContactText(value: string): ApiContact {
@@ -275,6 +295,11 @@ function parseContactText(value: string): ApiContact {
 
 function normalizeContactValue(value?: ApiContact[] | ApiContact | string[] | string | null): ApiContact[] {
   if (!value) return [];
+  if (typeof value === 'string') {
+    const parsed = parseJsonSafe<any>(value, null);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === 'object') return [parsed];
+  }
   const items = Array.isArray(value) ? value : [value];
   return items.map((item) => (typeof item === 'string' ? parseContactText(item) : item));
 }

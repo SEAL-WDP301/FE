@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { getPublicEvents, type PublicEvent } from "@/lib/api/public-events.api";
+import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
+import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
 const EVENT_SEASONS = ["All", "Spring", "Summer", "Fall"];
 
@@ -18,12 +18,13 @@ export default function PastEvents() {
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    const filteredEvents = !events ? [] : activeTab === "All" 
-        ? events 
-        : events.filter((event) => event.season === activeTab);
+    const publicEvents = events?.filter(event => !isAutomationEvent(event)) ?? [];
+    const filteredEvents = activeTab === "All"
+        ? publicEvents
+        : publicEvents.filter((event) => event.season === activeTab);
 
     return (
-        <section className="bg-background py-20">
+        <section className="bg-background pb-32 pt-20 sm:pb-36">
             <div className="container mx-auto px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="mb-12 border-b border-border pb-6">
@@ -70,37 +71,23 @@ export default function PastEvents() {
                 {/* Grid */}
                 {!isLoading && !isError && filteredEvents.length > 0 && (
                     <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredEvents.map((event: PublicEvent) => {
-                            const imageUrl = event.imageUrl || event.image_url;
+                        {filteredEvents.map((event: OrganizerEvent) => (
+                            <div 
+                                key={event.id} 
+                                className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
+                            >
+                                {/* Header Image (16:9) */}
+                                <div className="relative aspect-video w-full overflow-hidden bg-muted flex items-center justify-center">
+                                    {/* Fallback pattern for events without images */}
+                                    <div className="absolute inset-0 opacity-20 seal-grid"></div>
+                                    <span className="text-4xl font-bold text-muted-foreground/30 relative z-10">{event.season} {event.year}</span>
+                                    
+                                    {/* Gradient Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
+                                </div>
 
-                            return (
-                                <div
-                                    key={event.id}
-                                    className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
-                                >
-                                    {/* Header Image (16:9) */}
-                                    <div className="relative aspect-video w-full overflow-hidden bg-muted flex items-center justify-center">
-                                        {imageUrl ? (
-                                            <Image
-                                                src={imageUrl}
-                                                alt={event.name || "Event image"}
-                                                fill
-                                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <>
-                                                <div className="absolute inset-0 opacity-20 seal-grid"></div>
-                                                <span className="text-4xl font-bold text-muted-foreground/30 relative z-10">{event.season} {event.year}</span>
-                                            </>
-                                        )}
-
-                                        {/* Gradient Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex flex-1 flex-col p-6">
+                                {/* Content */}
+                                <div className="flex flex-1 flex-col p-6">
                                     {/* Tags */}
                                     <div className="mb-3 flex flex-wrap gap-2">
                                         <span className="text-xs font-semibold text-orange-500">
@@ -144,10 +131,9 @@ export default function PastEvents() {
                                             </Button>
                                         </Link>
                                     </div>
-                                    </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

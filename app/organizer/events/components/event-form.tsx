@@ -25,8 +25,8 @@ const defaultLocation = {
     room: "Innovation Hall",
     address: "Lô E2a-7, Đường D1, Khu Công nghệ cao, TP. Thủ Đức, TP.HCM",
     meetingPlatform: "Google Meet",
-    meetingUrl: "",
-    mapUrl: "",
+    meetingUrl: "https://meet.google.com/abc-xyz-123",
+    mapUrl: "https://maps.app.goo.gl/fpthcm",
     note: "Teams will receive detailed room allocation before the event day.",
 };
 
@@ -35,7 +35,7 @@ const defaultContacts = [
         label: "Organizer Support",
         name: "SEAL Organizing Committee",
         email: "seal@fe.edu.vn",
-        phone: "",
+        phone: "0123 456 789",
         detail: "Questions about registration, teams, schedules, and event logistics.",
         responseTime: "Within 24 hours",
     },
@@ -43,7 +43,7 @@ const defaultContacts = [
         label: "Technical Support",
         name: "SEAL Technical Team",
         email: "tech.seal@fe.edu.vn",
-        phone: "",
+        phone: "0987 654 321",
         detail: "Support for GitHub, submissions, file upload, and workspace access.",
         responseTime: "During competition hours",
     },
@@ -98,17 +98,27 @@ function linesToList(value?: string) {
         .filter(Boolean);
 }
 
+function parseJsonSafe<T>(jsonStr: string | null | undefined, fallback: T): T {
+    if (!jsonStr) return fallback;
+    try {
+        return JSON.parse(jsonStr) as T;
+    } catch {
+        return fallback;
+    }
+}
+
 function normalizeRuleGroups(event?: OrganizerEvent) {
-    if (!event?.ruleGroups?.length) return defaultRuleGroups;
-    return event.ruleGroups.map((group) => ({
+    const rulesArray = parseJsonSafe<any[]>(event?.rules, []);
+    if (!rulesArray.length) return defaultRuleGroups;
+    return rulesArray.map((group) => ({
         title: group.title || group.name || group.category || "Rules",
         itemsText: (group.rules || []).join("\n"),
     }));
 }
 
 function normalizeFaqItems(event?: OrganizerEvent) {
-    if (!event?.faqItems?.length) return defaultFaqItems;
-    return event.faqItems.map((faq) => ({
+    if (!event?.faq?.length) return defaultFaqItems;
+    return event.faq.map((faq: any) => ({
         question: faq.question || faq.q || faq.title || "",
         answer: faq.answer || faq.a || faq.content || "",
     }));
@@ -267,16 +277,19 @@ export default function EventForm({ initialData }: EventFormProps) {
         })) || [{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }],
         location: {
             ...defaultLocation,
-            ...(initialData?.location || {}),
+            ...parseJsonSafe<any>(initialData?.location, {}),
         },
-        contacts: initialData?.contacts?.length ? initialData.contacts.map((contact) => ({
-            label: contact.label || contact.type || "",
-            name: contact.name || contact.title || "",
-            email: contact.email || "",
-            phone: contact.phone || "",
-            detail: contact.detail || "",
-            responseTime: contact.responseTime || "",
-        })) : defaultContacts,
+        contacts: (() => {
+            const parsedContacts = parseJsonSafe<any[]>(initialData?.contact, []);
+            return parsedContacts.length ? parsedContacts.map((contact) => ({
+                label: contact.label || contact.type || "",
+                name: contact.name || contact.title || "",
+                email: contact.email || "",
+                phone: contact.phone || "",
+                detail: contact.detail || "",
+                responseTime: contact.responseTime || "",
+            })) : defaultContacts;
+        })(),
         ruleGroups: normalizeRuleGroups(initialData),
         faqItems: normalizeFaqItems(initialData),
     };
@@ -348,8 +361,10 @@ export default function EventForm({ initialData }: EventFormProps) {
     const onSubmit = async (data: EventFormValues) => {
         setIsLoading(true);
         try {
+            const { contacts, ruleGroups, faqItems, location, ...restData } = data;
+            
             const payload: OrganizerEventPayload = {
-                ...data,
+                ...restData,
                 registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
                 startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
                 githubOrgUrl: data.githubOrgUrl || undefined,
@@ -370,7 +385,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                     maxFileSizeMb: r.maxFileSizeMb,
                     isTrackSpecific: r.isTrackSpecific,
                 })),
-                location: {
+                location: JSON.stringify({
                     venueName: data.location.venueName || undefined,
                     room: data.location.room || undefined,
                     address: data.location.address || undefined,
@@ -378,8 +393,8 @@ export default function EventForm({ initialData }: EventFormProps) {
                     meetingUrl: data.location.meetingUrl || undefined,
                     mapUrl: data.location.mapUrl || undefined,
                     note: data.location.note || undefined,
-                },
-                contacts: data.contacts
+                }),
+                contact: JSON.stringify(data.contacts
                     .filter((contact) => contact.label || contact.name || contact.email || contact.phone || contact.detail)
                     .map((contact) => ({
                         label: contact.label || undefined,
@@ -388,14 +403,14 @@ export default function EventForm({ initialData }: EventFormProps) {
                         phone: contact.phone || undefined,
                         detail: contact.detail || undefined,
                         responseTime: contact.responseTime || undefined,
-                    })),
-                ruleGroups: data.ruleGroups
+                    }))),
+                rules: JSON.stringify(data.ruleGroups
                     .map((group) => ({
                         title: group.title,
                         rules: linesToList(group.itemsText),
                     }))
-                    .filter((group) => group.title && group.rules.length > 0),
-                faqItems: data.faqItems
+                    .filter((group) => group.title && group.rules.length > 0)),
+                faq: data.faqItems
                     .filter((faq) => faq.question && faq.answer)
                     .map((faq) => ({
                         question: faq.question,

@@ -77,10 +77,10 @@ export interface OrganizerEventPayload {
   prizeHonorable?: string;
   tracks: OrganizerTrackInput[];
   rounds: OrganizerRoundInput[];
-  location?: OrganizerEventLocation;
-  contacts?: OrganizerEventContact[];
-  ruleGroups?: OrganizerEventRuleGroup[];
-  faqItems?: OrganizerEventFAQItem[];
+  location?: string;
+  contact?: string;
+  rules?: string;
+  faq?: OrganizerEventFAQItem[];
 }
 
 export interface OrganizerTrack extends OrganizerTrackInput {
