@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Loader2, Trophy, Medal, MapPin, Users, Calendar, Award } from "lucide-react";
 import { format } from "date-fns";
+import Link from "next/link";
 
 export function ProfileHistory({ userId }: { userId?: number }) {
   const { data, isLoading, isError } = useQuery({
@@ -80,26 +81,69 @@ export function ProfileHistory({ userId }: { userId?: number }) {
         {hackerHistory.length === 0 ? (
           <p className="text-sm text-[#a39c8f]">No participations yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-5">
             {hackerHistory.map((team: any) => (
-              <div key={team.id} className="flex flex-col justify-between p-5 rounded-[16px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] hover:border-[rgba(255,154,60,0.3)] transition-colors">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-[#f5f2ec] text-base">{team.event?.name}</h4>
-                    {team.award && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500">
-                        <Award className="w-3 h-3" /> {team.award.replace("_", " ")}
-                      </span>
+              <Link key={team.id} href={`/home/events/${team.event?.id}`} className="block">
+                <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-[16px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] hover:border-[rgba(255,154,60,0.3)] hover:bg-[#1a1510] transition-all group">
+                  {/* Event Image or Fallback */}
+                  <div className="w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden bg-[#1e1814] flex-shrink-0 relative">
+                    {team.event?.image_url || team.event?.imageUrl ? (
+                      <img src={team.event?.image_url || team.event?.imageUrl} alt={team.event?.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center border border-[rgba(255,154,60,0.1)] opacity-50">
+                        <Trophy className="w-8 h-8 text-orange-500 mb-2 opacity-50" />
+                        <span className="text-xs font-bold text-orange-500/50 uppercase tracking-widest">{team.event?.season} {team.event?.year}</span>
+                      </div>
                     )}
+                    {/* Status Badge */}
+                    <div className="absolute top-2 right-2 flex gap-2">
+                        {team.event?.status === 'closed' && <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ended</span>}
+                        {team.event?.status === 'active' && <span className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Active</span>}
+                        {team.event?.status === 'ongoing' && <span className="bg-yellow-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ongoing</span>}
+                    </div>
                   </div>
-                  <p className="text-sm font-semibold text-[#ff9a3c] mb-1">Team: {team.name}</p>
-                  <p className="text-xs text-[#a39c8f] mb-4">Track: {team.track?.name}</p>
+
+                  {/* Content */}
+                  <div className="flex flex-col justify-between flex-1">
+                    <div>
+                      <div className="flex justify-between items-start mb-2 gap-4">
+                        <h4 className="font-bold text-[#f5f2ec] text-xl group-hover:text-orange-400 transition-colors line-clamp-1">{team.event?.name}</h4>
+                        {team.award && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2.5 py-1 text-xs font-bold text-yellow-500 shrink-0 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+                            <Award className="w-3.5 h-3.5" /> {team.award.replace("_", " ")}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {team.event?.description && (
+                         <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
+                           {team.event.description}
+                         </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                        <p className="text-sm font-semibold text-orange-500 flex items-center gap-1.5 bg-orange-500/10 px-2.5 py-1 rounded-md border border-orange-500/20">
+                          Team: {team.name}
+                        </p>
+                        {team.track?.name && (
+                          <p className="text-sm text-[#a39c8f] flex items-center gap-1.5 border border-white/5 bg-white/5 px-2.5 py-1 rounded-md">
+                            Track: {team.track.name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center text-[12px] text-[#6f685c] gap-4 pt-4 border-t border-[rgba(255,154,60,0.1)] mt-auto">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Joined {format(new Date(team.createdAt), "MMM yyyy")}</span>
+                      {team.leaderId === userId ? (
+                        <span className="flex items-center gap-1.5 text-emerald-500"><Users className="w-3.5 h-3.5" /> Team Leader</span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-blue-400"><Users className="w-3.5 h-3.5" /> Member</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center text-[11px] text-[#6f685c] gap-4">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {format(new Date(team.createdAt), "MMM yyyy")}</span>
-                  {team.leaderId === userId && <span className="flex items-center gap-1 text-emerald-500"><Users className="w-3 h-3" /> Team Leader</span>}
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -115,11 +159,13 @@ export function ProfileHistory({ userId }: { userId?: number }) {
             </h3>
             <div className="space-y-3">
               {judgeHistory.map((assignment: any) => (
-                <div key={assignment.id} className="p-4 rounded-[12px] border border-emerald-500/20 bg-[#14100c]">
-                  <p className="font-semibold text-sm text-[#f5f2ec]">{assignment.round?.event?.name}</p>
-                  <p className="text-xs text-emerald-400 mt-1">Round: {assignment.round?.name}</p>
-                  {assignment.track && <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.track.name}</p>}
-                </div>
+                <Link key={assignment.id} href={`/home/events/${assignment.round?.event?.id}`} className="block">
+                  <div className="p-4 rounded-[12px] border border-emerald-500/20 bg-[#14100c] hover:border-emerald-500/40 hover:bg-[#1a211c] transition-colors">
+                    <p className="font-semibold text-sm text-[#f5f2ec] group-hover:text-emerald-400">{assignment.round?.event?.name}</p>
+                    <p className="text-xs text-emerald-400 mt-1">Round: {assignment.round?.name}</p>
+                    {assignment.track && <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.track.name}</p>}
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -131,11 +177,13 @@ export function ProfileHistory({ userId }: { userId?: number }) {
             </h3>
             <div className="space-y-3">
               {mentorHistory.map((assignment: any) => (
-                <div key={assignment.id} className="p-4 rounded-[12px] border border-blue-500/20 bg-[#14100c]">
-                  <p className="font-semibold text-sm text-[#f5f2ec]">{assignment.team?.event?.name}</p>
-                  <p className="text-xs text-blue-400 mt-1">Mentored Team: {assignment.team?.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.team?.track?.name}</p>
-                </div>
+                <Link key={assignment.id} href={`/home/events/${assignment.team?.event?.id}`} className="block">
+                  <div className="p-4 rounded-[12px] border border-blue-500/20 bg-[#14100c] hover:border-blue-500/40 hover:bg-[#181d24] transition-colors">
+                    <p className="font-semibold text-sm text-[#f5f2ec] group-hover:text-blue-400">{assignment.team?.event?.name}</p>
+                    <p className="text-xs text-blue-400 mt-1">Mentored Team: {assignment.team?.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.team?.track?.name}</p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
