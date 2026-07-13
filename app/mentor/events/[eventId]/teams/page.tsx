@@ -62,9 +62,12 @@ export default function MentorTeamsPage() {
                   {team.status || "pending"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 pr-16">
-                <Avatar className="h-14 w-14"><AvatarFallback>{initials(team.name)}</AvatarFallback></Avatar>
-                <div><h2 className="text-lg font-semibold">{team.name}</h2><p className="text-sm text-muted-foreground">{team.track?.name || "No track"}</p></div>
+              <div className="flex items-center gap-3 pr-20">
+                <Avatar className="h-14 w-14 shrink-0"><AvatarFallback>{initials(team.name)}</AvatarFallback></Avatar>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-semibold truncate" title={team.name}>{team.name}</h2>
+                  <p className="text-sm text-muted-foreground truncate">{team.track?.name || "No track"}</p>
+                </div>
               </div>
               <div className="mt-5 space-y-2 text-sm text-muted-foreground">
                 <p>Event: <span className="text-foreground">{team.event?.name || "N/A"}</span></p>

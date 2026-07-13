@@ -26,7 +26,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { ProfileHistory } from "./profile-history";
 
 type RoleProfileMode = "student" | "professional" | "auto";
 
@@ -303,35 +305,48 @@ export function ProfileManager({
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-[340px_1fr]">
-          <ProfilePreviewCard
-            user={user}
-            avatarUrl={avatarUrl}
-            roleLabel={roleLabel}
-            hasProfile={hasProfile}
-            resolvedMode={resolvedMode}
-            studentForm={studentForm}
-            professionalForm={professionalForm}
-          />
+        <Tabs defaultValue="info" className="mt-10">
+          <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-[#14100c] border border-[rgba(255,154,60,0.16)]">
+            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
+          </TabsList>
 
-          {resolvedMode === "student" ? (
-            <StudentProfileForm
-              form={studentForm}
-              setForm={setStudentForm}
-              isSaving={isSaving}
-              onSubmit={handleStudentSubmit}
-              onRevert={() => refetch()}
-            />
-          ) : (
-            <ProfessionalProfileForm
-              form={professionalForm}
-              setForm={setProfessionalForm}
-              isSaving={isSaving}
-              onSubmit={handleProfessionalSubmit}
-              onRevert={() => refetch()}
-            />
-          )}
-        </div>
+          <TabsContent value="info">
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[340px_1fr]">
+              <ProfilePreviewCard
+                user={user}
+                avatarUrl={avatarUrl}
+                roleLabel={roleLabel}
+                hasProfile={hasProfile}
+                resolvedMode={resolvedMode}
+                studentForm={studentForm}
+                professionalForm={professionalForm}
+              />
+
+              {resolvedMode === "student" ? (
+                <StudentProfileForm
+                  form={studentForm}
+                  setForm={setStudentForm}
+                  isSaving={isSaving}
+                  onSubmit={handleStudentSubmit}
+                  onRevert={() => refetch()}
+                />
+              ) : (
+                <ProfessionalProfileForm
+                  form={professionalForm}
+                  setForm={setProfessionalForm}
+                  isSaving={isSaving}
+                  onSubmit={handleProfessionalSubmit}
+                  onRevert={() => refetch()}
+                />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <ProfileHistory userId={user.id} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

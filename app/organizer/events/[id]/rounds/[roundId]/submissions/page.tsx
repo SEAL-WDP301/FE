@@ -16,6 +16,7 @@ export default function EventSubmissionsPage() {
   const eventId = params.id as string;
   const roundId = params.roundId as string;
   const [selectedTrackId, setSelectedTrackId] = useState<number | "">("");
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "unsubmitted">("all");
   const queryClient = useQueryClient();
 
   // Fetch event to get tracks and rounds for filters
@@ -57,6 +58,12 @@ export default function EventSubmissionsPage() {
       socket.off("submission.created", handleSubmissionCreated);
     };
   }, [socket, eventId, queryClient]);
+
+  const filteredSubmissions = submissions?.filter((sub: any) => {
+    if (submissionFilter === "submitted") return sub.isSubmittedStatus === true;
+    if (submissionFilter === "unsubmitted") return sub.isSubmittedStatus === false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -107,6 +114,17 @@ export default function EventSubmissionsPage() {
               <option key={track.id} value={track.id}>{track.name}</option>
             ))}
           </select>
+          <select
+            value={submissionFilter}
+            onChange={(e) => {
+              setSubmissionFilter(e.target.value as "all" | "submitted" | "unsubmitted");
+            }}
+            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"
+          >
+            <option value="all">All Statuses</option>
+            <option value="submitted">Đã nộp</option>
+            <option value="unsubmitted">Chưa nộp</option>
+          </select>
         </div>
 
         {/* Table */}
@@ -128,9 +146,9 @@ export default function EventSubmissionsPage() {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                   </td>
                 </tr>
-              ) : submissions && submissions.length > 0 ? (
+              ) : filteredSubmissions && filteredSubmissions.length > 0 ? (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                submissions.map((sub: any) => (
+                filteredSubmissions.map((sub: any) => (
                   <tr key={sub.id} className="border-b border-border hover:bg-muted/10">
                     <td className="px-6 py-4 font-medium">{sub.team?.name}</td>
                     <td className="px-6 py-4">
@@ -140,7 +158,13 @@ export default function EventSubmissionsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {sub.submittedBy?.name || sub.submittedBy?.email}
+                      {sub.isSubmittedStatus ? (
+                        sub.submittedBy?.name || sub.submittedBy?.email || "Team Leader"
+                      ) : (
+                        <span className="text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-1 rounded-md">
+                          Chưa nộp
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
@@ -160,7 +184,11 @@ export default function EventSubmissionsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-xs">
-                      {new Date(sub.updatedAt || sub.createdAt).toLocaleString()}
+                      {sub.isSubmittedStatus ? (
+                        new Date(sub.updatedAt || sub.createdAt).toLocaleString()
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </td>
                   </tr>
                 ))

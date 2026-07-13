@@ -101,6 +101,13 @@ export function MentorSidebar({
   const feedbackCount = feedbacks?.length || 0;
   const submissionsCount = submissions?.length || 0;
 
+  const { data: user } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const res = await axiosClient.get('/users/profile');
+      return res.data.data;
+    },
+  });
 
   const queryClient = useQueryClient();
   const { socket, isConnected } = useSocket("/chat");
@@ -130,7 +137,7 @@ export function MentorSidebar({
           if (t.id === newMessage.teamId) {
             return {
               ...t,
-              unreadCount: (t.unreadCount || 0) + 1,
+              unreadCount: (t.unreadCount || 0) + (newMessage.senderId !== user?.id ? 1 : 0),
               lastMessageAt: newMessage.createdAt,
             };
           }
@@ -163,7 +170,7 @@ export function MentorSidebar({
       socket.off("receive_chat_message", handleReceiveMessage);
       socket.off("messages_read_updated", handleMessagesReadUpdated);
     };
-  }, [socket, isConnected, teams, queryClient, eventId]);
+  }, [socket, isConnected, teams, queryClient, eventId, user?.id]);
 
   const unreadMessagesCount = teams?.reduce((acc, team) => acc + ((team.unreadCount ?? 0) > 0 ? 1 : 0), 0) || 0;
 

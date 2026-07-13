@@ -311,14 +311,21 @@ export async function getRoundRankings(
   return unwrapData<unknown>(res);
 }
 
+export type AwardType = "first_prize" | "second_prize" | "third_prize" | "honorable_mention";
+
+export interface PublishResultsPayload {
+  advancingTeamIds?: number[];
+  awards?: { teamId: number; award: AwardType | null }[];
+}
+
 export async function publishRoundResults(
   eventId: string | number,
   roundId: string | number,
-  advancingTeamIds: number[]
+  payload: PublishResultsPayload
 ) {
   const res = await axiosClient.post(
     `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
-    { advancingTeamIds }
+    payload
   );
   return unwrapData<unknown>(res);
 }

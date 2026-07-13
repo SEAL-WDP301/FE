@@ -14,11 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useSocket } from "@/lib/hooks/useSocket";
 
-export default function MentorMessagesPage() {
+export default function EventMessagesPage() {
   const params = useParams();
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const eventId = params.eventId as string;
+  const eventId = params.id as string;
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { socket, isConnected } = useSocket("/chat");
@@ -32,9 +31,9 @@ export default function MentorMessagesPage() {
   });
 
   const { data: teams, isLoading } = useQuery({
-    queryKey: ["mentorTeams", eventId],
+    queryKey: ["organizerTeams", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/mentor/teams?eventId=${eventId}`);
+      const res = await axiosClient.get(`/organizer/teams/events/${eventId}`);
       return res.data.data;
     },
     enabled: !!eventId,
@@ -74,7 +73,7 @@ export default function MentorMessagesPage() {
     setSelectedTeamId(team.id);
     // Optimistically clear unread count
     if (team.unreadCount > 0) {
-      queryClient.setQueryData(["mentorTeams", eventId], (oldData: any) => {
+      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
         if (!oldData) return oldData;
         return oldData.map((t: any) => t.id === team.id ? { ...t, unreadCount: 0 } : t);
       });
@@ -211,14 +210,6 @@ export default function MentorMessagesPage() {
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1.5 h-8 text-[11px] font-medium"
-                onClick={() => router.push(`/mentor/events/${eventId}/teams/${selectedTeamId}`)}
-              >
-                View Team <ExternalLink className="h-3 w-3" />
-              </Button>
             </div>
             <div className="flex-1 relative min-h-0">
               <FloatingTeamChat teamId={selectedTeamId} teamName={selectedTeamData?.name} inline={true} defaultOpen={true} />
