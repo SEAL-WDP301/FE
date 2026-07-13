@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Search, Calendar, Users, Trophy, Trash2, Loader2, Pencil } from "lucide-react";
 import { format } from "date-fns"
 import { enqueueSnackbar } from "notistack";
@@ -145,8 +146,27 @@ export default function OrganizerEventsPage() {
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {filteredEvents.map((event) => (
+                    {filteredEvents.map((event) => {
+                        const imageUrl = event.imageUrl || event.image_url;
+
+                        return (
                         <div key={event.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:border-blue-500/30 transition-all duration-300 group flex flex-col">
+                            <div className="relative aspect-video bg-muted overflow-hidden">
+                                {imageUrl ? (
+                                    <Image
+                                        src={imageUrl}
+                                        alt={event.name}
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="flex h-full items-center justify-center text-sm font-medium text-muted-foreground">
+                                        No cover image
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
+                            </div>
                             <div className="p-6 flex-1">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(event.status)} uppercase tracking-wider`}>
@@ -208,7 +228,8 @@ export default function OrganizerEventsPage() {
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks } from "lucide-react";
+import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
 import { useState, useMemo } from "react";
@@ -117,6 +117,7 @@ function normalizeFaqItems(event?: OrganizerEvent) {
 const createEventSchema = (isEdit: boolean) => z.object({
     name: z.string().min(1, "Name is required").max(100, "Name is too long"),
     description: z.string().max(2000, "Description is too long").optional(),
+    imageUrl: z.string().url("Invalid image URL").optional().or(z.literal('')),
     season: z.enum(["Spring", "Summer", "Fall"]),
     year: z.coerce.number().int("Year must be an integer").min(2020, "Year must be >= 2020").max(new Date().getFullYear() + 5, "Year cannot exceed 5 years in the future"),
     status: z.enum(["draft", "active", "ongoing", "closed"]).optional(),
@@ -241,6 +242,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
         description: initialData?.description || "",
+        imageUrl: initialData?.imageUrl || initialData?.image_url || "",
         season: initialData?.season || "Spring",
         year: initialData?.year || new Date().getFullYear(),
         status: initialData?.status || "draft",
@@ -351,6 +353,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                 registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
                 startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
                 githubOrgUrl: data.githubOrgUrl || undefined,
+                imageUrl: data.imageUrl || undefined,
                 tracks: data.tracks?.map(t => ({
                     id: t.id,
                     name: t.name,
@@ -519,6 +522,16 @@ export default function EventForm({ initialData }: EventFormProps) {
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><LinkIcon className="w-4 h-4" /> GitHub Organization URL</FormLabel>
                                     <FormControl>
                                         <Input className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" placeholder="https://github.com/your-org" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+
+                            <FormField control={control} name="imageUrl" render={({ field }) => (
+                                <FormItem className="md:col-span-12">
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image URL</FormLabel>
+                                    <FormControl>
+                                        <Input className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" placeholder="https://images.unsplash.com/..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

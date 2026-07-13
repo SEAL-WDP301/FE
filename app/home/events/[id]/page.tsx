@@ -4,6 +4,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 import { useQuery } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef } from 'react';
 import { enqueueSnackbar } from 'notistack';
@@ -44,6 +45,8 @@ type EventDetail = {
   id: number | string;
   name: string;
   description?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
   season?: string | null;
   year?: number | string | null;
   status?: string | null;
@@ -686,6 +689,7 @@ export default function EventDetailPage() {
   const eventLocation = normalizeLocation(event);
   const eventContacts = normalizeContacts(event);
   const mentorSupportNote = event.support?.mentorNote;
+  const eventImageUrl = event.imageUrl || event.image_url;
 
   // Render Action Button based on Role
   const renderActionButton = () => {
@@ -826,6 +830,19 @@ export default function EventDetailPage() {
 
         {/* Hero Banner */}
         <div className="relative rounded-3xl overflow-hidden bg-card border border-border p-8 md:p-12 mb-12 shadow-2xl">
+          {eventImageUrl && (
+            <>
+              <Image
+                src={eventImageUrl}
+                alt={event.name || 'Event image'}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                className="object-cover opacity-25"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/45" />
+            </>
+          )}
           <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-orange-500/10 blur-[100px]" />
 
           <div className="relative z-10">

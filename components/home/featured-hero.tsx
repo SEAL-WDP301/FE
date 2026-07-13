@@ -34,7 +34,7 @@ export default function FeaturedHero() {
     const highlightWords = words.length >= 2 ? words.slice(-2).join(' ') : words.slice(-1).join(' ');
     const regularWords = words.length >= 2 ? words.slice(0, -2).join(' ') : '';
 
-    const imageUrl = latestEvent.image_url || "/images/rag_system.png";
+    const imageUrl = latestEvent.imageUrl || latestEvent.image_url || "/images/rag_system.png";
     
     let formattedDate = `${latestEvent.season || ''} ${latestEvent.year || ''}`;
     try {

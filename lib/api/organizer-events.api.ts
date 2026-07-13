@@ -64,6 +64,7 @@ export interface OrganizerEventFAQItem {
 export interface OrganizerEventPayload {
   name: string;
   description?: string;
+  imageUrl?: string;
   season: EventSeason;
   year: number;
   status?: EventStatus;
@@ -99,8 +100,10 @@ export interface OrganizerRound extends OrganizerRoundInput {
   };
 }
 
-export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds"> {
+export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds" | "imageUrl"> {
   id: number;
+  imageUrl?: string | null;
+  image_url?: string | null;
   icons?: Array<{
     id?: number;
     url: string;
@@ -268,11 +271,18 @@ export interface DetailedRankedTeamEntry {
   criteriaAverages: DetailedCriterionAverage[];
   judges: DetailedJudgeScore[];
   status: string;
+  award?: AwardType | null;
   submittedAt: string;
 }
 
 export interface DetailedRankingsResponse {
-  round: unknown;
+  round: {
+    id: number;
+    name: string;
+    roundNumber: number;
+    status: string;
+    isFinalRound: boolean;
+  };
   tracks: {
     track: { id: number; name: string };
     entries: DetailedRankedTeamEntry[];
