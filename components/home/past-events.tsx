@@ -18,7 +18,7 @@ export default function PastEvents() {
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    const publicEvents = events?.filter(event => !isAutomationEvent(event)) ?? [];
+    const publicEvents = events ?? [];
     const filteredEvents = activeTab === "All"
         ? publicEvents
         : publicEvents.filter((event) => event.season === activeTab);
@@ -104,13 +104,18 @@ export default function PastEvents() {
                                             #{event.season}
                                         </span>
                                         {event.status === 'closed' && (
-                                            <span className="text-xs font-semibold text-green-500">
+                                            <span className="text-xs font-semibold text-red-500">
                                                 #Finished
                                             </span>
                                         )}
                                         {event.status === 'active' && (
                                             <span className="text-xs font-semibold text-blue-500">
                                                 #Active
+                                            </span>
+                                        )}
+                                        {event.status === 'ongoing' && (
+                                            <span className="text-xs font-semibold text-yellow-500">
+                                                #Ongoing
                                             </span>
                                         )}
                                     </div>
@@ -127,8 +132,16 @@ export default function PastEvents() {
 
                                     {/* Footer Card */}
                                     <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                                        <span className={`text-sm font-medium flex items-center gap-1.5 ${event.status === 'active' ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                                            <span className={`size-2 rounded-full ${event.status === 'active' ? 'bg-blue-500 animate-pulse' : 'bg-muted-foreground'}`}></span>
+                                        <span className={`text-sm font-medium flex items-center gap-1.5 ${
+                                            event.status === 'active' ? 'text-blue-500' :
+                                            event.status === 'ongoing' ? 'text-yellow-500' :
+                                            event.status === 'closed' ? 'text-red-500' : 'text-muted-foreground'
+                                        }`}>
+                                            <span className={`size-2 rounded-full ${
+                                                event.status === 'active' ? 'bg-blue-500 animate-pulse' :
+                                                event.status === 'ongoing' ? 'bg-yellow-500 animate-pulse' :
+                                                event.status === 'closed' ? 'bg-red-500' : 'bg-muted-foreground'
+                                            }`}></span>
                                             {event.status === 'closed' ? 'Ended' : event.status === 'active' ? 'Registration Open' : 'Ongoing'}
                                         </span>
                                         <Link href={`/home/events/${event.id}`}>
