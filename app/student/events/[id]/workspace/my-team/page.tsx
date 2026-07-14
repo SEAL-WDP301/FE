@@ -35,12 +35,14 @@ import {
 
 import { MemberListItem } from "./components/member-list-item";
 import { PendingInvitesTable } from "./components/pending-invites-table";
+import { useWorkspaceAccess } from "../workspace-access";
 
 export default function TeamMembersPage() {
     const router = useRouter();
     const params = useParams();
     const eventId = params.id as string;
     const queryClient = useQueryClient();
+    const { isReadOnly } = useWorkspaceAccess();
 
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState("");
@@ -68,6 +70,7 @@ export default function TeamMembersPage() {
     const updateTeamMutation = useMutation({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mutationFn: async (data: any) => {
+            if (isReadOnly) throw new Error("This event has ended. The workspace is view only.");
             return axiosClient.put(`/student/teams/register/team/${eventId}`, data);
         },
         onSuccess: () => {
@@ -109,7 +112,7 @@ export default function TeamMembersPage() {
 
     const team = teamInfo.team;
     const isLeader = teamInfo.role === "leader";
-    const isEventActive = event?.status === "active";
+    const isEventActive = !isReadOnly && event?.status === "active";
     const members = team.members || [];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,6 +122,10 @@ export default function TeamMembersPage() {
 
     // Prepare data for inviting a new member
     const handleSendInvite = () => {
+        if (isReadOnly) {
+            enqueueSnackbar('This event has ended. The workspace is view only.', { variant: 'warning' });
+            return;
+        }
         if (!inviteEmail.trim()) {
             enqueueSnackbar('Please enter an email address', { variant: 'warning' });
             return;

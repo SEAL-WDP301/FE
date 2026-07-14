@@ -12,6 +12,7 @@ import {
     type StudentWorkspaceFeedback,
     type StudentWorkspaceMentor,
 } from "@/lib/api/mentor.api";
+import { useWorkspaceAccess } from "../../workspace-access";
 
 type FeedbackThreadCardProps = {
     items: StudentWorkspaceFeedback[];
@@ -35,16 +36,20 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
     const queryClient = useQueryClient();
     const params = useParams();
     const eventId = Number(params.id);
+    const { isReadOnly } = useWorkspaceAccess();
 
     const updateStatusMutation = useMutation({
-        mutationFn: ({ feedbackId, status }: { feedbackId: number | string, status: "unread" | "acknowledged" | "completed" }) =>
-            updateStudentMentorFeedbackStatus(feedbackId, status),
+        mutationFn: ({ feedbackId, status }: { feedbackId: number | string, status: "unread" | "acknowledged" | "completed" }) => {
+            if (isReadOnly) throw new Error("This event has ended. The workspace is view only.");
+            return updateStudentMentorFeedbackStatus(feedbackId, status);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["studentMentorWorkspace", eventId] });
         },
     });
 
     const handleStatusClick = (feedbackId: number | string, currentStatus: string) => {
+        if (isReadOnly) return;
         if (currentStatus === "unread") {
             updateStatusMutation.mutate({ feedbackId, status: "acknowledged" });
         } else if (currentStatus === "acknowledged") {
@@ -134,7 +139,7 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                                                         variant="ghost"
                                                         title="Acknowledge feedback"
                                                         className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
-                                                        disabled={isUpdating}
+                                                        disabled={isReadOnly || isUpdating}
                                                         onClick={() => handleStatusClick(item.id, "unread")}
                                                     >
                                                         <Check className="h-4 w-4" />
@@ -146,7 +151,7 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                                                         variant="ghost"
                                                         title="Mark as Completed"
                                                         className="h-6 w-6 rounded-full text-green-500 hover:bg-green-500/10 hover:text-green-600"
-                                                        disabled={isUpdating}
+                                                        disabled={isReadOnly || isUpdating}
                                                         onClick={() => handleStatusClick(item.id, "acknowledged")}
                                                     >
                                                         <CheckCircle2 className="h-4 w-4" />

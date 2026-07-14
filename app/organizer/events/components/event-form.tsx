@@ -127,7 +127,12 @@ function normalizeFaqItems(event?: OrganizerEvent) {
 const createEventSchema = (isEdit: boolean) => z.object({
     name: z.string().min(1, "Name is required").max(100, "Name is too long"),
     description: z.string().max(2000, "Description is too long").optional(),
-    imageUrl: z.string().url("Invalid image URL").optional().or(z.literal('')),
+    imageUrl: z.string()
+        .trim()
+        .url("Invalid image URL")
+        .refine((value) => /^https?:\/\//i.test(value), "Image URL must use HTTP or HTTPS")
+        .optional()
+        .or(z.literal('')),
     season: z.enum(["Spring", "Summer", "Fall"]),
     year: z.coerce.number().int("Year must be an integer").min(2020, "Year must be >= 2020").max(new Date().getFullYear() + 5, "Year cannot exceed 5 years in the future"),
     status: z.enum(["draft", "active", "ongoing", "closed"]).optional(),
@@ -386,15 +391,15 @@ export default function EventForm({ initialData }: EventFormProps) {
                     isTrackSpecific: r.isTrackSpecific,
                 })),
                 location: JSON.stringify({
-                    venueName: data.location.venueName || undefined,
-                    room: data.location.room || undefined,
-                    address: data.location.address || undefined,
-                    meetingPlatform: data.location.meetingPlatform || undefined,
-                    meetingUrl: data.location.meetingUrl || undefined,
-                    mapUrl: data.location.mapUrl || undefined,
-                    note: data.location.note || undefined,
+                    venueName: location.venueName || undefined,
+                    room: location.room || undefined,
+                    address: location.address || undefined,
+                    meetingPlatform: location.meetingPlatform || undefined,
+                    meetingUrl: location.meetingUrl || undefined,
+                    mapUrl: location.mapUrl || undefined,
+                    note: location.note || undefined,
                 }),
-                contact: JSON.stringify(data.contacts
+                contact: JSON.stringify(contacts
                     .filter((contact) => contact.label || contact.name || contact.email || contact.phone || contact.detail)
                     .map((contact) => ({
                         label: contact.label || undefined,
@@ -404,13 +409,13 @@ export default function EventForm({ initialData }: EventFormProps) {
                         detail: contact.detail || undefined,
                         responseTime: contact.responseTime || undefined,
                     }))),
-                rules: JSON.stringify(data.ruleGroups
+                rules: JSON.stringify(ruleGroups
                     .map((group) => ({
                         title: group.title,
                         rules: linesToList(group.itemsText),
                     }))
                     .filter((group) => group.title && group.rules.length > 0)),
-                faq: data.faqItems
+                faq: faqItems
                     .filter((faq) => faq.question && faq.answer)
                     .map((faq) => ({
                         question: faq.question,
@@ -428,8 +433,8 @@ export default function EventForm({ initialData }: EventFormProps) {
                 router.push(`/organizer/events/${event.id}`);
             }
         } catch (error: unknown) {
-            console.error("Event form error", error);
             const apiError = error as { response?: { data?: { errors?: string[]; message?: string } } };
+            console.error("Event form error", apiError.response?.data ?? error);
             const errData = apiError.response?.data?.errors || apiError.response?.data?.message;
             let errorMessage = "Failed to save event";
 
@@ -546,8 +551,17 @@ export default function EventForm({ initialData }: EventFormProps) {
                                 <FormItem className="md:col-span-12">
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image URL</FormLabel>
                                     <FormControl>
-                                        <Input className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" placeholder="https://images.unsplash.com/..." {...field} />
+                                        <Input
+                                            type="url"
+                                            inputMode="url"
+                                            className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl"
+                                            placeholder="https://images.unsplash.com/photo-...?auto=format&fit=crop&w=1600&q=80"
+                                            {...field}
+                                        />
                                     </FormControl>
+                                    <p className="text-xs text-muted-foreground">
+                                        Supports HTTP/HTTPS image URLs, including query parameters for crop, size, and quality.
+                                    </p>
                                     <FormMessage />
                                 </FormItem>
                             )} />

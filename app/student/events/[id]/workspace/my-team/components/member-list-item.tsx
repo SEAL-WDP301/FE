@@ -53,6 +53,7 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
     // Mutations
     const transferMutation = useMutation({
         mutationFn: async () => {
+            if (!isEventActive) throw new Error("Team roster is locked for this event.");
             return axiosClient.post(`/student/teams/${team.id}/transfer-leadership/${member.userId}`);
         },
         onSuccess: () => {
@@ -69,6 +70,7 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
     const updateTeamMutation = useMutation({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mutationFn: async (data: any) => {
+            if (!isEventActive) throw new Error("Team roster is locked for this event.");
             return axiosClient.put(`/student/teams/register/team/${team.eventId}`, data);
         },
         onSuccess: () => {
@@ -83,6 +85,10 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
     });
 
     const handleRemoveMember = () => {
+        if (!isEventActive) {
+            enqueueSnackbar('Team roster is locked for this event.', { variant: 'warning' });
+            return;
+        }
         // Keep everyone except this member
         const currentEmails = team.members
             .filter((m: any) => m.role === "member")
@@ -145,7 +151,14 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
                                     <>
                                         <DropdownMenuItem 
                                             className="text-orange-500 focus:text-orange-500 cursor-pointer" 
-                                            onClick={() => setIsTransferDialogOpen(true)}
+                                            onClick={(event) => {
+                                                if (!isEventActive) {
+                                                    event.preventDefault();
+                                                    enqueueSnackbar("Team roster is locked for this event.", { variant: "warning" });
+                                                    return;
+                                                }
+                                                setIsTransferDialogOpen(true);
+                                            }}
                                         >
                                             <Crown className="mr-2 h-4 w-4" />
                                             Make Leader
@@ -197,7 +210,7 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
                             variant="orange" 
                             className="rounded-xl"
                             onClick={() => transferMutation.mutate()}
-                            disabled={transferMutation.isPending}
+                            disabled={!isEventActive || transferMutation.isPending}
                         >
                             {transferMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Crown className="h-4 w-4 mr-2" />}
                             Confirm Transfer
@@ -227,7 +240,7 @@ export function MemberListItem({ member, teamInfo, isCurrentUserLeader, currentU
                             variant="destructive" 
                             className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
                             onClick={handleRemoveMember}
-                            disabled={updateTeamMutation.isPending}
+                            disabled={!isEventActive || updateTeamMutation.isPending}
                         >
                             {updateTeamMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
                             Remove Member

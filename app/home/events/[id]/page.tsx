@@ -67,6 +67,24 @@ type EventDetail = {
   venue?: ApiLocation | string | null;
 };
 
+function isRegistrationOpen(event: EventDetail) {
+  if (event.status?.toLowerCase() !== 'active') return false;
+
+  const now = new Date();
+
+  if (event.registrationDeadline) {
+    const deadline = new Date(event.registrationDeadline);
+    if (!Number.isNaN(deadline.getTime()) && now > deadline) return false;
+  }
+
+  if (event.startDate) {
+    const startDate = new Date(event.startDate);
+    if (!Number.isNaN(startDate.getTime()) && now >= startDate) return false;
+  }
+
+  return true;
+}
+
 type UserAccount = {
   role?: string | null;
 };
@@ -752,6 +770,9 @@ export default function EventDetailPage() {
         const memberStatus = teamInfo?.status;
         const teamStatus = teamInfo?.team?.status || "registered";
         const displayStatus = memberStatus === 'pending' ? 'Invitation Pending' : teamStatus;
+        const canEnterWorkspace = ['active', 'ongoing'].includes(
+          event.status?.toLowerCase() || ''
+        );
 
         return (
           <div className="bg-card/40 backdrop-blur-md border border-border/50 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full sm:w-auto shadow-lg shadow-black/5">
@@ -779,7 +800,7 @@ export default function EventDetailPage() {
             {displayStatus === 'approved' && (
               <Link href={`/student/events/${eventId}/workspace`}>
                 <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white transition-colors">
-                  Enter Workspace
+                  {canEnterWorkspace ? 'Enter Workspace' : 'View Workspace'}
                 </Button>
               </Link>
             )}
@@ -794,8 +815,8 @@ export default function EventDetailPage() {
         );
       }
 
-      // Not registered, check event status
-      if (event.status !== 'active') {
+      // Not registered, check event status and registration dates
+      if (!isRegistrationOpen(event)) {
         return (
           <Button size="lg" disabled className="w-full sm:w-auto px-8">
             Registration Closed

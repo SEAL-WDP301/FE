@@ -40,7 +40,7 @@ export default function FeaturedHero() {
         return null; // or a fallback static hero
     }
 
-    const imageUrl = latestEvent.imageUrl || latestEvent.icons?.[0]?.url || "/images/rag_system.png";
+    const imageUrl = latestEvent.image_url || latestEvent.imageUrl || latestEvent.icons?.[0]?.url || "/images/rag_system.png";
     
     let formattedDate = `${latestEvent.season || ''} ${latestEvent.year || ''}`;
     try {

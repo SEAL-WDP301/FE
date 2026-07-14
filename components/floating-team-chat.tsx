@@ -24,9 +24,10 @@ interface FloatingTeamChatProps {
   inline?: boolean;
   defaultOpen?: boolean;
   teamName?: string;
+  readOnly?: boolean;
 }
 
-export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, teamName }: FloatingTeamChatProps) {
+export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, teamName, readOnly = false }: FloatingTeamChatProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [message, setMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
@@ -72,7 +73,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
 
   // Mark as read when opened or new message arrives while open
   useEffect(() => {
-    if (isOpen && unreadCount > 0 && socket && isConnected && user?.id) {
+    if (!readOnly && isOpen && unreadCount > 0 && socket && isConnected && user?.id) {
       socket.emit("mark_as_read", teamId);
       // Optimistically update cache to mark as read
       queryClient.setQueryData(["team-messages", teamId], (oldData: any) => {
@@ -91,7 +92,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
         return { ...oldData, pages: newPages };
       });
     }
-  }, [isOpen, unreadCount, socket, isConnected, teamId, user, queryClient]);
+  }, [isOpen, unreadCount, socket, isConnected, teamId, user, queryClient, readOnly]);
 
   useEffect(() => {
     if (!socket || !teamId) return;
@@ -246,6 +247,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!message.trim() || !socket || !isConnected) return;
 
     socket.emit("send_chat_message", { teamId, content: message.trim() });
@@ -426,7 +428,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
                               <form 
                                 onSubmit={(e) => {
                                   e.preventDefault();
-                                  if (editContent.trim()) {
+                                  if (!readOnly && editContent.trim()) {
                                     socket?.emit("edit_chat_message", { messageId: msg.id, content: editContent.trim() });
                                     setEditingMessageId(null);
                                   }
@@ -448,7 +450,7 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
                               <>
                                 {msg.content}
                                 {msg.isEdited && <span className="text-[10px] opacity-70 ml-2">(edited)</span>}
-                                {(isMe || user?.role === 'admin' || user?.role === 'organizer') && (
+                                {!readOnly && (isMe || user?.role === 'admin' || user?.role === 'organizer') && (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <button className={`absolute top-2 ${isMe ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-full transition-opacity z-10`}>
@@ -515,15 +517,16 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
               className="flex items-center gap-2 border-t border-border bg-muted/10 p-3"
             >
               <Input
-                placeholder="Type your message..."
+                placeholder={readOnly ? "Event ended — chat history is view only" : "Type your message..."}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                disabled={readOnly}
                 className="flex-1 rounded-full border-border bg-background px-4"
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={!message.trim() || !isConnected}
+                disabled={readOnly || !message.trim() || !isConnected}
                 variant="orange"
                 className="h-10 w-10 shrink-0 rounded-full"
               >

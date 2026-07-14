@@ -15,8 +15,10 @@ import {
 import HomeHeader from "@/components/layout/dashboard/home-header";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
-import { ChevronRight, Trophy, Shield, Target, AlertTriangle } from "lucide-react";
+import { ChevronRight, Trophy, Shield, Target, AlertTriangle, Eye } from "lucide-react";
 import { FloatingTeamChat } from "@/components/floating-team-chat";
+import { axiosClient } from "@/lib/axios";
+import { WorkspaceAccessProvider } from "./workspace-access";
 
 
 export default function TrackWorkspaceLayout({
@@ -34,12 +36,23 @@ export default function TrackWorkspaceLayout({
     queryFn: () => workspaceApi.getWorkspaceOverview(Number(eventId)),
   });
 
+  const eventQuery = useQuery({
+    queryKey: ["publicEvent", eventId],
+    queryFn: async () => {
+      const response = await axiosClient.get(`/public/events/${eventId}`);
+      return response.data?.data as { status?: string | null };
+    },
+  });
+
   const workspaceData = data?.data;
   const eventName = workspaceData?.team?.event?.name || "Event";
   const teamName = workspaceData?.team?.name || "Team";
   const currentActiveRound = workspaceData?.currentActiveRound;
   const isEliminated = workspaceData?.isEliminated;
   const isLeader = workspaceData?.role === "leader";
+  const eventStatus = eventQuery.data?.status?.toLowerCase() || null;
+  const isReadOnly =
+    eventQuery.isLoading || !eventStatus || !["active", "ongoing"].includes(eventStatus);
 
   // Read selected round from URL
   const searchParams = useSearchParams();
@@ -115,11 +128,23 @@ export default function TrackWorkspaceLayout({
   );
 
   return (
+    <WorkspaceAccessProvider eventStatus={eventStatus} isReadOnly={isReadOnly}>
     <div className="min-h-screen bg-background flex flex-col relative z-10">
       <HomeHeader customCenterContent={customTabsContent} />
       
       {/* Main Content Area */}
       <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        {!eventQuery.isLoading && isReadOnly && (
+          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm text-blue-700 dark:text-blue-300">
+            <Eye className="mt-0.5 h-5 w-5 shrink-0" />
+            <div>
+              <p className="font-semibold">Event ended — view-only workspace</p>
+              <p className="mt-1 opacity-80">
+                You can review your team, submissions, results, schedule, and feedback, but changes are disabled.
+              </p>
+            </div>
+          </div>
+        )}
         {/* Global Workspace Context Banner */}
         {workspaceData && (
           <div className="mb-8 p-3 px-5 rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-background to-background flex items-center gap-3 text-sm overflow-x-auto scrollbar-none whitespace-nowrap shadow-sm shadow-orange-500/5">
@@ -175,8 +200,9 @@ export default function TrackWorkspaceLayout({
 
       {/* Floating Chat for Team */}
       {workspaceData?.team?.id && (
-        <FloatingTeamChat teamId={workspaceData.team.id} />
+        <FloatingTeamChat teamId={workspaceData.team.id} readOnly={isReadOnly} />
       )}
     </div>
+    </WorkspaceAccessProvider>
   );
 }

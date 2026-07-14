@@ -26,6 +26,7 @@ import {
 import { FaGithub } from "react-icons/fa";
 import { useSnackbar } from "notistack";
 import { isAxiosError } from "axios";
+import { useWorkspaceAccess } from "../workspace-access";
 
 interface SubmissionHistoryEntry {
   action: string;
@@ -67,6 +68,7 @@ export default function SubmissionsPage() {
   const { enqueueSnackbar } = useSnackbar();
   const searchParams = useSearchParams();
   const selectedRoundId = searchParams.get("roundId") ? Number(searchParams.get("roundId")) : null;
+  const { isReadOnly } = useWorkspaceAccess();
 
   const [file, setFile] = useState<File | null>(null);
   const [githubUrl, setGithubUrl] = useState("");
@@ -96,7 +98,7 @@ export default function SubmissionsPage() {
   const latestSubmission = workspaceData?.latestSubmission;
   const isLeader = workspaceData?.role === "leader";
   const teamStatus = workspaceData?.team?.status as string | undefined;
-  const canSubmit = workspaceData?.canSubmit !== false && teamStatus === "approved";
+  const canSubmit = !isReadOnly && workspaceData?.canSubmit !== false && teamStatus === "approved";
   const assignedRepoUrl = workspaceData?.team?.githubRepoUrl as string | undefined;
   const submissionType = currentActiveRound?.submissionType as "file" | "github_link" | undefined;
   const isGithubRound = submissionType === "github_link";
@@ -141,6 +143,7 @@ export default function SubmissionsPage() {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (isReadOnly) throw new Error("This event has ended. The workspace is view only.");
       if (!currentActiveRound) throw new Error("No active round");
       
       const formData = new FormData();
@@ -171,6 +174,7 @@ export default function SubmissionsPage() {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     setIsDragging(true);
   };
 
@@ -180,6 +184,7 @@ export default function SubmissionsPage() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
@@ -193,6 +198,7 @@ export default function SubmissionsPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isReadOnly) return;
     if (e.target.files && e.target.files.length > 0) {
       const selectedFile = e.target.files[0];
       const maxSize = currentActiveRound?.maxFileSizeMb || 20;
@@ -212,7 +218,12 @@ export default function SubmissionsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) {
-      enqueueSnackbar("Your team must be approved before submitting", { variant: "warning" });
+      enqueueSnackbar(
+        isReadOnly
+          ? "This event has ended. The workspace is view only."
+          : "Your team must be approved before submitting",
+        { variant: "warning" }
+      );
       return;
     }
     if (!canSubmitPayload) {
@@ -547,7 +558,7 @@ export default function SubmissionsPage() {
                   className="hidden" 
                   onChange={handleFileChange}
                   accept=".pdf,.zip,.rar"
-                  disabled={isDeadlinePassed || !isLeader}
+                  disabled={isReadOnly || isDeadlinePassed || !isLeader}
                 />
                 
                 {file ? (
@@ -618,7 +629,7 @@ export default function SubmissionsPage() {
                   className="bg-background border-border min-h-[120px] resize-none"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  disabled={isDeadlinePassed || !isLeader}
+                  disabled={isReadOnly || isDeadlinePassed || !isLeader}
                 />
               </div>
             </GlassCard>
@@ -751,6 +762,7 @@ export default function SubmissionsPage() {
         variant="orange" 
         className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(243,112,33,0.3)]"
         disabled={
+          isReadOnly ||
           isDeadlinePassed ||
           submitMutation.isPending ||
           !isLeader ||
@@ -764,7 +776,11 @@ export default function SubmissionsPage() {
         ) : (
           <CheckCircle2 className="h-5 w-5 mr-2" />
         )}
-        {latestSubmission ? (isGithubRound ? "Update Submission Info" : "Resubmit Project") : "Submit Project"}
+        {isReadOnly
+          ? "View Only"
+          : latestSubmission
+            ? (isGithubRound ? "Update Submission Info" : "Resubmit Project")
+            : "Submit Project"}
       </Button>
     </form>
   </div>

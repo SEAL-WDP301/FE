@@ -23,6 +23,7 @@ export function PendingInvitesTable({ invites, isCurrentUserLeader, team, isEven
     const updateTeamMutation = useMutation({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mutationFn: async (data: any) => {
+            if (!isEventActive) throw new Error("Team roster is locked for this event.");
             return axiosClient.put(`/student/teams/register/team/${team.eventId}`, data);
         },
         onSuccess: () => {
@@ -36,6 +37,10 @@ export function PendingInvitesTable({ invites, isCurrentUserLeader, team, isEven
     });
 
     const handleCancelInvite = (emailToCancel: string) => {
+        if (!isEventActive) {
+            enqueueSnackbar('Team roster is locked for this event.', { variant: 'warning' });
+            return;
+        }
         // Remove the email to cancel from the existing list of emails (both active and pending, but excluding the leader)
         const currentEmails = team.members
             .filter((m: any) => m.role === "member")
