@@ -265,13 +265,6 @@ export default function EventDashboardLayout({
                             {item.badge > 99 ? '99+' : item.badge}
                           </div>
                         )}
-                        {isActive && (
-                          <motion.div
-                            layoutId="sidebarIndicator"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-blue-500"
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                        )}
                       </Link>
                     );
                   })}
@@ -303,13 +296,6 @@ export default function EventDashboardLayout({
                           <item.icon className={cn("shrink-0", isActive ? "text-blue-500" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
                           {isSidebarExpanded && (
                             <span className="truncate relative z-10 flex-1">{item.name}</span>
-                          )}
-                          {isActive && (
-                            <motion.div
-                              layoutId="sidebarIndicator2"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-blue-500"
-                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            />
                           )}
                         </Link>
                       );
@@ -365,4 +351,3 @@ export default function EventDashboardLayout({
     </div>
   );
 }
-

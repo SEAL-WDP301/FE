@@ -16,6 +16,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SEAL",
   description: "Software Engineering Agile League",
+  icons: {
+    icon: "/brand/seal-emblem-512.png",
+    apple: "/brand/seal-emblem-512.png",
+  },
 };
 
 import { SseProvider } from "../components/providers/sse-provider";

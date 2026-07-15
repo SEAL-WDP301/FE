@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FaGithub, FaTwitter, FaLinkedin, FaYoutube, FaFacebook } from 'react-icons/fa';
 import { Mail } from 'lucide-react'
+import Logo from '@/components/ui/logo';
 
 export default function Footer() {
     return (
@@ -12,22 +13,8 @@ export default function Footer() {
                 <div className="mb-12 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
                     {/* Brand */}
                     <div>
-                        <div className="mb-4 flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/25">
-                                <span className="text-xl font-bold text-foreground">
-                                    S
-                                </span>
-                            </div>
-
-                            <div>
-                                <h2 className="text-lg font-bold">
-                                    SEAL
-                                </h2>
-
-                                <p className="text-xs text-muted-foreground">
-                                    FPT University
-                                </p>
-                            </div>
+                        <div className="mb-4">
+                            <Logo size="md" href="/" />
                         </div>
 
                         <p className="mb-6 text-sm leading-7 text-muted-foreground">

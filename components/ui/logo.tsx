@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
 interface LogoProps {
@@ -16,19 +17,19 @@ export default function Logo({
 }: LogoProps) {
   const sizes = {
     sm: {
-      wrapper: "h-9 w-9",
+      wrapper: "h-12 w-12",
       text: "text-lg",
       title: "text-lg",
       subtitle: "text-[9px]",
     },
     md: {
-      wrapper: "h-11 w-11",
+      wrapper: "h-14 w-14",
       text: "text-xl",
       title: "text-xl",
       subtitle: "text-[10px]",
     },
     lg: {
-      wrapper: "h-14 w-14",
+      wrapper: "h-[72px] w-[72px]",
       text: "text-2xl",
       title: "text-2xl",
       subtitle: "text-xs",
@@ -39,20 +40,22 @@ export default function Logo({
 
   return (
     <Link href={href} className={cn("flex items-center", collapsed ? "justify-center" : "gap-2.5")}>
-      {/* Circle Logo */}
-      <div
-        className={cn(`flex ${current.wrapper} items-center justify-center rounded-full border border-orange-400/30 bg-gradient-to-br from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20`)}
-      >
-        <span className={cn(`${current.text} font-bold text-black`)}>
-          S
-        </span>
+      <div className={cn("relative shrink-0", current.wrapper)}>
+        <Image
+          src="/brand/seal-emblem-512.png"
+          alt="SEAL"
+          fill
+          priority
+          sizes={size === "lg" ? "72px" : size === "md" ? "56px" : "48px"}
+          className="object-contain drop-shadow-[0_4px_10px_rgba(249,115,22,0.4)]"
+        />
       </div>
 
       {/* Text */}
       {showText && !collapsed && (
         <div className="leading-tight transition-all duration-300">
           <h1
-            className={cn(`${current.title} font-bold tracking-tight text-white`)}
+            className={cn(`${current.title} font-bold tracking-tight text-foreground`)}
           >
             SEAL
           </h1>
