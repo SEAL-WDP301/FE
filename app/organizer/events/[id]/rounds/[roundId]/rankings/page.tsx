@@ -346,7 +346,7 @@ function TeamRow({
 
         <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-50 drop-shadow-md" : titleClass}`}>
+            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-700 dark:text-emerald-50 drop-shadow-sm dark:drop-shadow-md" : titleClass}`}>
               {entry.teamName}
             </span>
             {isSelecting && (

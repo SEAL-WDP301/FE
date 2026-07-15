@@ -192,19 +192,35 @@ export default function EventDashboardLayout({
                         <Link
                           href={`${baseUrl}/rounds/${round.id}/${currentTab}`}
                           className={cn(
-                            "relative px-4 py-1.5 text-sm font-semibold transition-all duration-300 rounded-full border shadow-sm flex items-center gap-2 group",
-                            isRoundActive
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent ring-2 ring-blue-500/30 scale-105"
-                              : "bg-background text-muted-foreground border-border hover:border-blue-500/50 hover:text-foreground hover:bg-blue-50/50 dark:hover:bg-blue-950/30"
+                            "relative p-[2px] text-sm font-semibold transition-all duration-300 rounded-full flex items-center group overflow-hidden shadow-sm",
+                            isRoundActive ? "scale-105" : "hover:scale-105"
                           )}
                         >
-                          {isRoundActive && (
-                            <motion.div 
-                              layoutId="activeRoundGlow" 
-                              className="absolute inset-0 rounded-full bg-white/20 blur-md pointer-events-none" 
-                            />
-                          )}
-                          <span className="relative z-10">{round.name}</span>
+                          {/* Electric Animation Border */}
+                          <div className="absolute inset-0 overflow-hidden rounded-full">
+                            <div className={cn(
+                              "absolute inset-[-150%] animate-[spin_3s_linear_infinite] transition-all duration-300",
+                              isRoundActive 
+                                ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_50%,transparent_100%)] opacity-100" 
+                                : "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#64748b_50%,transparent_100%)] opacity-50 group-hover:opacity-100 group-hover:bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#f97316_50%,transparent_100%)]"
+                            )} />
+                          </div>
+                          
+                          {/* Inner Pill */}
+                          <div className={cn(
+                            "relative z-10 flex items-center px-4 py-1.5 rounded-full transition-colors duration-300 h-full w-full",
+                            isRoundActive
+                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-inner"
+                              : "bg-muted/80 text-foreground group-hover:bg-card dark:group-hover:bg-[#1a202c]"
+                          )}>
+                            {isRoundActive && (
+                              <motion.div 
+                                layoutId="activeRoundGlow" 
+                                className="absolute inset-0 rounded-full bg-white/20 blur-md pointer-events-none" 
+                              />
+                            )}
+                            <span className="relative z-10">{round.name}</span>
+                          </div>
                         </Link>
                         {index < sortedRounds.length - 1 && (
                           <ChevronRight className="h-4 w-4 text-muted-foreground/30" />
@@ -237,7 +253,8 @@ export default function EventDashboardLayout({
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-6 p-4">
               {/* Event Workspace section */}
               <div>
-                <div className={cn("text-xs font-semibold text-muted-foreground mb-2 ml-2 transition-opacity duration-300", !isSidebarExpanded && "opacity-0 text-center ml-0")}>
+                <div className={cn("text-xs font-bold text-orange-500 uppercase tracking-widest mb-3 ml-2 transition-opacity duration-300 flex items-center gap-2", !isSidebarExpanded && "opacity-0 text-center ml-0")}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
                   {isSidebarExpanded ? "EVENT MANAGEMENT" : "..."}
                 </div>
                 <nav className="space-y-1">
@@ -274,7 +291,8 @@ export default function EventDashboardLayout({
               {/* Round Workspace section */}
               {roundNavItems.length > 0 && (
                 <div>
-                  <div className={cn("text-xs font-semibold text-muted-foreground mb-2 ml-2 transition-opacity duration-300", !isSidebarExpanded && "opacity-0 text-center ml-0")}>
+                  <div className={cn("text-xs font-bold text-blue-500 uppercase tracking-widest mb-3 ml-2 transition-opacity duration-300 flex items-center gap-2", !isSidebarExpanded && "opacity-0 text-center ml-0")}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                     {isSidebarExpanded ? "ROUND WORKSPACE" : "..."}
                   </div>
                   <nav className="space-y-1">
@@ -285,18 +303,38 @@ export default function EventDashboardLayout({
                           key={item.name}
                           href={item.href}
                           className={cn(
-                            "relative flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all group overflow-hidden",
-                            isActive
-                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                            "relative flex items-center rounded-xl p-[1px] text-sm font-medium transition-all group overflow-hidden",
                             !isSidebarExpanded && "justify-center"
                           )}
                           title={!isSidebarExpanded ? item.name : undefined}
                         >
-                          <item.icon className={cn("shrink-0", isActive ? "text-blue-500" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
-                          {isSidebarExpanded && (
-                            <span className="truncate relative z-10 flex-1">{item.name}</span>
-                          )}
+                          {/* Electric Animation Border */}
+                          <div className="absolute inset-0 overflow-hidden rounded-xl">
+                            <div className={cn(
+                              "absolute inset-[-100%] animate-spin opacity-50 group-hover:opacity-100 transition-opacity",
+                              isActive ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_50%,transparent_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_30%,transparent_100%)] opacity-0"
+                            )} style={{ animationDuration: '3s' }} />
+                          </div>
+                          
+                          {/* Inner Background */}
+                          <div className={cn(
+                            "absolute inset-[1px] rounded-xl transition-colors",
+                            isActive ? "bg-blue-500/10 dark:bg-[#1a202c]" : "bg-transparent group-hover:bg-muted/80 dark:group-hover:bg-[#1f2937]"
+                          )} />
+
+                          <div className={cn("relative z-10 flex items-center px-3 py-2.5 w-full", !isSidebarExpanded && "justify-center")}>
+                            <item.icon className={cn("shrink-0", isActive ? "text-blue-500 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
+                            {isSidebarExpanded && (
+                              <span className={cn("truncate flex-1", isActive ? "text-blue-600 dark:text-blue-400 font-bold" : "text-muted-foreground group-hover:text-foreground")}>{item.name}</span>
+                            )}
+                            {isActive && (
+                              <motion.div
+                                layoutId="sidebarIndicator2"
+                                className="absolute left-[-4px] top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                              />
+                            )}
+                          </div>
                         </Link>
                       );
                     })}
