@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
 import { useState, useMemo } from "react";
@@ -19,6 +19,7 @@ import {
     type OrganizerEvent,
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
+import { uploadFile } from "@/lib/api/upload.api";
 
 const defaultLocation = {
     venueName: "FPT University Ho Chi Minh City",
@@ -269,6 +270,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const router = useRouter();
     const isEdit = !!initialData;
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
@@ -577,18 +579,60 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="imageUrl" render={({ field }) => (
                                 <FormItem className="md:col-span-12">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image URL</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            type="url"
-                                            inputMode="url"
-                                            className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl"
-                                            placeholder="https://images.unsplash.com/photo-...?auto=format&fit=crop&w=1600&q=80"
-                                            {...field}
-                                        />
+                                        <div className="flex flex-col gap-3">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                id="cover-upload"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    try {
+                                                        setIsUploading(true);
+                                                        const res = await uploadFile(file);
+                                                        field.onChange(res.data.fileUrl);
+                                                        enqueueSnackbar('Cover image uploaded successfully', { variant: 'success' });
+                                                    } catch (err) {
+                                                        enqueueSnackbar('Failed to upload image', { variant: 'error' });
+                                                    } finally {
+                                                        setIsUploading(false);
+                                                    }
+                                                }}
+                                            />
+                                            {!field.value && (
+                                                <label htmlFor="cover-upload" className="w-full">
+                                                    <div className="border-2 border-dashed border-border/50 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors w-full min-h-[160px]">
+                                                        {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-3" /> : <UploadCloud className="w-8 h-8 text-muted-foreground mb-3" />}
+                                                        <span className="text-sm font-medium text-foreground">
+                                                            {isUploading ? "Uploading..." : "Click to upload cover image"}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP up to 5MB</span>
+                                                    </div>
+                                                </label>
+                                            )}
+                                            {field.value && (
+                                                <div className="relative w-full h-[240px] rounded-xl overflow-hidden border border-border/50 group">
+                                                    <img src={field.value} alt="Cover Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                        <label htmlFor="cover-upload">
+                                                            <div className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium">
+                                                                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                                                                Change Image
+                                                            </div>
+                                                        </label>
+                                                        <Button type="button" variant="destructive" onClick={() => field.onChange("")} className="backdrop-blur-sm">
+                                                            <Trash2 className="w-4 h-4 mr-2" /> Remove Image
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </FormControl>
                                     <p className="text-xs text-muted-foreground">
-                                        Supports HTTP/HTTPS image URLs, including query parameters for crop, size, and quality.
+                                        Upload a beautiful cover image to make your event stand out.
                                     </p>
                                     <FormMessage />
                                 </FormItem>

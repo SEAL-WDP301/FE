@@ -9,11 +9,23 @@ import { format } from "date-fns";
 import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
 
 function getLocationLabel(location: unknown) {
-    if (typeof location === "string" && location.trim()) return location;
-    if (location && typeof location === "object") {
-        const value = location as { name?: string; venueName?: string; meetingPlatform?: string };
+    if (!location) return "Online";
+    
+    let locObj = location;
+    if (typeof location === "string") {
+        if (!location.trim()) return "Online";
+        try {
+            locObj = JSON.parse(location);
+        } catch {
+            return location; // Return raw string if not JSON
+        }
+    }
+    
+    if (locObj && typeof locObj === "object") {
+        const value = locObj as { name?: string; venueName?: string; meetingPlatform?: string };
         return value.name || value.venueName || value.meetingPlatform || "Online";
     }
+    
     return "Online";
 }
 
@@ -85,7 +97,7 @@ export default function FeaturedHero() {
                 {/* Right Column: Content */}
                 <div className="flex flex-col items-start text-left">
                     {/* Headlines */}
-                    <h1 className="mb-6 line-clamp-2 max-w-4xl font-sans text-5xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+                    <h1 className="mb-6 max-w-4xl font-sans text-5xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl text-balance">
                         {latestEvent.name}
                     </h1>
 

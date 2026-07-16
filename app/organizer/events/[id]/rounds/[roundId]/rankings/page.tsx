@@ -346,7 +346,7 @@ function TeamRow({
 
         <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)} style={{cursor: "pointer"}}>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-50 drop-shadow-md" : titleClass}`}>
+            <span className={`font-semibold text-base truncate ${isPassed ? "text-emerald-700 dark:text-emerald-50 dark:drop-shadow-md" : titleClass}`}>
               {entry.teamName}
             </span>
             {isSelecting && (
@@ -355,8 +355,8 @@ function TeamRow({
               </Badge>
             )}
             {isPassed && !isFinalRound && (
-              <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-emerald-500/20 text-[10px] px-2 py-0.5 shadow-[0_0_10px_rgba(16,185,129,0.3)] backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 mr-1.5 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" /> Passed
+              <Badge variant="outline" className="text-emerald-700 dark:text-emerald-400 border-emerald-500/30 dark:border-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/20 text-[10px] px-2 py-0.5 shadow-sm dark:shadow-[0_0_10px_rgba(16,185,129,0.3)] backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 mr-1.5 text-emerald-600 dark:text-emerald-400 dark:drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" /> Passed
               </Badge>
             )}
             {activeAward && (

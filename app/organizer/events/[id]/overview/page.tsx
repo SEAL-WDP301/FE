@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2, Trash2 } from "lucide-react";
+import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2, Trash2, MapPin, Phone, Scale, Building, Map, Link as LinkIcon, Info, Mail, AlertCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
@@ -77,39 +77,89 @@ export default function EventOverviewPage() {
     );
   }
 
+  const parseJSON = (str: any) => {
+    if (typeof str !== 'string') return str;
+    try { return JSON.parse(str); } catch { return null; }
+  };
+
+  const loc = parseJSON(event.location);
+  const contacts = parseJSON(event.contact) || [];
+  const rules = parseJSON(event.rules) || [];
+  const imageUrl = event.imageUrl || event.image_url || null;
+
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{event.name}</h1>
-          <div className="text-muted-foreground mt-1 flex items-center gap-2">
-            Season {event.season} {event.year} • 
+    <div className="space-y-8 pb-12">
+      {/* Cover Image Header */}
+      <div className="relative w-full h-[280px] md:h-[360px] rounded-3xl overflow-hidden border border-border shadow-2xl bg-zinc-950">
+        {imageUrl ? (
+          <>
+            {/* Blurred ambient background */}
+            <div className="absolute inset-0">
+              <img
+                src={imageUrl}
+                alt=""
+                className="w-full h-full object-cover blur-[80px] opacity-60 scale-125 saturate-150"
+              />
+            </div>
+
+            {/* Clear image on the right fading in */}
+            <div className="absolute inset-y-0 right-0 w-full md:w-[65%] pointer-events-none">
+              <img
+                src={imageUrl}
+                alt={event.name}
+                className="w-full h-full object-cover object-right-center md:object-center"
+                style={{
+                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%, black 100%)",
+                  maskImage: "linear-gradient(to right, transparent 0%, black 35%, black 100%)"
+                }}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-orange-500/20 flex items-center justify-center">
+            <ImageIcon className="h-20 w-20 text-muted-foreground/30" />
+          </div>
+        )}
+
+        {/* Gradients to ensure text is always readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent w-full md:w-[70%]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent md:hidden" />
+
+        <div className="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/50 backdrop-blur-md border border-border text-xs font-bold tracking-wider mb-4 shadow-sm">
+              <span className="relative flex size-2">
+                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-400' : 'bg-zinc-400'}`} />
+                <span className={`relative inline-flex size-2 rounded-full ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-500' : 'bg-zinc-500'}`} />
+              </span>
+              {event.status.toUpperCase()}
+            </div>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground shadow-sm">{event.name}</h1>
+            <p className="text-muted-foreground mt-2 font-medium">Season {event.season} {event.year}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
             <select
               value={event.status}
               onChange={(e) => updateStatusMutation.mutate(e.target.value as EventStatus)}
               disabled={updateStatusMutation.isPending}
-              className="bg-transparent border border-border rounded-md text-sm uppercase text-blue-500 font-semibold focus:ring-blue-500 focus:border-blue-500 p-1 cursor-pointer"
+              className="bg-background/80 backdrop-blur-md border border-border rounded-xl text-sm uppercase font-semibold focus:ring-blue-500 focus:border-blue-500 px-4 py-2.5 cursor-pointer shadow-sm hover:bg-background/90 transition-colors"
             >
-              <option value="draft">DRAFT</option>
-              <option value="active">ACTIVE</option>
-              <option value="ongoing">ONGOING</option>
-              <option value="closed">CLOSED</option>
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="closed">Closed</option>
             </select>
-            {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href={`/organizer/events/${eventId}/edit`}>
-            <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">
-              <Settings className="h-4 w-4" />
-              Edit Event
+            <Link href={`/organizer/events/${eventId}/edit`}>
+              <Button className="gap-2 rounded-xl h-10 shadow-sm">
+                <Settings className="h-4 w-4" />
+                Edit Event
+              </Button>
+            </Link>
+            <Button variant="destructive" className="gap-2 rounded-xl h-10 shadow-sm" onClick={() => setIsDeleteOpen(true)}>
+              <Trash2 className="h-4 w-4" />
             </Button>
-          </Link>
-          <Button variant="destructive" className="gap-2" onClick={() => setIsDeleteOpen(true)}>
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
+          </div>
         </div>
       </div>
 
@@ -127,7 +177,7 @@ export default function EventOverviewPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <GlassCard className="p-6 rounded-[24px] hover:bg-white/[0.02] transition-colors">
+            <GlassCard className="p-6 rounded-[24px] hover:bg-white/[0.02] transition-colors border-border/50 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
                   <stat.icon className="h-6 w-6" />
@@ -142,66 +192,165 @@ export default function EventOverviewPage() {
 
       {/* Main Content Details */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* About Event */}
+        {/* Left Column (Wider) */}
         <div className="lg:col-span-2 space-y-6">
-          <GlassCard className="p-8 rounded-[24px]">
+          <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-500" />
-              Event Information
+              Event Description
             </h3>
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Description</p>
-                <p className="font-medium text-foreground leading-relaxed">
-                  {event.description || "No description provided for this event."}
-                </p>
+            <p className="font-medium text-foreground leading-relaxed whitespace-pre-wrap">
+              {event.description || "No description provided for this event."}
+            </p>
+          </GlassCard>
+
+          {loc && (
+            <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-green-500" />
+                Location & Venue
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {loc.venueName && (
+                  <div className="bg-muted/30 p-4 rounded-xl border border-border/30">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Building className="h-3 w-3" /> Venue</p>
+                    <p className="font-semibold">{loc.venueName}</p>
+                    {loc.room && <p className="text-sm text-muted-foreground mt-1">Room: {loc.room}</p>}
+                  </div>
+                )}
+                {loc.address && (
+                  <div className="bg-muted/30 p-4 rounded-xl border border-border/30">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Map className="h-3 w-3" /> Address</p>
+                    <p className="font-semibold text-sm">{loc.address}</p>
+                    {loc.mapUrl && (
+                      <a href={loc.mapUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline mt-2 inline-flex items-center gap-1">
+                        View on Map <LinkIcon className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+                {loc.meetingPlatform && (
+                  <div className="bg-muted/30 p-4 rounded-xl border border-border/30 md:col-span-2">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Phone className="h-3 w-3" /> Virtual Meeting</p>
+                    <p className="font-semibold">{loc.meetingPlatform}</p>
+                    {loc.meetingUrl && (
+                      <a href={loc.meetingUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline break-all mt-1 inline-block">
+                        {loc.meetingUrl}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="bg-muted/50 p-4 rounded-xl">
-                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" /> Start Date
-                  </p>
-                  <p className="font-semibold">{event.startDate ? new Date(event.startDate).toLocaleDateString() : "TBA"}</p>
+              {loc.note && (
+                <div className="mt-4 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3">
+                  <Info className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">{loc.note}</p>
                 </div>
-                <div className="bg-muted/50 p-4 rounded-xl">
-                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-red-400" /> Registration Deadline
-                  </p>
-                  <p className="font-semibold">{event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString() : "TBA"}</p>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-xl">
-                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" /> End Date
-                  </p>
-                  <p className="font-semibold">{event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBA"}</p>
-                </div>
+              )}
+            </GlassCard>
+          )}
+
+          {rules.length > 0 && (
+            <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Scale className="h-5 w-5 text-purple-500" />
+                Rules & Guidelines
+              </h3>
+              <div className="space-y-6">
+                {rules.map((ruleGroup: any, idx: number) => (
+                  <div key={idx}>
+                    <h4 className="font-bold text-foreground mb-3">{ruleGroup.title || ruleGroup.name || `Rule Group ${idx + 1}`}</h4>
+                    <ul className="space-y-2">
+                      {(ruleGroup.rules || []).map((rule: string, rIdx: number) => (
+                        <li key={rIdx} className="text-sm text-muted-foreground flex items-start gap-2">
+                          <span className="text-purple-500 mt-1 shrink-0">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+        </div>
+
+        {/* Right Column (Narrower) */}
+        <div className="space-y-6">
+          <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-orange-500" />
+              Timeline
+            </h3>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Start Date</p>
+                <p className="font-semibold text-lg">{event.startDate ? new Date(event.startDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : "TBA"}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                <p className="text-xs font-bold text-red-500/80 uppercase tracking-wider mb-1">Registration Deadline</p>
+                <p className="font-semibold text-lg">{event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : "TBA"}</p>
               </div>
             </div>
           </GlassCard>
-        </div>
 
-        {/* Prizes */}
-        <div className="space-y-6">
-          <GlassCard className="p-8 rounded-[24px]">
+          <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-orange-500" />
+              <Trophy className="h-5 w-5 text-yellow-500" />
               Prize Structure
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20">
-                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider mb-1">1st Place</p>
+                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider mb-1 flex justify-between">1st Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize1st || "TBA"}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-r from-slate-400/10 to-transparent border border-slate-400/20">
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">2nd Place</p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex justify-between">2nd Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize2nd || "TBA"}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-r from-orange-700/10 to-transparent border border-orange-700/20">
-                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1">3rd Place</p>
+                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1 flex justify-between">3rd Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize3rd || "TBA"}</p>
               </div>
+              {event.prizeHonorable && (
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Honorable Mention</p>
+                  <p className="font-bold text-sm">{event.prizeHonorable}</p>
+                </div>
+              )}
             </div>
           </GlassCard>
+
+          {contacts.length > 0 && (
+            <GlassCard className="p-8 rounded-[24px] border-border/50 shadow-sm">
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Phone className="h-5 w-5 text-zinc-500" />
+                Contact Info
+              </h3>
+              <div className="space-y-4">
+                {contacts.map((contact: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-xl bg-muted/30 border border-border/30 text-sm">
+                    <p className="font-bold text-foreground mb-2">{contact.label || contact.name}</p>
+                    {contact.email && (
+                      <p className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <Mail className="h-3.5 w-3.5" /> <a href={`mailto:${contact.email}`} className="hover:text-blue-500">{contact.email}</a>
+                      </p>
+                    )}
+                    {contact.phone && (
+                      <p className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <Phone className="h-3.5 w-3.5" /> <a href={`tel:${contact.phone}`} className="hover:text-blue-500">{contact.phone}</a>
+                      </p>
+                    )}
+                    {contact.responseTime && (
+                      <p className="flex items-center gap-2 text-muted-foreground mt-2 pt-2 border-t border-border/50 text-xs">
+                        <Clock className="h-3 w-3" /> {contact.responseTime}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
         </div>
       </div>
 
