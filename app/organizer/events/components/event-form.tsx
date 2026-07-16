@@ -145,10 +145,7 @@ const createEventSchema = (isEdit: boolean) => z.object({
         ? z.string().optional()
         : z.string().min(1, "End date is required"),
     githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
-    prize1st: z.string().optional(),
-    prize2nd: z.string().optional(),
-    prize3rd: z.string().optional(),
-    prizeHonorable: z.string().optional(),
+
     tracks: z.array(z.object({
         id: z.number().optional(),
         _count: z.object({ teams: z.number().optional() }).optional(),
@@ -215,9 +212,7 @@ const createEventSchema = (isEdit: boolean) => z.object({
         requireText(data.registrationDeadline, ["registrationDeadline"], "Registration deadline");
         requireText(data.startDate, ["startDate"], "Start date");
         requireText(data.githubOrgUrl, ["githubOrgUrl"], "GitHub organization URL");
-        requireText(data.prize1st, ["prize1st"], "1st prize");
-        requireText(data.prize2nd, ["prize2nd"], "2nd prize");
-        requireText(data.prize3rd, ["prize3rd"], "3rd prize");
+
 
         requireText(data.location.venueName, ["location", "venueName"], "Venue");
         requireText(data.location.room, ["location", "room"], "Room / Hall");

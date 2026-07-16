@@ -304,22 +304,35 @@ export default function EventOverviewPage() {
               Prize Structure
             </h3>
             <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20">
-                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider mb-1 flex justify-between">1st Place <Trophy className="h-3 w-3" /></p>
-                <p className="font-bold text-lg">{event.prize1st || "TBA"}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-400/10 to-transparent border border-slate-400/20">
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex justify-between">2nd Place <Trophy className="h-3 w-3" /></p>
-                <p className="font-bold text-lg">{event.prize2nd || "TBA"}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-orange-700/10 to-transparent border border-orange-700/20">
-                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1 flex justify-between">3rd Place <Trophy className="h-3 w-3" /></p>
-                <p className="font-bold text-lg">{event.prize3rd || "TBA"}</p>
-              </div>
-              {event.prizeHonorable && (
+              {event.prizes && event.prizes.length > 0 ? (
+                event.prizes.map((prize: any, idx: number) => {
+                  let colors = "from-muted/30 to-transparent border-border/30 text-foreground";
+                  let titleColor = "text-muted-foreground";
+                  const nameLower = prize.name.toLowerCase();
+                  
+                  if (nameLower.includes("1st") || nameLower.includes("first")) {
+                    colors = "from-yellow-500/10 to-transparent border-yellow-500/20 text-foreground";
+                    titleColor = "text-yellow-600";
+                  } else if (nameLower.includes("2nd") || nameLower.includes("second")) {
+                    colors = "from-slate-400/10 to-transparent border-slate-400/20 text-foreground";
+                    titleColor = "text-slate-500";
+                  } else if (nameLower.includes("3rd") || nameLower.includes("third")) {
+                    colors = "from-orange-700/10 to-transparent border-orange-700/20 text-foreground";
+                    titleColor = "text-orange-600";
+                  }
+                  
+                  return (
+                    <div key={idx} className={`p-4 rounded-xl bg-gradient-to-r border ${colors}`}>
+                      <p className={`text-xs font-bold uppercase tracking-wider mb-1 flex justify-between ${titleColor}`}>
+                        {prize.name} <Trophy className="h-3 w-3" />
+                      </p>
+                      <p className="font-bold text-lg">{prize.description || `${prize.quantity} winner(s)`}</p>
+                    </div>
+                  );
+                })
+              ) : (
                 <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Honorable Mention</p>
-                  <p className="font-bold text-sm">{event.prizeHonorable}</p>
+                  <p className="text-muted-foreground text-center">TBA</p>
                 </div>
               )}
             </div>
