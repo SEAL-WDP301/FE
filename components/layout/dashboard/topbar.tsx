@@ -36,10 +36,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
         const role = user?.role?.toLowerCase();
         if (role === "student") return "/student/profile";
         if (role === "judge") return "/judge/profile";
-        if (role === "stakeholder") {
-            const mentorEventMatch = pathname.match(/^\/mentor\/events\/([^/]+)/);
-            return mentorEventMatch ? `/mentor/events/${mentorEventMatch[1]}/settings` : "/mentor/profile";
-        }
+        if (role === "stakeholder") return "/mentor/profile"; // Mentor/Judge share stakeholder role, we default to mentor profile which acts as general stakeholder profile
         if (role === "admin" || role === "organizer") return "/organizer/profile";
         return "/home";
     };
@@ -91,40 +88,51 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
 
                     <DropdownMenuContent
                         align="end"
-                        className="w-56 border border-border bg-popover/95 backdrop-blur-xl"
+                        className="w-60 border border-border bg-popover/95 backdrop-blur-xl p-2 rounded-xl shadow-xl"
                     >
-                        <DropdownMenuLabel>
-                            My Account
+                        <DropdownMenuLabel className="font-normal">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{user?.name}</p>
+                                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                            </div>
                         </DropdownMenuLabel>
 
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator className="my-2" />
 
-                        <DropdownMenuItem asChild>
-                            <Link href={getProfileHref()}>
-                                Profile
+                        <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
+                            <Link href={getProfileHref()} className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                My Profile
+                            </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
+                            <Link href={getProfileHref()} className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Participation History
                             </Link>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem asChild>
-                            <Link href="/student/settings">
-                                Team Settings
-                            </Link>
-                        </DropdownMenuItem>
+                        {user?.role?.toLowerCase() === "student" && (
+                            <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
+                                <Link href="/student/settings" className="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Team Settings
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem>
-                            Preferences
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator className="my-2" />
 
                         <DropdownMenuItem 
-                            className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
+                            className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer rounded-lg py-2 flex items-center gap-2"
                             onClick={() => {
                                 useAuthStore.getState().clearAccessToken();
                                 window.dispatchEvent(new Event('auth-unauthorized'));
                                 window.location.href = '/login';
                             }}
                         >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                             Logout
                         </DropdownMenuItem>
                     </DropdownMenuContent>
