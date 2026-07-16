@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2, Trash2, MapPin, Phone, Scale, Building, Map, Link as LinkIcon, Info, Mail, AlertCircle, Clock } from "lucide-react";
+import { Users, FileText, Settings, Calendar, GitMerge, Trophy, Loader2, Trash2, MapPin, Phone, Scale, Building, Map, Link as LinkIcon, Info, Mail, AlertCircle, Clock, ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
@@ -132,7 +132,7 @@ export default function EventOverviewPage() {
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-400' : 'bg-zinc-400'}`} />
                 <span className={`relative inline-flex size-2 rounded-full ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-500' : 'bg-zinc-500'}`} />
               </span>
-              {event.status.toUpperCase()}
+              {(event.status ?? "draft").toUpperCase()}
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground shadow-sm">{event.name}</h1>
             <p className="text-muted-foreground mt-2 font-medium">Season {event.season} {event.year}</p>
@@ -286,6 +286,10 @@ export default function EventOverviewPage() {
               <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Start Date</p>
                 <p className="font-semibold text-lg">{event.startDate ? new Date(event.startDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : "TBA"}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">End Date</p>
+                <p className="font-semibold text-lg">{event.endDate ? new Date(event.endDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : "TBA"}</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
                 <p className="text-xs font-bold text-red-500/80 uppercase tracking-wider mb-1">Registration Deadline</p>

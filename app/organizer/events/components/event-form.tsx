@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, type FieldErrors, type FieldPath, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, X, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
 import { useState, useMemo } from "react";
@@ -20,6 +20,7 @@ import {
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
 import { uploadFile } from "@/lib/api/upload.api";
+import { cn } from "@/lib/utils";
 
 const defaultLocation = {
     venueName: "FPT University Ho Chi Minh City",
@@ -139,7 +140,9 @@ const createEventSchema = (isEdit: boolean) => z.object({
     status: z.enum(["draft", "active", "ongoing", "closed"]).optional(),
     registrationDeadline: z.string().optional(),
     startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    endDate: isEdit
+        ? z.string().optional()
+        : z.string().min(1, "End date is required"),
     githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
     prize1st: z.string().optional(),
     prize2nd: z.string().optional(),
@@ -190,6 +193,75 @@ const createEventSchema = (isEdit: boolean) => z.object({
     })).default(defaultFaqItems),
 }).superRefine((data, ctx) => {
     const now = new Date();
+
+    if (!isEdit) {
+        const requireText = (
+            value: string | undefined,
+            path: Array<string | number>,
+            label: string,
+        ) => {
+            if (!value?.trim()) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `${label} is required`,
+                    path,
+                });
+            }
+        };
+
+        requireText(data.description, ["description"], "Description");
+        requireText(data.imageUrl, ["imageUrl"], "Cover image");
+        requireText(data.registrationDeadline, ["registrationDeadline"], "Registration deadline");
+        requireText(data.startDate, ["startDate"], "Start date");
+        requireText(data.githubOrgUrl, ["githubOrgUrl"], "GitHub organization URL");
+        requireText(data.prize1st, ["prize1st"], "1st prize");
+        requireText(data.prize2nd, ["prize2nd"], "2nd prize");
+        requireText(data.prize3rd, ["prize3rd"], "3rd prize");
+
+        requireText(data.location.venueName, ["location", "venueName"], "Venue");
+        requireText(data.location.room, ["location", "room"], "Room / Hall");
+        requireText(data.location.address, ["location", "address"], "Address");
+        requireText(data.location.meetingPlatform, ["location", "meetingPlatform"], "Online platform");
+        requireText(data.location.meetingUrl, ["location", "meetingUrl"], "Meeting URL");
+        requireText(data.location.mapUrl, ["location", "mapUrl"], "Map URL");
+
+        if (data.contacts.length === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one contact is required", path: ["contacts"] });
+        }
+        data.contacts.forEach((contact, index) => {
+            requireText(contact.label, ["contacts", index, "label"], "Contact label");
+            requireText(contact.name, ["contacts", index, "name"], "Contact name");
+            requireText(contact.email, ["contacts", index, "email"], "Contact email");
+            requireText(contact.phone, ["contacts", index, "phone"], "Contact phone");
+            requireText(contact.detail, ["contacts", index, "detail"], "Contact detail");
+            requireText(contact.responseTime, ["contacts", index, "responseTime"], "Response time");
+        });
+
+        if (data.ruleGroups.length === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one rule group is required", path: ["ruleGroups"] });
+        }
+        data.ruleGroups.forEach((group, index) => {
+            requireText(group.itemsText, ["ruleGroups", index, "itemsText"], "Rules");
+        });
+
+        if (data.faqItems.length === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one FAQ is required", path: ["faqItems"] });
+        }
+
+        data.tracks.forEach((track, index) => {
+            requireText(track.description, ["tracks", index, "description"], "Track description");
+            if (track.maxTeams === undefined) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Max teams is required", path: ["tracks", index, "maxTeams"] });
+            }
+            if (track.maxMembersPerTeam === undefined) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Max members is required", path: ["tracks", index, "maxMembersPerTeam"] });
+            }
+        });
+
+        data.rounds.forEach((round, index) => {
+            requireText(round.submissionDeadline, ["rounds", index, "submissionDeadline"], "Round deadline");
+        });
+    }
 
     if (!isEdit && data.startDate) {
         if (new Date(data.startDate) <= now) {
@@ -262,6 +334,50 @@ const createEventSchema = (isEdit: boolean) => z.object({
 
 type EventFormValues = z.infer<ReturnType<typeof createEventSchema>>;
 
+const eventFormSteps: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon: typeof Info;
+    fields: FieldPath<EventFormValues>[];
+}> = [
+    {
+        id: "event-form-general",
+        title: "General",
+        description: "Core event details",
+        icon: Info,
+        fields: ["name", "season", "year", "registrationDeadline", "startDate", "endDate", "githubOrgUrl", "imageUrl", "description"],
+    },
+    {
+        id: "event-form-prizes",
+        title: "Prizes",
+        description: "Awards and rewards",
+        icon: Trophy,
+        fields: ["prize1st", "prize2nd", "prize3rd", "prizeHonorable"],
+    },
+    {
+        id: "event-form-logistics",
+        title: "Logistics",
+        description: "Location, contacts and rules",
+        icon: MapPin,
+        fields: ["location", "contacts", "ruleGroups", "faqItems"],
+    },
+    {
+        id: "event-form-tracks",
+        title: "Tracks",
+        description: "Competition categories",
+        icon: GitMerge,
+        fields: ["tracks"],
+    },
+    {
+        id: "event-form-rounds",
+        title: "Rounds",
+        description: "Submission stages",
+        icon: FileText,
+        fields: ["rounds"],
+    },
+];
+
 interface EventFormProps {
     initialData?: OrganizerEvent;
 }
@@ -271,6 +387,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const isEdit = !!initialData;
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [currentStep, setCurrentStep] = useState(0);
 
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
@@ -382,6 +499,29 @@ export default function EventForm({ initialData }: EventFormProps) {
         removeRound(index);
     };
 
+    const handleStepSelect = (stepIndex: number) => {
+        setCurrentStep(stepIndex);
+        document.getElementById(eventFormSteps[stepIndex].id)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    };
+
+    const handleInvalidSubmit = (errors: FieldErrors<EventFormValues>) => {
+        const errorRoots = new Set(Object.keys(errors));
+        const firstInvalidStep = eventFormSteps.findIndex((step) =>
+            step.fields.some((field) => errorRoots.has(field.split(".")[0]))
+        );
+
+        if (firstInvalidStep >= 0) {
+            handleStepSelect(firstInvalidStep);
+        }
+
+        enqueueSnackbar("Please review the highlighted required fields.", {
+            variant: "warning",
+        });
+    };
+
     const onSubmit = async (data: EventFormValues) => {
         setIsLoading(true);
         try {
@@ -481,12 +621,95 @@ export default function EventForm({ initialData }: EventFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-32" suppressHydrationWarning>
+            <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="pb-8" suppressHydrationWarning>
+                <div className="grid items-start gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+                    <aside className="sticky top-24 rounded-[28px] border border-border/60 bg-card/90 p-6 shadow-lg shadow-black/5 backdrop-blur-xl">
+                        <div className="border-b border-border/60 pb-5">
+                            <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-500">
+                                Event setup
+                            </p>
+                            <h2 className="mt-2 text-xl font-bold">
+                                {isEdit ? "Update your event" : "Create your event"}
+                            </h2>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                Complete each step before publishing the event workspace.
+                            </p>
+                        </div>
+
+                        <nav className="mt-5" aria-label="Event creation progress">
+                            {eventFormSteps.map((step, index) => {
+                                const StepIcon = step.icon;
+                                const isActive = currentStep === index;
+                                const isComplete = index < currentStep;
+
+                                return (
+                                    <div key={step.title} className="relative pb-2 last:pb-0">
+                                        {index < eventFormSteps.length - 1 && (
+                                            <div
+                                                className={cn(
+                                                    "absolute -bottom-2 left-7 top-7 w-px",
+                                                    isComplete ? "bg-orange-500" : "bg-border"
+                                                )}
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleStepSelect(index)}
+                                            className={cn(
+                                                "relative z-10 flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all",
+                                                isActive && "bg-orange-500/10 ring-1 ring-orange-500/20",
+                                                "hover:bg-orange-500/5"
+                                            )}
+                                        >
+                                            <span
+                                                className={cn(
+                                                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all",
+                                                    isActive && "border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-500/25",
+                                                    isComplete && !isActive && "border-orange-500 bg-orange-500/10 text-orange-600",
+                                                    !isActive && !isComplete && "border-border bg-background text-muted-foreground"
+                                                )}
+                                            >
+                                                {isComplete && !isActive ? (
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                ) : (
+                                                    <StepIcon className="h-4 w-4" />
+                                                )}
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className={cn("block text-sm font-semibold", isActive && "text-orange-600 dark:text-orange-400")}>
+                                                    {index + 1}. {step.title}
+                                                </span>
+                                                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                                                    {step.description}
+                                                </span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </nav>
+
+                        <div className="mt-5 rounded-2xl bg-muted/50 p-3">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                                <span>Progress</span>
+                                <span className="text-orange-600">{Math.round(((currentStep + 1) / eventFormSteps.length) * 100)}%</span>
+                            </div>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+                                <motion.div
+                                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
+                                    animate={{ width: `${((currentStep + 1) / eventFormSteps.length) * 100}%` }}
+                                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                                />
+                            </div>
+                        </div>
+                    </aside>
+
+                    <main className="min-w-0 space-y-12 rounded-[32px] border border-border/60 bg-card p-4 shadow-xl shadow-black/5 sm:p-6 lg:p-8">
 
                 {/* GENERAL INFORMATION */}
-                <motion.div custom={0} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div id="event-form-general" custom={0} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-blue-500/10 group-hover:to-purple-500/10" />
-                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                    <div className="relative">
                         <div className="flex items-center gap-4 mb-8">
                             <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl text-blue-600 ring-1 ring-blue-500/20">
                                 <Info className="h-6 w-6" />
@@ -539,7 +762,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="registrationDeadline" render={({ field }) => (
                                 <FormItem className="md:col-span-4">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Registration Deadline</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Registration Deadline {!isEdit && <span className="text-red-500">*</span>}</FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
@@ -549,7 +772,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="startDate" render={({ field }) => (
                                 <FormItem className="md:col-span-4">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Start Date</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Start Date {!isEdit && <span className="text-red-500">*</span>}</FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
@@ -559,7 +782,11 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="endDate" render={({ field }) => (
                                 <FormItem className="md:col-span-4">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> End Date</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        End Date
+                                        {!isEdit && <span className="text-red-500">*</span>}
+                                    </FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
@@ -569,7 +796,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="githubOrgUrl" render={({ field }) => (
                                 <FormItem className="md:col-span-12">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><LinkIcon className="w-4 h-4" /> GitHub Organization URL</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><LinkIcon className="w-4 h-4" /> GitHub Organization URL {!isEdit && <span className="text-red-500">*</span>}</FormLabel>
                                     <FormControl>
                                         <Input className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" placeholder="https://github.com/your-org" {...field} />
                                     </FormControl>
@@ -579,7 +806,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="imageUrl" render={({ field }) => (
                                 <FormItem className="md:col-span-12">
-                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cover Image {!isEdit && <span className="text-red-500">*</span>}</FormLabel>
                                     <FormControl>
                                         <div className="flex flex-col gap-3">
                                             <input
@@ -640,7 +867,7 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                             <FormField control={control} name="description" render={({ field }) => (
                                 <FormItem className="md:col-span-12">
-                                    <FormLabel className="text-foreground/80 font-medium">Description</FormLabel>
+                                    <FormLabel className="text-foreground/80 font-medium">Description {!isEdit && <span className="text-red-500">*</span>}</FormLabel>
                                     <FormControl>
                                         <Textarea className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl min-h-[120px] resize-y" placeholder="Event description..." {...field} />
                                     </FormControl>
@@ -652,9 +879,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                 </motion.div>
 
                 {/* PRIZES */}
-                <motion.div custom={1} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div id="event-form-prizes" custom={1} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-amber-500/10 group-hover:to-orange-500/10" />
-                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                    <div className="relative">
                         <div className="flex items-center gap-4 mb-8">
                             <div className="p-3 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-2xl text-amber-600 ring-1 ring-amber-500/20">
                                 <Trophy className="h-6 w-6" />
@@ -667,13 +894,13 @@ export default function EventForm({ initialData }: EventFormProps) {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <FormField control={control} name="prize1st" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">1st Prize</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-amber-500/20 focus-visible:ring-amber-500/30" placeholder="E.g. $1000 & MacBooks" {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel className="text-foreground/80 font-medium">1st Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-amber-500/20 focus-visible:ring-amber-500/30" placeholder="E.g. $1000 & MacBooks" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={control} name="prize2nd" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">2nd Prize</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $500 & AirPods" {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel className="text-foreground/80 font-medium">2nd Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $500 & AirPods" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={control} name="prize3rd" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">3rd Prize</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $250 & Keyboards" {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel className="text-foreground/80 font-medium">3rd Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $250 & Keyboards" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={control} name="prizeHonorable" render={({ field }) => (
                                 <FormItem><FormLabel className="text-foreground/80 font-medium">Honorable Mention</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. Swag bag & Vouchers" {...field} /></FormControl><FormMessage /></FormItem>
@@ -683,9 +910,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                 </motion.div>
 
                 {/* EVENT DETAILS */}
-                <motion.div custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div id="event-form-logistics" custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-yellow-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-orange-500/10 group-hover:to-yellow-500/10" />
-                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                    <div className="relative">
                         <div className="flex items-center gap-4 mb-8">
                             <div className="p-3 bg-gradient-to-br from-orange-500/20 to-yellow-600/20 rounded-2xl text-orange-600 ring-1 ring-orange-500/20">
                                 <ListChecks className="h-6 w-6" />
@@ -704,22 +931,22 @@ export default function EventForm({ initialData }: EventFormProps) {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                                     <FormField control={control} name="location.venueName" render={({ field }) => (
-                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Venue</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Venue {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.room" render={({ field }) => (
-                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Room / Hall</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-6"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Room / Hall {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.address" render={({ field }) => (
-                                        <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Address</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Address {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.meetingPlatform" render={({ field }) => (
-                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Online Platform</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Google Meet / Zoom" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Online Platform {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Google Meet / Zoom" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.meetingUrl" render={({ field }) => (
-                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Meeting URL</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Meeting URL {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.mapUrl" render={({ field }) => (
-                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Map URL</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="md:col-span-4"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Map URL {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="https://..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <FormField control={control} name="location.note" render={({ field }) => (
                                         <FormItem className="md:col-span-12"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Location Note</FormLabel><FormControl><Textarea className="bg-card/50 rounded-lg min-h-[80px]" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
@@ -830,9 +1057,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                 </motion.div>
 
                 {/* TRACKS */}
-                <motion.div custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div id="event-form-tracks" custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-emerald-500/10 group-hover:to-teal-500/10" />
-                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                    <div className="relative">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-600/20 rounded-2xl text-emerald-600 ring-1 ring-emerald-500/20">
@@ -869,17 +1096,17 @@ export default function EventForm({ initialData }: EventFormProps) {
                                         </div>
                                         <div className="md:col-span-8">
                                             <FormField control={control} name={`tracks.${index}.description`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Description</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Track focus area..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Description {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Track focus area..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </div>
                                         <div className="md:col-span-4">
                                             <FormField control={control} name={`tracks.${index}.maxTeams`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Teams</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Teams {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </div>
                                         <div className="md:col-span-4">
                                             <FormField control={control} name={`tracks.${index}.maxMembersPerTeam`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Members</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Members {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </div>
                                         <div className="md:col-span-4 flex justify-end items-end">
@@ -897,9 +1124,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                 </motion.div>
 
                 {/* ROUNDS */}
-                <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible" className="relative group">
+                <motion.div id="event-form-rounds" custom={4} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-pink-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-rose-500/10 group-hover:to-pink-500/10" />
-                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                    <div className="relative">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-gradient-to-br from-rose-500/20 to-pink-600/20 rounded-2xl text-rose-600 ring-1 ring-rose-500/20">
@@ -941,7 +1168,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                         </div>
                                         <div className="md:col-span-5 flex justify-between items-end gap-3">
                                             <FormField control={control} name={`rounds.${index}.submissionDeadline`} render={({ field }) => (
-                                                <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline {!isEdit && "*"}</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </div>
                                         <div className="md:col-span-4">
@@ -995,27 +1222,17 @@ export default function EventForm({ initialData }: EventFormProps) {
                         </div>
                     </div>
                 </motion.div>
-
-                {/* BOTTOM ACTIONS BAR */}
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border/50 z-50 flex justify-end gap-4 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)]"
-                >
-                    <div className="max-w-7xl mx-auto w-full flex justify-end gap-4 px-4 md:px-8">
-                        <Button type="button" variant="ghost" className="rounded-xl px-6 hover:bg-muted" onClick={() => router.back()} disabled={isLoading}>
-                            <X className="w-4 h-4 mr-2" /> Cancel
-                        </Button>
-                        <Button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 rounded-xl px-8" disabled={isLoading}>
-                            {isLoading ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-                            ) : (
-                                <>{isEdit ? <><Save className="w-4 h-4 mr-2" /> Save Changes</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Create Event</>}</>
-                            )}
-                        </Button>
-                    </div>
-                </motion.div>
+                        <div className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-border/60 pt-6">
+                            <Button type="submit" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600" disabled={isLoading || isUploading}>
+                                {isLoading ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                                ) : (
+                                    <>{isEdit ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Create Event</>}</>
+                                )}
+                            </Button>
+                        </div>
+                    </main>
+                </div>
             </form>
         </Form>
     );

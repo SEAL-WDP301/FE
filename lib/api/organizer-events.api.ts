@@ -102,6 +102,8 @@ export interface OrganizerRound extends OrganizerRoundInput {
 }
 
 export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds" | "imageUrl"> {
+  /** Compatibility for APIs returning the mapped database column name. */
+  end_date?: string | null;
   id: number;
   imageUrl?: string | null;
   image_url?: string | null;
@@ -147,29 +149,37 @@ function unwrapData<T>(response: { data?: { data?: T } }) {
   return response.data?.data as T;
 }
 
+function normalizeOrganizerEvent(event: OrganizerEvent): OrganizerEvent {
+  return {
+    ...event,
+    endDate: event.endDate ?? event.end_date ?? undefined,
+  };
+}
+
 export async function getOrganizerEvents() {
   const res = await axiosClient.get("/organizer/events");
-  return unwrapData<OrganizerEvent[]>(res);
+  return (unwrapData<OrganizerEvent[]>(res) || []).map(normalizeOrganizerEvent);
 }
 
 export async function getOrganizerEvent(eventId: string | number) {
   const res = await axiosClient.get(`/public/events/${eventId}`);
-  return unwrapData<OrganizerEvent>(res);
+  const event = unwrapData<OrganizerEvent>(res);
+  return event ? normalizeOrganizerEvent(event) : undefined;
 }
 
 export async function createOrganizerEvent(payload: OrganizerEventPayload) {
   const res = await axiosClient.post("/organizer/events", payload);
-  return unwrapData<OrganizerEvent>(res);
+  return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
 export async function updateOrganizerEvent(eventId: string | number, payload: OrganizerEventPayload) {
   const res = await axiosClient.put(`/organizer/events/${eventId}`, payload);
-  return unwrapData<OrganizerEvent>(res);
+  return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
 export async function updateOrganizerEventStatus(eventId: string | number, status: EventStatus) {
   const res = await axiosClient.patch(`/organizer/events/${eventId}/status`, { status });
-  return unwrapData<OrganizerEvent>(res);
+  return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
 export async function deleteOrganizerEvent(eventId: string | number) {

@@ -265,23 +265,61 @@ export default function EventDashboardLayout({
                         key={item.name}
                         href={item.href}
                         className={cn(
-                          "relative flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all group overflow-hidden",
-                          isActive
-                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          "relative flex items-center rounded-xl p-[1px] text-sm font-medium transition-all group overflow-hidden",
                           !isSidebarExpanded && "justify-center"
                         )}
                         title={!isSidebarExpanded ? item.name : undefined}
                       >
-                        <item.icon className={cn("shrink-0", isActive ? "text-blue-500" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
-                        {isSidebarExpanded && (
-                          <span className="truncate relative z-10 flex-1">{item.name}</span>
-                        )}
-                        {item.badge !== undefined && item.badge > 0 && (
-                          <div className={cn("flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px]", isSidebarExpanded ? "h-5 min-w-5 px-1 ml-2" : "absolute top-1 right-1 h-3.5 min-w-3.5 px-0.5")}>
-                            {item.badge > 99 ? '99+' : item.badge}
-                          </div>
-                        )}
+                        <div className="absolute inset-0 overflow-hidden rounded-xl">
+                          <div
+                            className={cn(
+                              "absolute inset-[-100%] animate-spin transition-opacity",
+                              isActive
+                                ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#f97316_50%,transparent_100%)] opacity-100"
+                                : "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#f97316_30%,transparent_100%)] opacity-0 group-hover:opacity-70"
+                            )}
+                            style={{ animationDuration: "3s" }}
+                          />
+                        </div>
+
+                        <div className={cn(
+                          "absolute inset-[1px] rounded-xl transition-colors duration-300",
+                          isActive
+                            ? "bg-orange-500/10 dark:bg-[#1a202c]"
+                            : "bg-transparent group-hover:bg-orange-500/5 dark:group-hover:bg-[#1f2937]"
+                        )} />
+
+                        <div className={cn("relative z-10 flex w-full items-center px-3 py-2.5", !isSidebarExpanded && "justify-center")}>
+                          <item.icon className={cn(
+                            "shrink-0 transition-colors",
+                            isActive
+                              ? "text-orange-500 drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
+                              : "text-muted-foreground group-hover:text-orange-500",
+                            isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5"
+                          )} />
+                          {isSidebarExpanded && (
+                            <span className={cn(
+                              "truncate flex-1 transition-colors",
+                              isActive
+                                ? "font-bold text-orange-600 dark:text-orange-400"
+                                : "text-muted-foreground group-hover:text-orange-500"
+                            )}>
+                              {item.name}
+                            </span>
+                          )}
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <div className={cn("flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px]", isSidebarExpanded ? "h-5 min-w-5 px-1 ml-2" : "absolute top-0 right-0 h-3.5 min-w-3.5 px-0.5")}>
+                              {item.badge > 99 ? '99+' : item.badge}
+                            </div>
+                          )}
+                          {isActive && (
+                            <motion.div
+                              layoutId="sidebarEventIndicator"
+                              className="absolute left-[-4px] top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.9)]"
+                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                          )}
+                        </div>
                       </Link>
                     );
                   })}

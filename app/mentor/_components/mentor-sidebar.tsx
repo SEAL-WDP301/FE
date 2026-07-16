@@ -67,7 +67,7 @@ const getNavItems = (eventId: string): NavItem[] => {
     { label: "Feedback", href: `${base}/feedback`, icon: ClipboardCheck, id: "feedback" },
     { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
 
-    { label: "Settings", href: `${base}/settings`, icon: Settings },
+
   ];
 };
 
