@@ -6,7 +6,7 @@ import EventForm from "../components/event-form";
 
 export default function CreateEventPage() {
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-8 max-w-7xl mx-auto">
             <div className="mb-8">
                 <Link href="/organizer/events" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
                     <ArrowLeft className="mr-2 h-4 w-4" />
