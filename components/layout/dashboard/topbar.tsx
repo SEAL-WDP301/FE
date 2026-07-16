@@ -65,7 +65,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
 
                 {/* User */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 transition-colors hover:bg-muted outline-none">
+                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 transition-colors hover:bg-muted outline-none group">
                         <Avatar className="h-9 w-9 border border-orange-500/30 overflow-hidden">
                             {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="Avatar" />}
                             <AvatarFallback className="bg-orange-500/15 text-sm font-bold text-orange-400">
@@ -83,22 +83,13 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                             </p>
                         </div>
 
-                        <ChevronDown className="hidden h-4 w-4 text-muted-foreground md:block" />
+                        <ChevronDown className="hidden h-4 w-4 text-muted-foreground md:block transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent
                         align="end"
                         className="w-60 border border-border bg-popover/95 backdrop-blur-xl p-2 rounded-xl shadow-xl"
                     >
-                        <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{user?.name}</p>
-                                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                            </div>
-                        </DropdownMenuLabel>
-
-                        <DropdownMenuSeparator className="my-2" />
-
                         <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
                             <Link href={getProfileHref()} className="flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -113,14 +104,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                             </Link>
                         </DropdownMenuItem>
 
-                        {user?.role?.toLowerCase() === "student" && (
-                            <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
-                                <Link href="/student/settings" className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Team Settings
-                                </Link>
-                            </DropdownMenuItem>
-                        )}
+
 
                         <DropdownMenuSeparator className="my-2" />
 
