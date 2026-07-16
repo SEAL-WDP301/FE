@@ -126,6 +126,7 @@ function buildEventPayload(
     status: event.status,
     registrationDeadline: event.registrationDeadline || undefined,
     startDate: event.startDate || undefined,
+    endDate: event.endDate || undefined,
     githubOrgUrl: event.githubOrgUrl || undefined,
     prize1st: event.prize1st || undefined,
     prize2nd: event.prize2nd || undefined,

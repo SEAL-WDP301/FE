@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Layers, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, Layers, Users } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,27 @@ export default function EventCard({ event }: EventCardProps) {
       </div>
 
       <div className="space-y-5 p-5">
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="rounded-2xl border border-border bg-card/40 p-3">
+            <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              Registration
+            </div>
+            <p className="font-semibold">
+              {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString() : "TBA"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 p-3">
+            <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              End date
+            </div>
+            <p className="font-semibold">
+              {event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBA"}
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card/40 p-3">
             <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">

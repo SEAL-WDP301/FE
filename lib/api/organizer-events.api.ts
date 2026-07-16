@@ -70,6 +70,7 @@ export interface OrganizerEventPayload {
   status?: EventStatus;
   registrationDeadline?: string;
   startDate?: string;
+  endDate?: string;
   githubOrgUrl?: string;
   prize1st?: string;
   prize2nd?: string;

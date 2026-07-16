@@ -156,7 +156,7 @@ export default function EventOverviewPage() {
                   {event.description || "No description provided for this event."}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid gap-6 md:grid-cols-3">
                 <div className="bg-muted/50 p-4 rounded-xl">
                   <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
                     <Calendar className="h-4 w-4" /> Start Date
@@ -168,6 +168,12 @@ export default function EventOverviewPage() {
                     <Calendar className="h-4 w-4 text-red-400" /> Registration Deadline
                   </p>
                   <p className="font-semibold">{event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString() : "TBA"}</p>
+                </div>
+                <div className="bg-muted/50 p-4 rounded-xl">
+                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" /> End Date
+                  </p>
+                  <p className="font-semibold">{event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBA"}</p>
                 </div>
               </div>
             </div>

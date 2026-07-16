@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { CalendarDays } from 'lucide-react';
+import { format } from 'date-fns';
 import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
 import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
 
@@ -129,6 +131,17 @@ export default function PastEvents() {
                                     <p className="mb-6 text-sm text-muted-foreground line-clamp-3">
                                         {event.description}
                                     </p>
+
+                                    <div className="mb-6 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+                                            <CalendarDays className="size-4 shrink-0 text-orange-500" />
+                                            <span>Registration: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+                                            <CalendarDays className="size-4 shrink-0 text-orange-500" />
+                                            <span>Ends: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
+                                        </div>
+                                    </div>
 
                                     {/* Footer Card */}
                                     <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
