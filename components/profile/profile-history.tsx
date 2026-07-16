@@ -151,42 +151,140 @@ export function ProfileHistory({ userId }: { userId?: number }) {
 
       {/* Other Roles History */}
       {(judgeHistory.length > 0 || mentorHistory.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-[rgba(255,154,60,0.16)]">
+        <div className="space-y-8 pt-4 border-t border-[rgba(255,154,60,0.16)]">
           {/* Judge History */}
-          <div>
-            <h3 className="text-lg font-bold text-[#f5f2ec] mb-4 flex items-center gap-2">
-               <Award className="w-5 h-5 text-emerald-400" /> Judging Roles
-            </h3>
-            <div className="space-y-3">
-              {judgeHistory.map((assignment: any) => (
-                <Link key={assignment.id} href={`/home/events/${assignment.round?.event?.id}`} className="block">
-                  <div className="p-4 rounded-[12px] border border-emerald-500/20 bg-[#14100c] hover:border-emerald-500/40 hover:bg-[#1a211c] transition-colors">
-                    <p className="font-semibold text-sm text-[#f5f2ec] group-hover:text-emerald-400">{assignment.round?.event?.name}</p>
-                    <p className="text-xs text-emerald-400 mt-1">Round: {assignment.round?.name}</p>
-                    {assignment.track && <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.track.name}</p>}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-          
+          {judgeHistory.length > 0 && (() => {
+            const judgeEventsMap = new Map();
+            judgeHistory.forEach((assignment: any) => {
+              const event = assignment.round?.event;
+              if (!event) return;
+              if (!judgeEventsMap.has(event.id)) {
+                judgeEventsMap.set(event.id, { event, assignments: [] });
+              }
+              judgeEventsMap.get(event.id).assignments.push(assignment);
+            });
+            const judgeEvents = Array.from(judgeEventsMap.values());
+
+            return (
+              <div>
+                <h3 className="text-lg font-bold text-[#f5f2ec] mb-4 flex items-center gap-2">
+                   <Award className="w-5 h-5 text-emerald-400" /> Judging Roles
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {judgeEvents.map(({ event, assignments }: any) => (
+                    <Link key={event.id} href={`/home/events/${event.id}`} className="block">
+                      <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-[16px] border border-[rgba(16,185,129,0.2)] bg-[#14100c] hover:border-[rgba(16,185,129,0.4)] hover:bg-[#1a211c] transition-colors group">
+                        <div className="w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden flex-shrink-0 bg-[#1e1814] relative">
+                          {event.image_url || event.imageUrl ? (
+                            <img src={event.image_url || event.imageUrl} alt={event.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center border border-white/5 opacity-50">
+                              <Trophy className="w-8 h-8 text-emerald-500/50 mb-2" />
+                              <span className="text-xs font-bold text-emerald-500/50 uppercase tracking-widest">{event.season} {event.year}</span>
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            {event.status === 'closed' && <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ended</span>}
+                            {event.status === 'active' && <span className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Active</span>}
+                            {event.status === 'ongoing' && <span className="bg-yellow-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ongoing</span>}
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-between flex-1">
+                          <div>
+                            <h4 className="font-bold text-[#f5f2ec] text-xl group-hover:text-emerald-400 transition-colors line-clamp-1 mb-2">{event.name}</h4>
+                            {event.description && (
+                              <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
+                                {event.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {assignments.map((assignment: any) => (
+                                <div key={assignment.id} className="text-xs border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 rounded-md text-emerald-400">
+                                  <span className="font-semibold">{assignment.round?.name}</span>
+                                  {assignment.track && <span className="opacity-80"> - {assignment.track.name}</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center text-[12px] text-[#6f685c] gap-4 pt-4 border-t border-[rgba(16,185,129,0.1)] mt-auto">
+                            <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Assigned {format(new Date(assignments[0]?.createdAt || new Date()), "MMM yyyy")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Mentor History */}
-          <div>
-            <h3 className="text-lg font-bold text-[#f5f2ec] mb-4 flex items-center gap-2">
-               <MapPin className="w-5 h-5 text-blue-400" /> Mentoring Roles
-            </h3>
-            <div className="space-y-3">
-              {mentorHistory.map((assignment: any) => (
-                <Link key={assignment.id} href={`/home/events/${assignment.team?.event?.id}`} className="block">
-                  <div className="p-4 rounded-[12px] border border-blue-500/20 bg-[#14100c] hover:border-blue-500/40 hover:bg-[#181d24] transition-colors">
-                    <p className="font-semibold text-sm text-[#f5f2ec] group-hover:text-blue-400">{assignment.team?.event?.name}</p>
-                    <p className="text-xs text-blue-400 mt-1">Mentored Team: {assignment.team?.name}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Track: {assignment.team?.track?.name}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          {mentorHistory.length > 0 && (() => {
+            const mentorEventsMap = new Map();
+            mentorHistory.forEach((assignment: any) => {
+              const event = assignment.team?.event;
+              if (!event) return;
+              if (!mentorEventsMap.has(event.id)) {
+                mentorEventsMap.set(event.id, { event, teams: [] });
+              }
+              mentorEventsMap.get(event.id).teams.push(assignment.team);
+            });
+            const mentorEvents = Array.from(mentorEventsMap.values());
+
+            return (
+              <div>
+                <h3 className="text-lg font-bold text-[#f5f2ec] mb-4 flex items-center gap-2">
+                   <MapPin className="w-5 h-5 text-blue-400" /> Mentoring Roles
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {mentorEvents.map(({ event, teams }: any) => (
+                    <Link key={event.id} href={`/home/events/${event.id}`} className="block">
+                      <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-[16px] border border-[rgba(59,130,246,0.2)] bg-[#14100c] hover:border-[rgba(59,130,246,0.4)] hover:bg-[#181d24] transition-colors group">
+                        <div className="w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden flex-shrink-0 bg-[#1e1814] relative">
+                          {event.image_url || event.imageUrl ? (
+                            <img src={event.image_url || event.imageUrl} alt={event.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center border border-white/5 opacity-50">
+                              <Trophy className="w-8 h-8 text-blue-500/50 mb-2" />
+                              <span className="text-xs font-bold text-blue-500/50 uppercase tracking-widest">{event.season} {event.year}</span>
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            {event.status === 'closed' && <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ended</span>}
+                            {event.status === 'active' && <span className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Active</span>}
+                            {event.status === 'ongoing' && <span className="bg-yellow-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ongoing</span>}
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-between flex-1">
+                          <div>
+                            <h4 className="font-bold text-[#f5f2ec] text-xl group-hover:text-blue-400 transition-colors line-clamp-1 mb-2">{event.name}</h4>
+                            {event.description && (
+                              <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
+                                {event.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {teams.map((team: any) => (
+                                <div key={team.id} className="text-xs border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 rounded-md text-blue-400">
+                                  <span className="font-semibold">{team.name}</span>
+                                  {team.track?.name && <span className="opacity-80"> ({team.track.name})</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center text-[12px] text-[#6f685c] gap-4 pt-4 border-t border-[rgba(59,130,246,0.1)] mt-auto">
+                            <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Assigned {format(new Date(teams[0]?.createdAt || new Date()), "MMM yyyy")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -51,7 +51,7 @@ export default function MentorSettingsPage() {
 
   return (
     <div className="mx-auto max-w-[1000px] space-y-6">
-      <MentorPageHeader title="Mentor Settings" subtitle="Update your mentor profile stored by the backend." />
+      <MentorPageHeader title="Stakeholder Settings" subtitle="Update your stakeholder profile stored by the backend." />
       <GlassCard className="rounded-[24px] bg-card p-6">
         <div className="flex flex-col gap-6 md:flex-row">
           <Avatar className="h-24 w-24">

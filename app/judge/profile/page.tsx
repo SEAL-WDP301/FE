@@ -4,8 +4,8 @@ export default function JudgeProfilePage() {
   return (
     <ProfileManager
       mode="professional"
-      title="Judge Profile"
-      subtitle="Manage the professional profile shown to organizers and used across evaluation workflows."
+      title="Stakeholder Profile"
+      subtitle="Manage the stakeholder profile shown to organizers and used across workflows."
     />
   );
 }
