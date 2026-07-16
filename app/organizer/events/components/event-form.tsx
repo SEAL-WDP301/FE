@@ -372,7 +372,7 @@ const eventFormSteps: Array<{
     },
     {
         id: "event-form-logistics",
-        title: "Logistics",
+        title: "Event Details",
         description: "Location, contacts and rules",
         icon: MapPin,
         fields: ["location", "contacts", "ruleGroups", "faqItems"],
@@ -515,32 +515,47 @@ export default function EventForm({ initialData }: EventFormProps) {
     };
 
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const visibleEntries = entries.filter((e) => e.isIntersecting);
-                if (visibleEntries.length > 0) {
-                    const mostVisible = visibleEntries.reduce((prev, current) =>
-                        prev.intersectionRatio > current.intersectionRatio ? prev : current
-                    );
-                    const stepIndex = eventFormSteps.findIndex((s) => s.id === mostVisible.target.id);
-                    if (stepIndex !== -1) {
-                        setCurrentStep(stepIndex);
+        const handleScroll = () => {
+            let maxVisibleArea = 0;
+            let newStep = 0;
+
+            eventFormSteps.forEach((step, index) => {
+                const el = document.getElementById(step.id);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    // Account for the sticky header (~100px)
+                    const visibleTop = Math.max(rect.top, 100); 
+                    const visibleBottom = Math.min(rect.bottom, window.innerHeight);
+                    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+                    // If this section occupies more of the screen than previous ones
+                    if (visibleHeight >= maxVisibleArea) {
+                        maxVisibleArea = visibleHeight;
+                        newStep = index;
+                    }
+
+                    // Special case: if we scrolled to the absolute bottom of the form,
+                    // highlight the last section, even if it's smaller than the one above it.
+                    if (index === eventFormSteps.length - 1) {
+                        if (rect.bottom <= window.innerHeight + 50 && rect.top < window.innerHeight) {
+                            newStep = index;
+                            maxVisibleArea = Infinity; // Ensure nothing else overrides this
+                        }
                     }
                 }
-            },
-            { rootMargin: "-120px 0px -50% 0px" }
-        );
-
-        const timeoutId = setTimeout(() => {
-            eventFormSteps.forEach((step) => {
-                const el = document.getElementById(step.id);
-                if (el) observer.observe(el);
             });
-        }, 500);
+
+            setCurrentStep(newStep);
+        };
+
+        window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+        
+        // Initial check after a slight delay to let DOM render
+        const timeoutId = setTimeout(handleScroll, 500);
 
         return () => {
+            window.removeEventListener("scroll", handleScroll, { capture: true });
             clearTimeout(timeoutId);
-            observer.disconnect();
         };
     }, []);
 
@@ -1327,10 +1342,18 @@ export default function EventForm({ initialData }: EventFormProps) {
                     </div>
                 </motion.div>
 
-                
-</main>
+                <div className="sticky bottom-6 z-50 mt-8 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl">
+                    <Button type="submit" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600" disabled={isLoading || isUploading}>
+                        {isLoading ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                        ) : (
+                            <>{isEdit ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Create Event</>}</>
+                        )}
+                    </Button>
                 </div>
-            </form>
-        </Form>
+            </main>
+        </div>
+    </form>
+</Form>
     );
 }
