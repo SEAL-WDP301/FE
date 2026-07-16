@@ -145,7 +145,17 @@ const createEventSchema = (isEdit: boolean) => z.object({
         ? z.string().optional()
         : z.string().min(1, "End date is required"),
     githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
-
+    prizes: z.array(z.object({
+        id: z.number().optional(),
+        name: z.string().min(1, "Prize name is required"),
+        description: z.string().optional(),
+        quantity: z.union([z.coerce.number().int().min(1, "Quantity must be >= 1"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
+    })).optional().default([
+        { name: "First Prize", description: "$10,000 + Gold Trophy", quantity: 1 },
+        { name: "Second Prize", description: "$5,000 + Silver Trophy", quantity: 1 },
+        { name: "Third Prize", description: "$2,500 + Bronze Trophy", quantity: 1 },
+        { name: "Honorable Mention", description: "$1,000 + Certificate", quantity: 1 }
+    ]),
     tracks: z.array(z.object({
         id: z.number().optional(),
         _count: z.object({ teams: z.number().optional() }).optional(),
@@ -404,10 +414,10 @@ export default function EventForm({ initialData }: EventFormProps) {
             description: prize.description || "",
             quantity: prize.quantity ?? 1,
         })) || [
-            { name: "First Prize", description: "", quantity: 1 },
-            { name: "Second Prize", description: "", quantity: 1 },
-            { name: "Third Prize", description: "", quantity: 1 },
-            { name: "Honorable Mention", description: "", quantity: 1 },
+            { name: "First Prize", description: "$10,000 + Gold Trophy", quantity: 1 },
+            { name: "Second Prize", description: "$5,000 + Silver Trophy", quantity: 1 },
+            { name: "Third Prize", description: "$2,500 + Bronze Trophy", quantity: 1 },
+            { name: "Honorable Mention", description: "$1,000 + Certificate", quantity: 1 },
         ],
         tracks: initialData?.tracks?.map((track) => ({
             ...track,
@@ -1136,7 +1146,13 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                 <FormItem>
                                                     <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Submission Type *</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-card/50 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
+                                                        <FormControl>
+                                                            <SelectTrigger className="bg-card/50 rounded-lg">
+                                                                <SelectValue>
+                                                                    {field.value === 'file' ? 'Project File (ZIP/RAR)' : field.value === 'github_link' ? 'GitHub Link' : 'Select Type'}
+                                                                </SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
                                                         <SelectContent className="rounded-xl">
                                                             <SelectItem value="file">Project File (ZIP/RAR)</SelectItem>
                                                             <SelectItem value="github_link">GitHub Link</SelectItem>
