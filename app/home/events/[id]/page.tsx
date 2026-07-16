@@ -52,6 +52,7 @@ type EventDetail = {
   status?: string | null;
   registrationDeadline?: string | null;
   startDate?: string | null;
+  endDate?: string | null;
   prize1st?: string | null;
   githubOrgUrl?: string | null;
   tracks?: EventTrack[];
@@ -921,6 +922,15 @@ export default function EventDetailPage() {
                   <div className="text-xs text-muted-foreground uppercase tracking-wider">Start Date</div>
                   <div className="font-semibold text-foreground">
                     {event.startDate ? new Date(event.startDate).toLocaleDateString() : 'TBA'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-4 py-3 border border-border">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider">End Date</div>
+                  <div className="font-semibold text-foreground">
+                    {event.endDate ? new Date(event.endDate).toLocaleDateString() : 'TBA'}
                   </div>
                 </div>
               </div>

@@ -55,9 +55,13 @@ export default function FeaturedHero() {
     const imageUrl = latestEvent.image_url || latestEvent.imageUrl || latestEvent.icons?.[0]?.url || "/images/rag_system.png";
     
     let formattedDate = `${latestEvent.season || ''} ${latestEvent.year || ''}`;
+    let formattedEndDate = "End: TBA";
     try {
         if (latestEvent.registrationDeadline) {
             formattedDate = `Deadline: ${format(new Date(latestEvent.registrationDeadline), "MMM dd, yyyy")}`;
+        }
+        if (latestEvent.endDate) {
+            formattedEndDate = `End: ${format(new Date(latestEvent.endDate), "MMM dd, yyyy")}`;
         }
     } catch {
         // fallback to season/year if parsing fails
@@ -106,6 +110,10 @@ export default function FeaturedHero() {
                         <div className="flex items-center gap-2 rounded-xl bg-card/50 px-4 py-2 border border-border backdrop-blur-sm">
                             <CalendarDays className="size-4 text-orange-500" />
                             <span>{formattedDate}</span>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-xl bg-card/50 px-4 py-2 border border-border backdrop-blur-sm">
+                            <CalendarDays className="size-4 text-orange-500" />
+                            <span>{formattedEndDate}</span>
                         </div>
                         <div className="flex items-center gap-2 rounded-xl bg-card/50 px-4 py-2 border border-border backdrop-blur-sm">
                             <MapPin className="size-4 text-orange-500" />

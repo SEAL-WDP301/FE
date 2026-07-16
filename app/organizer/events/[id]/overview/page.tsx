@@ -95,13 +95,13 @@ export default function EventOverviewPage() {
           <>
             {/* Blurred ambient background */}
             <div className="absolute inset-0">
-              <img 
-                src={imageUrl} 
-                alt="" 
-                className="w-full h-full object-cover blur-[80px] opacity-60 scale-125 saturate-150" 
+              <img
+                src={imageUrl}
+                alt=""
+                className="w-full h-full object-cover blur-[80px] opacity-60 scale-125 saturate-150"
               />
             </div>
-            
+
             {/* Clear image on the right fading in */}
             <div className="absolute inset-y-0 right-0 w-full md:w-[65%] pointer-events-none">
               <img
@@ -120,24 +120,24 @@ export default function EventOverviewPage() {
             <ImageIcon className="h-20 w-20 text-muted-foreground/30" />
           </div>
         )}
-        
+
         {/* Gradients to ensure text is always readable */}
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent w-full md:w-[70%]" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent md:hidden" />
-        
+
         <div className="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/50 backdrop-blur-md border border-border text-xs font-bold tracking-wider mb-4 shadow-sm">
               <span className="relative flex size-2">
-                  <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-400' : 'bg-zinc-400'}`} />
-                  <span className={`relative inline-flex size-2 rounded-full ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-500' : 'bg-zinc-500'}`} />
+                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-400' : 'bg-zinc-400'}`} />
+                <span className={`relative inline-flex size-2 rounded-full ${event.status === 'active' || event.status === 'ongoing' ? 'bg-green-500' : 'bg-zinc-500'}`} />
               </span>
               {event.status.toUpperCase()}
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground shadow-sm">{event.name}</h1>
             <p className="text-muted-foreground mt-2 font-medium">Season {event.season} {event.year}</p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <select
               value={event.status}
@@ -213,14 +213,14 @@ export default function EventOverviewPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {loc.venueName && (
                   <div className="bg-muted/30 p-4 rounded-xl border border-border/30">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Building className="h-3 w-3"/> Venue</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Building className="h-3 w-3" /> Venue</p>
                     <p className="font-semibold">{loc.venueName}</p>
                     {loc.room && <p className="text-sm text-muted-foreground mt-1">Room: {loc.room}</p>}
                   </div>
                 )}
                 {loc.address && (
                   <div className="bg-muted/30 p-4 rounded-xl border border-border/30">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Map className="h-3 w-3"/> Address</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Map className="h-3 w-3" /> Address</p>
                     <p className="font-semibold text-sm">{loc.address}</p>
                     {loc.mapUrl && (
                       <a href={loc.mapUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline mt-2 inline-flex items-center gap-1">
@@ -231,7 +231,7 @@ export default function EventOverviewPage() {
                 )}
                 {loc.meetingPlatform && (
                   <div className="bg-muted/30 p-4 rounded-xl border border-border/30 md:col-span-2">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Phone className="h-3 w-3"/> Virtual Meeting</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Phone className="h-3 w-3" /> Virtual Meeting</p>
                     <p className="font-semibold">{loc.meetingPlatform}</p>
                     {loc.meetingUrl && (
                       <a href={loc.meetingUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline break-all mt-1 inline-block">
@@ -301,15 +301,15 @@ export default function EventOverviewPage() {
             </h3>
             <div className="space-y-3">
               <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20">
-                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider mb-1 flex justify-between">1st Place <Trophy className="h-3 w-3"/></p>
+                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider mb-1 flex justify-between">1st Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize1st || "TBA"}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-r from-slate-400/10 to-transparent border border-slate-400/20">
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex justify-between">2nd Place <Trophy className="h-3 w-3"/></p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex justify-between">2nd Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize2nd || "TBA"}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-r from-orange-700/10 to-transparent border border-orange-700/20">
-                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1 flex justify-between">3rd Place <Trophy className="h-3 w-3"/></p>
+                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1 flex justify-between">3rd Place <Trophy className="h-3 w-3" /></p>
                 <p className="font-bold text-lg">{event.prize3rd || "TBA"}</p>
               </div>
               {event.prizeHonorable && (

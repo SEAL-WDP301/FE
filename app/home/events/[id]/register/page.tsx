@@ -15,6 +15,7 @@ interface PublicEvent {
   status?: string | null;
   registrationDeadline?: string | null;
   startDate?: string | null;
+  endDate?: string | null;
   tracks?: EventTrack[];
 }
 

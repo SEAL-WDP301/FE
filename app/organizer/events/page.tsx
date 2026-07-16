@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, Calendar, Users, Trophy, Trash2, Loader2, Pencil } from "lucide-react";
+import { Plus, Search, Calendar, CalendarClock, Users, Trophy, Trash2, Loader2, Pencil } from "lucide-react";
 import { format } from "date-fns"
 import { enqueueSnackbar } from "notistack";
 
@@ -187,7 +187,11 @@ export default function OrganizerEventsPage() {
                                 <div className="space-y-3">
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4 mr-2" />
-                                        <span>{event.startDate ? format(new Date(event.startDate), 'MMM dd, yyyy') : 'TBA'}</span>
+                                        <span>Registration: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <CalendarClock className="h-4 w-4 mr-2" />
+                                        <span>Ends: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Users className="h-4 w-4 mr-2" />

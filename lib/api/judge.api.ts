@@ -19,6 +19,8 @@ export interface JudgeAssignedEvent {
   season: string;
   year: number;
   status: string;
+  registrationDeadline?: string | null;
+  endDate?: string | null;
   rounds: JudgeAssignedRound[];
 }
 

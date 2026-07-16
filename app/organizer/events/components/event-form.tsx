@@ -139,6 +139,7 @@ const createEventSchema = (isEdit: boolean) => z.object({
     status: z.enum(["draft", "active", "ongoing", "closed"]).optional(),
     registrationDeadline: z.string().optional(),
     startDate: z.string().optional(),
+    endDate: z.string().optional(),
     githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
     prize1st: z.string().optional(),
     prize2nd: z.string().optional(),
@@ -208,6 +209,18 @@ const createEventSchema = (isEdit: boolean) => z.object({
         }
     }
 
+    if (!isEdit && data.endDate && new Date(data.endDate) <= now) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "End date must be in the future", path: ["endDate"] });
+    }
+
+    if (data.startDate && data.endDate && new Date(data.startDate) > new Date(data.endDate)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "End date must be after or equal to the event start date", path: ["endDate"] });
+    }
+
+    if (data.registrationDeadline && data.endDate && new Date(data.registrationDeadline) > new Date(data.endDate)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "End date must be after or equal to the registration deadline", path: ["endDate"] });
+    }
+
     const trackNames = data.tracks.map(t => t.name.trim().toLowerCase());
     if (new Set(trackNames).size !== trackNames.length) {
         trackNames.forEach((name, idx) => {
@@ -231,6 +244,9 @@ const createEventSchema = (isEdit: boolean) => z.object({
             const roundDate = new Date(round.submissionDeadline);
             if (data.startDate && roundDate < new Date(data.startDate)) {
                 ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Round deadline must be after or at the same time as event start date", path: ["rounds", idx, "submissionDeadline"] });
+            }
+            if (data.endDate && roundDate > new Date(data.endDate)) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Round deadline must be before or at the same time as event end date", path: ["rounds", idx, "submissionDeadline"] });
             }
             if (idx > 0) {
                 const prevRound = data.rounds[idx - 1];
@@ -265,6 +281,7 @@ export default function EventForm({ initialData }: EventFormProps) {
         status: initialData?.status || "draft",
         registrationDeadline: initialData?.registrationDeadline ? new Date(initialData.registrationDeadline).toISOString().slice(0, 16) : "",
         startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
+        endDate: initialData?.endDate ? new Date(initialData.endDate).toISOString().slice(0, 16) : "",
         githubOrgUrl: initialData?.githubOrgUrl || "https://github.com/DEMO-SEAL-HackaThon-ORG",
         prize1st: initialData?.prize1st || "",
         prize2nd: initialData?.prize2nd || "",
@@ -374,6 +391,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                 ...restData,
                 registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : undefined,
                 startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+                endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
                 githubOrgUrl: data.githubOrgUrl || undefined,
                 imageUrl: data.imageUrl || undefined,
                 tracks: data.tracks?.map(t => ({
@@ -520,7 +538,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                             )} />
 
                             <FormField control={control} name="registrationDeadline" render={({ field }) => (
-                                <FormItem className="md:col-span-6">
+                                <FormItem className="md:col-span-4">
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Registration Deadline</FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
@@ -530,8 +548,18 @@ export default function EventForm({ initialData }: EventFormProps) {
                             )} />
 
                             <FormField control={control} name="startDate" render={({ field }) => (
-                                <FormItem className="md:col-span-6">
+                                <FormItem className="md:col-span-4">
                                     <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Start Date</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+
+                            <FormField control={control} name="endDate" render={({ field }) => (
+                                <FormItem className="md:col-span-4">
+                                    <FormLabel className="text-foreground/80 font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> End Date</FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="bg-background/50 border-border/50 focus-visible:ring-blue-500/30 rounded-xl" {...field} />
                                     </FormControl>
