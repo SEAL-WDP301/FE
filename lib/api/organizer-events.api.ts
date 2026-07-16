@@ -61,6 +61,17 @@ export interface OrganizerEventFAQItem {
   content?: string;
 }
 
+export interface OrganizerPrizeInput {
+  id?: number;
+  name: string;
+  description?: string;
+  quantity?: number;
+}
+
+export interface OrganizerPrize extends OrganizerPrizeInput {
+  id: number;
+}
+
 export interface OrganizerEventPayload {
   name: string;
   description?: string;
@@ -72,12 +83,9 @@ export interface OrganizerEventPayload {
   startDate?: string;
   endDate?: string;
   githubOrgUrl?: string;
-  prize1st?: string;
-  prize2nd?: string;
-  prize3rd?: string;
-  prizeHonorable?: string;
   tracks: OrganizerTrackInput[];
   rounds: OrganizerRoundInput[];
+  prizes?: OrganizerPrizeInput[];
   location?: string;
   contact?: string;
   rules?: string;
@@ -101,9 +109,7 @@ export interface OrganizerRound extends OrganizerRoundInput {
   };
 }
 
-export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds" | "imageUrl"> {
-  /** Compatibility for APIs returning the mapped database column name. */
-  end_date?: string | null;
+export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds" | "imageUrl" | "endDate"> {
   id: number;
   imageUrl?: string | null;
   image_url?: string | null;
@@ -114,6 +120,7 @@ export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "
   }>;
   tracks?: OrganizerTrack[];
   rounds?: OrganizerRound[];
+  prizes?: OrganizerPrize[];
   _count?: {
     teams?: number;
     submissions?: number;
@@ -153,7 +160,7 @@ function unwrapData<T>(response: { data?: { data?: T } }) {
 function normalizeOrganizerEvent(event: OrganizerEvent): OrganizerEvent {
   return {
     ...event,
-    endDate: event.endDate ?? event.end_date ?? undefined,
+    endDate: event.endDate ?? undefined,
   };
 }
 
@@ -283,7 +290,7 @@ export interface DetailedRankedTeamEntry {
   criteriaAverages: DetailedCriterionAverage[];
   judges: DetailedJudgeScore[];
   status: string;
-  award?: AwardType | null;
+  award?: OrganizerPrize | null;
   submittedAt: string;
 }
 
@@ -333,11 +340,10 @@ export async function getRoundRankings(
   return unwrapData<unknown>(res);
 }
 
-export type AwardType = "first_prize" | "second_prize" | "third_prize" | "honorable_mention";
 
 export interface PublishResultsPayload {
   advancingTeamIds?: number[];
-  awards?: { teamId: number; award: AwardType | null }[];
+  awards?: { teamId: number; awardId: number | null }[];
 }
 
 export async function publishRoundResults(

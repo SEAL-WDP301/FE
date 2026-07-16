@@ -53,7 +53,7 @@ type EventDetail = {
   registrationDeadline?: string | null;
   startDate?: string | null;
   endDate?: string | null;
-  prize1st?: string | null;
+  prizes?: { id: number; name: string; description?: string; quantity: number }[];
   githubOrgUrl?: string | null;
   tracks?: EventTrack[];
   ruleGroups?: ApiRuleGroup[];
@@ -934,13 +934,15 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-4 py-3 border border-border">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider">Grand Prize</div>
-                  <div className="font-semibold text-foreground">{event.prize1st || 'TBA'}</div>
+              {event.prizes && event.prizes.length > 0 && (
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-4 py-3 border border-border">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Grand Prize</div>
+                    <div className="font-semibold text-foreground">{event.prizes[0].name}</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -1054,6 +1056,34 @@ export default function EventDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Prizes Section */}
+        {event.prizes && event.prizes.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-amber-500" />
+              Prizes & Awards
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {event.prizes.map((prize, index) => (
+                <div key={prize.id || index} className="bg-card border border-border rounded-2xl p-6 hover:border-amber-500/30 transition-colors shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <Trophy className="h-24 w-24 text-amber-500" />
+                  </div>
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-bold text-amber-500 mb-2">{prize.name}</h3>
+                    {prize.description && (
+                      <p className="text-muted-foreground text-sm font-medium mb-4">{prize.description}</p>
+                    )}
+                    <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-3 py-1.5 rounded-lg text-sm font-semibold">
+                      <span>Quantity: {prize.quantity}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <RulesSection groups={eventRuleGroups} />
         <SupportLocationSection

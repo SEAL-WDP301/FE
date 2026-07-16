@@ -16,19 +16,19 @@ import {
 } from "lucide-react";
 import {
   getDetailedRoundRankings,
+  getOrganizerEvent,
   publishRoundResults,
   DetailedRankedTeamEntry,
   DetailedRankingsResponse,
   PublishResultsPayload,
-  AwardType
+  OrganizerPrize
 } from "@/lib/api/organizer-events.api";
 import { format } from "date-fns";
 
 const ANOMALY_THRESHOLD = 1.5;
 
-const AWARD_PRESENTATION = {
-  first_prize: {
-    label: "1st Prize",
+const AWARD_PRESENTATION_STYLES = [
+  {
     icon: Crown,
     rowClass: "border border-yellow-300 bg-yellow-50/70 shadow-sm dark:border-yellow-400/50 dark:bg-yellow-950/30 dark:bg-gradient-to-r dark:from-yellow-500/10 dark:via-yellow-500/5 dark:to-transparent dark:shadow-[0_0_18px_rgba(234,179,8,0.14)]",
     headerClass: "bg-transparent",
@@ -38,8 +38,7 @@ const AWARD_PRESENTATION = {
     titleClass: "text-yellow-950 dark:text-yellow-50",
     ringClass: "bg-yellow-100 ring-yellow-300 dark:bg-yellow-500/20 dark:ring-yellow-300/60 dark:shadow-[0_0_16px_rgba(250,204,21,0.3)]",
   },
-  second_prize: {
-    label: "2nd Prize",
+  {
     icon: Medal,
     rowClass: "border border-slate-300 bg-slate-50/80 shadow-sm dark:border-slate-400/40 dark:bg-slate-900/80 dark:bg-gradient-to-r dark:from-slate-300/10 dark:via-slate-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(203,213,225,0.1)]",
     headerClass: "bg-transparent",
@@ -49,8 +48,7 @@ const AWARD_PRESENTATION = {
     titleClass: "text-slate-900 dark:text-slate-50",
     ringClass: "bg-slate-100 ring-slate-300 dark:bg-slate-300/20 dark:ring-slate-300/60 dark:shadow-[0_0_14px_rgba(203,213,225,0.2)]",
   },
-  third_prize: {
-    label: "3rd Prize",
+  {
     icon: Award,
     rowClass: "border border-orange-300 bg-orange-50/70 shadow-sm dark:border-orange-500/40 dark:bg-orange-950/30 dark:bg-gradient-to-r dark:from-orange-500/10 dark:via-orange-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(249,115,22,0.1)]",
     headerClass: "bg-transparent",
@@ -60,8 +58,7 @@ const AWARD_PRESENTATION = {
     titleClass: "text-orange-950 dark:text-orange-50",
     ringClass: "bg-orange-100 ring-orange-300 dark:bg-orange-500/20 dark:ring-orange-400/50 dark:shadow-[0_0_14px_rgba(251,146,60,0.18)]",
   },
-  honorable_mention: {
-    label: "Honorable Mention",
+  {
     icon: Sparkles,
     rowClass: "border border-sky-300 bg-sky-50/70 shadow-sm dark:border-sky-400/40 dark:bg-sky-950/30 dark:bg-gradient-to-r dark:from-sky-500/10 dark:via-cyan-500/5 dark:to-transparent dark:shadow-[0_0_14px_rgba(56,189,248,0.1)]",
     headerClass: "bg-transparent",
@@ -71,24 +68,7 @@ const AWARD_PRESENTATION = {
     titleClass: "text-sky-950 dark:text-sky-50",
     ringClass: "bg-sky-100 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-300/50 dark:shadow-[0_0_12px_rgba(56,189,248,0.16)]",
   },
-} satisfies Record<AwardType, {
-  label: string;
-  icon: LucideIcon;
-  rowClass: string;
-  headerClass: string;
-  badgeClass: string;
-  iconClass: string;
-  scoreClass: string;
-  titleClass: string;
-  ringClass: string;
-}>;
-
-const AWARD_PRIORITY: Record<AwardType, number> = {
-  first_prize: 1,
-  second_prize: 2,
-  third_prize: 3,
-  honorable_mention: 4,
-};
+];
 
 type RankingTrackGroup = DetailedRankingsResponse["tracks"][number];
 
@@ -135,29 +115,31 @@ const RANK_PRESENTATION: Record<1 | 2 | 3, {
   },
 };
 
-function getAwardPresentation(award?: AwardType | null) {
-  return award ? AWARD_PRESENTATION[award] : null;
+function getAwardPresentation(award?: OrganizerPrize | null) {
+  if (!award) return null;
+  const index = award.id ? (award.id % 4) : 3;
+  return AWARD_PRESENTATION_STYLES[index];
 }
 
 function getRankPresentation(rank: number) {
   return rank === 1 || rank === 2 || rank === 3 ? RANK_PRESENTATION[rank] : null;
 }
 
-function getAwardPriority(award?: AwardType | null) {
-  return award ? AWARD_PRIORITY[award] : Number.POSITIVE_INFINITY;
+function getAwardPriority(award?: OrganizerPrize | null) {
+  return award ? (award.id || Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
 }
 
-function RankBadge({ rank, award }: { rank: number; award?: AwardType | null }) {
+function RankBadge({ rank, award }: { rank: number; award?: OrganizerPrize | null }) {
   const awardPresentation = getAwardPresentation(award);
   const rankPresentation = getRankPresentation(rank);
 
   if (awardPresentation) {
     const Icon = awardPresentation.icon;
-    const isChampion = award === "first_prize";
+    const isChampion = getAwardPresentation(award) === AWARD_PRESENTATION_STYLES[0];
 
     return (
       <motion.div
-        title={awardPresentation.label}
+        title={award?.name || "Award"}
         animate={isChampion ? { y: [0, -2, 0], rotate: [-2, 2, -2] } : undefined}
         transition={isChampion ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" } : undefined}
         className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-1 ${awardPresentation.ringClass}`}
@@ -203,8 +185,8 @@ function RankBadge({ rank, award }: { rank: number; award?: AwardType | null }) 
   );
 }
 
-function AwardBadge({ award, isPreview }: { award: AwardType; isPreview?: boolean }) {
-  const awardPresentation = AWARD_PRESENTATION[award];
+function AwardBadge({ award, isPreview }: { award: OrganizerPrize; isPreview?: boolean }) {
+  const awardPresentation = getAwardPresentation(award)!;
   const Icon = awardPresentation.icon;
 
   return (
@@ -213,7 +195,7 @@ function AwardBadge({ award, isPreview }: { award: AwardType; isPreview?: boolea
       className={`text-[10px] px-2 py-0.5 backdrop-blur-sm ${awardPresentation.badgeClass}`}
     >
       <Icon className={`w-3 h-3 mr-1.5 ${awardPresentation.iconClass}`} />
-      {awardPresentation.label}
+      {award.name}
       {isPreview && <span className="ml-1 opacity-70">(draft)</span>}
     </Badge>
   );
@@ -258,7 +240,8 @@ function TeamRow({
   isPublished,
   isFinalRound,
   awardValue,
-  onAwardChange
+  onAwardChange,
+  prizes
 }: { 
   entry: DetailedRankedTeamEntry; 
   rank: number;
@@ -266,8 +249,9 @@ function TeamRow({
   onToggle: () => void;
   isPublished: boolean;
   isFinalRound?: boolean;
-  awardValue?: AwardType | null;
-  onAwardChange?: (val: AwardType | null) => void;
+  awardValue?: OrganizerPrize | null;
+  onAwardChange?: (val: OrganizerPrize | null) => void;
+  prizes: OrganizerPrize[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
@@ -327,17 +311,17 @@ function TeamRow({
           <div className="shrink-0">
              <select 
                className="bg-background border border-border text-sm rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500"
-               value={awardValue || ""}
+               value={awardValue?.id || ""}
                onChange={(e) => {
-                 const val = e.target.value as AwardType;
-                 onAwardChange?.(val || null);
+                 const prizeId = Number(e.target.value);
+                 const prize = prizes.find(p => p.id === prizeId);
+                 onAwardChange?.(prize || null);
                }}
              >
                <option value="">No Award</option>
-               <option value="first_prize">1st Prize</option>
-               <option value="second_prize">2nd Prize</option>
-               <option value="third_prize">3rd Prize</option>
-               <option value="honorable_mention">Honorable</option>
+               {prizes.map((prize) => (
+                 <option key={prize.id} value={prize.id}>{prize.name}</option>
+               ))}
              </select>
           </div>
         )}
@@ -486,10 +470,10 @@ export default function RankingsPage() {
   const [selectedTrackIdx, setSelectedTrackIdx] = useState(0);
   const [autoSelectTopN, setAutoSelectTopN] = useState(3);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(new Set());
-  const [teamAwards, setTeamAwards] = useState<Record<number, AwardType | null>>({});
+  const [teamAwards, setTeamAwards] = useState<Record<number, OrganizerPrize | null>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const awardedTeamEntries = useMemo(
-    () => Object.entries(teamAwards).filter((entry): entry is [string, AwardType] => Boolean(entry[1])),
+    () => Object.entries(teamAwards).filter((entry): entry is [string, OrganizerPrize] => Boolean(entry[1])),
     [teamAwards],
   );
   const awardedCount = awardedTeamEntries.length;
@@ -506,7 +490,7 @@ export default function RankingsPage() {
        if (data?.round?.isFinalRound) {
          payload.awards = awardedTeamEntries.map(([teamId, award]) => ({
            teamId: Number(teamId),
-           award
+           awardId: award.id
          }));
        } else {
          payload.advancingTeamIds = Array.from(selectedTeamIds);
@@ -530,6 +514,11 @@ export default function RankingsPage() {
   });
 
   const round = data?.round;
+  const { data: eventData } = useQuery({
+    queryKey: ["organizerEvent", eventId],
+    queryFn: () => getOrganizerEvent(eventId),
+    refetchOnWindowFocus: false,
+  });
   const isResultsPublished = round?.status === "results_published";
   
   const tracks = useMemo<RankingTrackGroup[]>(() => {
@@ -604,7 +593,7 @@ export default function RankingsPage() {
     enqueueSnackbar(`Auto-selected top ${autoSelectTopN} teams for all tracks.`, { variant: "info" });
   };
 
-  const handleAwardChange = (teamId: number, award: AwardType | null) => {
+  const handleAwardChange = (teamId: number, award: OrganizerPrize | null) => {
     setTeamAwards((prev) => {
       const next = { ...prev };
 
@@ -613,7 +602,7 @@ export default function RankingsPage() {
         return next;
       }
 
-      if (award !== "honorable_mention") {
+      if (award && (award.quantity ?? 1) <= 1) { // assuming quantity 1 means exclusive
         Object.entries(next).forEach(([id, existingAward]) => {
           if (Number(id) !== teamId && existingAward === award) {
             delete next[Number(id)];
@@ -728,13 +717,13 @@ export default function RankingsPage() {
             <div className="flex flex-wrap items-center gap-4 mb-5 pb-4 border-b border-border text-xs text-muted-foreground">
               {isResultsPublished && round?.isFinalRound ? (
                 <>
-                  {(["first_prize", "second_prize", "third_prize", "honorable_mention"] as AwardType[]).map((award) => {
-                    const awardPresentation = AWARD_PRESENTATION[award];
+                  {eventData?.prizes?.map((prize) => {
+                    const awardPresentation = getAwardPresentation(prize)!;
                     const Icon = awardPresentation.icon;
                     return (
-                      <span key={award} className="flex items-center gap-1">
+                      <span key={prize.id} className="flex items-center gap-1">
                         <Icon className={`w-3.5 h-3.5 ${awardPresentation.iconClass}`} />
-                        {awardPresentation.label}
+                        {prize.name}
                       </span>
                     );
                   })}
@@ -766,6 +755,7 @@ export default function RankingsPage() {
                 isFinalRound={round?.isFinalRound}
                 awardValue={teamAwards[entry.teamId]}
                 onAwardChange={(val) => handleAwardChange(entry.teamId, val)}
+                prizes={eventData?.prizes || []}
               />
             ))}
           </div>

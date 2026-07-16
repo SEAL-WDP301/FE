@@ -53,13 +53,13 @@ export function ProfileHistory({ userId }: { userId?: number }) {
               .map((team: any) => (
                 <div key={team.id} className="flex flex-col items-center justify-center p-4 rounded-xl border border-yellow-500/20 bg-black/40 text-center transition-transform hover:scale-105">
                   <Medal className={`w-10 h-10 mb-3 ${
-                    team.award === "first_prize" ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" :
-                    team.award === "second_prize" ? "text-slate-300 drop-shadow-[0_0_10px_rgba(203,213,225,0.8)]" :
-                    team.award === "third_prize" ? "text-orange-600 drop-shadow-[0_0_10px_rgba(234,88,12,0.8)]" :
+                    team.award?.name?.toLowerCase().includes("1st") || team.award?.name?.toLowerCase().includes("first") ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" :
+                    team.award?.name?.toLowerCase().includes("2nd") || team.award?.name?.toLowerCase().includes("second") ? "text-slate-300 drop-shadow-[0_0_10px_rgba(203,213,225,0.8)]" :
+                    team.award?.name?.toLowerCase().includes("3rd") || team.award?.name?.toLowerCase().includes("third") ? "text-orange-600 drop-shadow-[0_0_10px_rgba(234,88,12,0.8)]" :
                     "text-blue-400"
                   }`} />
                   <span className="text-xs font-bold uppercase text-yellow-500/80 mb-1">
-                    {team.award.replace("_", " ")}
+                    {team.award?.name || "Award"}
                   </span>
                   <span className="text-sm font-semibold text-[#f5f2ec] line-clamp-1" title={team.event?.name}>
                     {team.event?.name}
@@ -110,7 +110,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                         <h4 className="font-bold text-[#f5f2ec] text-xl group-hover:text-orange-400 transition-colors line-clamp-1">{team.event?.name}</h4>
                         {team.award && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2.5 py-1 text-xs font-bold text-yellow-500 shrink-0 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
-                            <Award className="w-3.5 h-3.5" /> {team.award.replace("_", " ")}
+                            <Award className="w-3.5 h-3.5" /> {team.award?.name || "Award"}
                           </span>
                         )}
                       </div>

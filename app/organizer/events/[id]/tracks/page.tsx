@@ -128,10 +128,12 @@ function buildEventPayload(
     startDate: event.startDate || undefined,
     endDate: event.endDate || undefined,
     githubOrgUrl: event.githubOrgUrl || undefined,
-    prize1st: event.prize1st || undefined,
-    prize2nd: event.prize2nd || undefined,
-    prize3rd: event.prize3rd || undefined,
-    prizeHonorable: event.prizeHonorable || undefined,
+    prizes: event.prizes?.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      quantity: p.quantity,
+    })),
     tracks,
     rounds,
   };
