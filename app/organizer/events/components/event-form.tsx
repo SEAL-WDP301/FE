@@ -20,7 +20,7 @@ import {
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
 import { uploadFile } from "@/lib/api/upload.api";
-import { cn } from "@/lib/utils";
+import { ImageCropper } from "@/components/ui/image-cropper";
 
 const defaultLocation = {
     venueName: "FPT University Ho Chi Minh City",
@@ -387,7 +387,10 @@ export default function EventForm({ initialData }: EventFormProps) {
     const isEdit = !!initialData;
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
+    
+    // Cropper states
+    const [cropDialogOpen, setCropDialogOpen] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
@@ -814,21 +817,40 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                 accept="image/*"
                                                 className="hidden"
                                                 id="cover-upload"
-                                                onChange={async (e) => {
+                                                onChange={(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (!file) return;
-                                                    try {
-                                                        setIsUploading(true);
-                                                        const res = await uploadFile(file);
-                                                        field.onChange(res.data.fileUrl);
-                                                        enqueueSnackbar('Cover image uploaded successfully', { variant: 'success' });
-                                                    } catch (err) {
-                                                        enqueueSnackbar('Failed to upload image', { variant: 'error' });
-                                                    } finally {
-                                                        setIsUploading(false);
-                                                    }
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => {
+                                                        setCropImageSrc(reader.result as string);
+                                                        setCropDialogOpen(true);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                    // Reset input so the same file can be selected again
+                                                    e.target.value = '';
                                                 }}
                                             />
+                                            {cropImageSrc && (
+                                                <ImageCropper
+                                                    open={cropDialogOpen}
+                                                    imageSrc={cropImageSrc}
+                                                    aspect={21 / 9}
+                                                    onClose={() => setCropDialogOpen(false)}
+                                                    onCropComplete={async (croppedFile) => {
+                                                        setCropDialogOpen(false);
+                                                        try {
+                                                            setIsUploading(true);
+                                                            const res = await uploadFile(croppedFile);
+                                                            field.onChange(res.data.fileUrl);
+                                                            enqueueSnackbar('Cover image uploaded successfully', { variant: 'success' });
+                                                        } catch (err) {
+                                                            enqueueSnackbar('Failed to upload cropped image', { variant: 'error' });
+                                                        } finally {
+                                                            setIsUploading(false);
+                                                        }
+                                                    }}
+                                                />
+                                            )}
                                             {!field.value && (
                                                 <label htmlFor="cover-upload" className="w-full">
                                                     <div className="border-2 border-dashed border-border/50 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors w-full min-h-[160px]">
@@ -841,8 +863,8 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                 </label>
                                             )}
                                             {field.value && (
-                                                <div className="relative w-full h-[240px] rounded-xl overflow-hidden border border-border/50 group">
-                                                    <img src={field.value} alt="Cover Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                                <div className="relative w-full aspect-video md:aspect-[21/9] bg-muted/30 rounded-xl overflow-hidden border border-border/50 group flex items-center justify-center">
+                                                    <img src={field.value} alt="Cover Preview" className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" />
                                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                                                         <label htmlFor="cover-upload">
                                                             <div className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium">

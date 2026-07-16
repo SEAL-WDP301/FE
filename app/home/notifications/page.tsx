@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { enqueueSnackbar } from "notistack";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // ==========================================
 // DYNAMIC TEMPLATES
@@ -153,11 +154,57 @@ const GenericTemplate = ({ notification }: { notification: any /* eslint-disable
     <p className="whitespace-pre-wrap">{notification.content}</p>
     <br />
     <div className="pt-6 border-t border-border mt-8">
-      <p>Best regards,,</p>
+      <p>Best regards,</p>
       <p className="font-bold">SEAL System</p>
     </div>
   </div>
 );
+
+const StakeholderAssignedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => {
+  const isMentor = notification.type === "mentor_assigned";
+  const roleText = isMentor ? "Mentor" : "Judge";
+  const basePath = isMentor ? `/mentor/events/${notification.eventId}` : `/judge/events/${notification.eventId}`;
+
+  return (
+    <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
+      <p className="font-medium text-lg">Dear {roleText},</p>
+      
+      <p>
+        We are thrilled to welcome you to the evaluation committee. You have been officially assigned as a {roleText.toLowerCase()} for the upcoming phases of our event.
+      </p>
+      
+      <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
+        <p className="text-blue-600 dark:text-blue-400 font-bold text-base mb-2 flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5" />
+          ASSIGNMENT DETAILS
+        </p>
+        <p className="whitespace-pre-wrap">{notification.content}</p>
+      </div>
+
+      <div>
+        <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 text-orange-500" />
+          ACCESS YOUR WORKSPACE
+        </h3>
+        <p className="mb-4">Please click the button below to access your dedicated workspace, where you can review team details, schedules, and grading rubrics.</p>
+        {notification.eventId ? (
+          <Link href={basePath}>
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">
+              Go to {roleText} Workspace
+            </Button>
+          </Link>
+        ) : (
+          <p className="text-muted-foreground italic">Event link is unavailable.</p>
+        )}
+      </div>
+
+      <div className="pt-6 border-t border-border mt-8">
+        <p>Best regards,</p>
+        <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Organizing Committee ${notification.event.name}` : 'Event Organizing Committee'}</p>
+      </div>
+    </div>
+  );
+};
 
 // ==========================================
 // MAIN COMPONENT
@@ -240,6 +287,9 @@ export default function NotificationsPage() {
       case 'final_result':
       case 'finalist':
         return <RoundResultTemplate notification={notification} />;
+      case 'mentor_assigned':
+      case 'judge_assigned':
+        return <StakeholderAssignedTemplate notification={notification} />;
       default:
         return <GenericTemplate notification={notification} />;
     }

@@ -107,6 +107,7 @@ export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "
   id: number;
   imageUrl?: string | null;
   image_url?: string | null;
+  endDate?: string | null;
   icons?: Array<{
     id?: number;
     url: string;

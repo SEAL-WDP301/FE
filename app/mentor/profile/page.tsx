@@ -10,8 +10,8 @@ export default function MentorProfilePage() {
         <main className="mx-auto max-w-7xl p-6 lg:p-8">
           <ProfileManager
             mode="professional"
-            title="Mentor Profile"
-            subtitle="Manage the professional profile shown to teams and used across mentoring workflows."
+            title="Stakeholder Profile"
+            subtitle="Manage the stakeholder profile shown to teams and used across workflows."
           />
         </main>
       </div>
