@@ -1,9 +1,10 @@
 "use client";
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import {
@@ -121,11 +122,33 @@ async function fetchUserProfile() {
   return user ? { ...user, avatarUrl: user.avatarUrl ?? user.avatar_url } : null;
 }
 
-export function ProfileManager({
+export function ProfileManager(props: ProfileManagerProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    }>
+      <ProfileManagerContent {...props} />
+    </Suspense>
+  );
+}
+
+function ProfileManagerContent({
   mode = "auto",
   title = "Profile",
   subtitle = "Manage the profile information used across SEAL.",
 }: ProfileManagerProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const currentTab = searchParams.get("tab") === "history" ? "history" : "info";
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    router.replace(`?${params.toString()}`);
+  };
+
   const queryClient = useQueryClient();
   const [studentForm, setStudentForm] = useState<StudentFormState>(emptyStudentForm);
   const [professionalForm, setProfessionalForm] =
@@ -305,7 +328,7 @@ export function ProfileManager({
           </p>
         </div>
 
-        <Tabs defaultValue="info" className="mt-10">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-10">
           <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-[#14100c] border border-[rgba(255,154,60,0.16)]">
             <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
             <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>

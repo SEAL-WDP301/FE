@@ -198,8 +198,8 @@ export default function OrganizerEventsPage() {
                                         <span>{event.tracks?.length || 0} Tracks</span>
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
-                                        <Trophy className="h-4 w-4 mr-2" />
-                                        <span>{event.prize1st || 'TBA'}</span>
+                                        <Trophy className="h-4 w-4 mr-2 text-yellow-500" />
+                                        <span>{event.prizes && event.prizes.length > 0 ? event.prizes[0].name : 'TBA'}</span>
                                     </div>
                                 </div>
                             </div>

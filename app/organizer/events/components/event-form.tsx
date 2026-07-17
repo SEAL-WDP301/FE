@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Info, Trophy, GitMerge, FileText, Calendar, Link as LinkIcon, Loader2, Save, CheckCircle2, MapPin, Phone, HelpCircle, ListChecks, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     createOrganizerEvent,
@@ -22,6 +22,7 @@ import {
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
 import { uploadFile } from "@/lib/api/upload.api";
+import { cn } from "@/lib/utils";
 import { ImageCropper } from "@/components/ui/image-cropper";
 import { cn } from "@/lib/utils";
 
@@ -154,10 +155,17 @@ const createEventSchema = (isEdit: boolean) => z.object({
         ? z.string().optional()
         : z.string().min(1, "End date is required"),
     githubOrgUrl: z.string().url("Invalid GitHub URL").includes("github.com", { message: "Must be a github.com URL" }).optional().or(z.literal('')),
-    prize1st: z.string().optional(),
-    prize2nd: z.string().optional(),
-    prize3rd: z.string().optional(),
-    prizeHonorable: z.string().optional(),
+    prizes: z.array(z.object({
+        id: z.number().optional(),
+        name: z.string().min(1, "Prize name is required"),
+        description: z.string().optional(),
+        quantity: z.union([z.coerce.number().int().min(1, "Quantity must be >= 1"), z.literal("")]).optional().transform(v => v === "" ? undefined : v as number | undefined),
+    })).optional().default([
+        { name: "First Prize", description: "$10,000 + Gold Trophy", quantity: 1 },
+        { name: "Second Prize", description: "$5,000 + Silver Trophy", quantity: 1 },
+        { name: "Third Prize", description: "$2,500 + Bronze Trophy", quantity: 1 },
+        { name: "Honorable Mention", description: "$1,000 + Certificate", quantity: 1 }
+    ]),
     tracks: z.array(z.object({
         id: z.number().optional(),
         _count: z.object({ teams: z.number().optional() }).optional(),
@@ -224,9 +232,7 @@ const createEventSchema = (isEdit: boolean) => z.object({
         requireText(data.registrationDeadline, ["registrationDeadline"], "Registration deadline");
         requireText(data.startDate, ["startDate"], "Start date");
         requireText(data.githubOrgUrl, ["githubOrgUrl"], "GitHub organization URL");
-        requireText(data.prize1st, ["prize1st"], "1st prize");
-        requireText(data.prize2nd, ["prize2nd"], "2nd prize");
-        requireText(data.prize3rd, ["prize3rd"], "3rd prize");
+
 
         requireText(data.location.venueName, ["location", "venueName"], "Venue");
         requireText(data.location.room, ["location", "room"], "Room / Hall");
@@ -363,14 +369,7 @@ const eventFormSteps: Array<{
         title: "Prizes",
         description: "Awards and rewards",
         icon: Trophy,
-        fields: ["prize1st", "prize2nd", "prize3rd", "prizeHonorable"],
-    },
-    {
-        id: "event-form-logistics",
-        title: "Logistics",
-        description: "Location, contacts and rules",
-        icon: MapPin,
-        fields: ["location", "contacts", "ruleGroups", "faqItems"],
+        fields: ["prizes"],
     },
     {
         id: "event-form-tracks",
@@ -385,6 +384,13 @@ const eventFormSteps: Array<{
         description: "Submission stages",
         icon: FileText,
         fields: ["rounds"],
+    },
+    {
+        id: "event-form-logistics",
+        title: "Event Details",
+        description: "Location, contacts and rules",
+        icon: MapPin,
+        fields: ["location", "contacts", "ruleGroups", "faqItems"],
     },
 ];
 
@@ -402,6 +408,8 @@ export default function EventForm({ initialData }: EventFormProps) {
     // Cropper states
     const [cropDialogOpen, setCropDialogOpen] = useState(false);
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [cropDialogOpen, setCropDialogOpen] = useState(false);
+    const [currentStep, setCurrentStep] = useState(0);
 
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
@@ -414,10 +422,17 @@ export default function EventForm({ initialData }: EventFormProps) {
         startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
         endDate: initialData?.endDate ? new Date(initialData.endDate).toISOString().slice(0, 16) : "",
         githubOrgUrl: initialData?.githubOrgUrl || "https://github.com/DEMO-SEAL-HackaThon-ORG",
-        prize1st: initialData?.prize1st || "",
-        prize2nd: initialData?.prize2nd || "",
-        prize3rd: initialData?.prize3rd || "",
-        prizeHonorable: initialData?.prizeHonorable || "",
+        prizes: initialData?.prizes?.map((prize) => ({
+            id: prize.id,
+            name: prize.name,
+            description: prize.description || "",
+            quantity: prize.quantity ?? 1,
+        })) || [
+            { name: "First Prize", description: "$10,000 + Gold Trophy", quantity: 1 },
+            { name: "Second Prize", description: "$5,000 + Silver Trophy", quantity: 1 },
+            { name: "Third Prize", description: "$2,500 + Bronze Trophy", quantity: 1 },
+            { name: "Honorable Mention", description: "$1,000 + Certificate", quantity: 1 },
+        ],
         tracks: initialData?.tracks?.map((track) => ({
             ...track,
             description: track.description || "",
@@ -481,6 +496,11 @@ export default function EventForm({ initialData }: EventFormProps) {
         name: "contacts",
     });
 
+    const { fields: prizeFields, append: appendPrize, remove: removePrize } = useFieldArray({
+        control: form.control,
+        name: "prizes",
+    });
+
     const { fields: ruleGroupFields, append: appendRuleGroup, remove: removeRuleGroup } = useFieldArray({
         control: form.control,
         name: "ruleGroups",
@@ -512,6 +532,51 @@ export default function EventForm({ initialData }: EventFormProps) {
         }
         removeRound(index);
     };
+
+    useEffect(() => {
+        const handleScroll = () => {
+            let maxVisibleArea = 0;
+            let newStep = 0;
+
+            eventFormSteps.forEach((step, index) => {
+                const el = document.getElementById(step.id);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    // Account for the sticky header (~100px)
+                    const visibleTop = Math.max(rect.top, 100); 
+                    const visibleBottom = Math.min(rect.bottom, window.innerHeight);
+                    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+                    // If this section occupies more of the screen than previous ones
+                    if (visibleHeight >= maxVisibleArea) {
+                        maxVisibleArea = visibleHeight;
+                        newStep = index;
+                    }
+
+                    // Special case: if we scrolled to the absolute bottom of the form,
+                    // highlight the last section, even if it's smaller than the one above it.
+                    if (index === eventFormSteps.length - 1) {
+                        if (rect.bottom <= window.innerHeight + 50 && rect.top < window.innerHeight) {
+                            newStep = index;
+                            maxVisibleArea = Infinity; // Ensure nothing else overrides this
+                        }
+                    }
+                }
+            });
+
+            setCurrentStep(newStep);
+        };
+
+        window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+        
+        // Initial check after a slight delay to let DOM render
+        const timeoutId = setTimeout(handleScroll, 500);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll, { capture: true });
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     const handleStepSelect = (stepIndex: number) => {
         setCurrentStep(stepIndex);
@@ -548,6 +613,12 @@ export default function EventForm({ initialData }: EventFormProps) {
                 endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
                 githubOrgUrl: data.githubOrgUrl || undefined,
                 imageUrl: data.imageUrl || undefined,
+                prizes: data.prizes?.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    quantity: p.quantity ? Number(p.quantity) : 1
+                })),
                 tracks: data.tracks?.map(t => ({
                     id: t.id,
                     name: t.name,
@@ -638,19 +709,8 @@ export default function EventForm({ initialData }: EventFormProps) {
             <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="pb-8" suppressHydrationWarning>
                 <div className="grid items-start gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
                     <aside className="sticky top-24 rounded-[28px] border border-border/60 bg-card/90 p-6 shadow-lg shadow-black/5 backdrop-blur-xl">
-                        <div className="border-b border-border/60 pb-5">
-                            <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-500">
-                                Event setup
-                            </p>
-                            <h2 className="mt-2 text-xl font-bold">
-                                {isEdit ? "Update your event" : "Create your event"}
-                            </h2>
-                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                Complete each step before publishing the event workspace.
-                            </p>
-                        </div>
 
-                        <nav className="mt-5" aria-label="Event creation progress">
+                        <nav aria-label="Event creation progress">
                             {eventFormSteps.map((step, index) => {
                                 const StepIcon = step.icon;
                                 const isActive = currentStep === index;
@@ -837,7 +897,6 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                         setCropDialogOpen(true);
                                                     };
                                                     reader.readAsDataURL(file);
-                                                    // Reset input so the same file can be selected again
                                                     e.target.value = '';
                                                 }}
                                             />
@@ -874,8 +933,8 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                 </label>
                                             )}
                                             {field.value && (
-                                                <div className="relative w-full aspect-video md:aspect-[21/9] bg-muted/30 rounded-xl overflow-hidden border border-border/50 group flex items-center justify-center">
-                                                    <img src={field.value} alt="Cover Preview" className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" />
+                                                <div className="relative w-full h-[240px] rounded-xl overflow-hidden border border-border/50 group">
+                                                    <img src={field.value} alt="Cover Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                                                         <label htmlFor="cover-upload">
                                                             <div className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium">
@@ -914,36 +973,255 @@ export default function EventForm({ initialData }: EventFormProps) {
                 {/* PRIZES */}
                 <motion.div id="event-form-prizes" custom={1} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-amber-500/10 group-hover:to-orange-500/10" />
-                    <div className="relative">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-3 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-2xl text-amber-600 ring-1 ring-amber-500/20">
-                                <Trophy className="h-6 w-6" />
+                    <div className="relative bg-card/40 backdrop-blur-2xl border border-border/50 p-8 rounded-3xl shadow-sm transition-all duration-500 hover:shadow-md">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-2xl text-amber-600 ring-1 ring-amber-500/20">
+                                    <Trophy className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-500">Prizes & Awards</h3>
+                                    <p className="text-muted-foreground mt-1">Configure the winning rewards for the participants.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-500">Prizes & Awards</h3>
-                                <p className="text-muted-foreground mt-1">Configure the winning rewards for the participants.</p>
-                            </div>
+                            <Button type="button" onClick={() => appendPrize({ name: "", description: "", quantity: 1 })} variant="outline" className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10 rounded-xl">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Prize
+                            </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                            <FormField control={control} name="prize1st" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">1st Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-amber-500/20 focus-visible:ring-amber-500/30" placeholder="E.g. $1000 & MacBooks" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={control} name="prize2nd" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">2nd Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $500 & AirPods" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={control} name="prize3rd" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">3rd Prize {!isEdit && <span className="text-red-500">*</span>}</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. $250 & Keyboards" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={control} name="prizeHonorable" render={({ field }) => (
-                                <FormItem><FormLabel className="text-foreground/80 font-medium">Honorable Mention</FormLabel><FormControl><Input className="bg-background/50 rounded-xl border-border/50 focus-visible:ring-amber-500/30" placeholder="E.g. Swag bag & Vouchers" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
+                        <div className="space-y-4">
+                            {prizeFields.map((field, index) => (
+                                <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 bg-background/50 rounded-2xl border border-border/50 relative">
+                                    <FormField control={control} name={`prizes.${index}.name`} render={({ field }) => (
+                                        <FormItem className="md:col-span-4">
+                                            <FormLabel className="text-foreground/80 font-medium">Prize Name</FormLabel>
+                                            <FormControl>
+                                                <Input className="bg-background/50 rounded-xl" placeholder="E.g. First Prize" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    
+                                    <FormField control={control} name={`prizes.${index}.description`} render={({ field }) => (
+                                        <FormItem className="md:col-span-5">
+                                            <FormLabel className="text-foreground/80 font-medium">Rewards</FormLabel>
+                                            <FormControl>
+                                                <Input className="bg-background/50 rounded-xl" placeholder="E.g. $10,000 + Trophy" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+
+                                    <FormField control={control} name={`prizes.${index}.quantity`} render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel className="text-foreground/80 font-medium">Quantity</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" min="1" className="bg-background/50 rounded-xl" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+
+                                    <div className="md:col-span-1 flex items-end justify-end">
+                                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-100/50 hover:text-red-600 rounded-xl" onClick={() => removePrize(index)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                            {prizeFields.length === 0 && (
+                                <div className="text-center p-8 border-2 border-dashed border-border/50 rounded-2xl">
+                                    <p className="text-muted-foreground">No prizes added yet.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>
 
                 {/* EVENT DETAILS */}
-                <motion.div id="event-form-logistics" custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
+                {/* TRACKS */}
+                <motion.div id="event-form-tracks" custom={2} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-emerald-500/10 group-hover:to-teal-500/10" />
+                    <div className="relative">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-600/20 rounded-2xl text-emerald-600 ring-1 ring-emerald-500/20">
+                                    <GitMerge className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">Tracks</h3>
+                                    <p className="text-muted-foreground mt-1">Define categories or themes for the competition.</p>
+                                </div>
+                            </div>
+                            {canModifyStructure && (
+                                <Button type="button" variant="outline" className="gap-2 rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950" onClick={() => appendTrack({ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 })}>
+                                    <Plus className="h-4 w-4" /> Add Track
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="space-y-4">
+                            <AnimatePresence mode="popLayout">
+                                {trackFields.map((field, index) => (
+                                    <motion.div
+                                        key={field.id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 bg-background/50 border border-border/50 rounded-2xl items-start relative group/item hover:border-emerald-500/30 hover:shadow-sm transition-all"
+                                    >
+                                        <div className="md:col-span-4">
+                                            <FormField control={control} name={`tracks.${index}.name`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Track Name *</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="e.g. AI Track" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-8">
+                                            <FormField control={control} name={`tracks.${index}.description`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Description {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Track focus area..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4">
+                                            <FormField control={control} name={`tracks.${index}.maxTeams`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Teams {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4">
+                                            <FormField control={control} name={`tracks.${index}.maxMembersPerTeam`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Members {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4 flex justify-end items-end">
+                                            {trackFields.length > 1 && canModifyStructure && (
+                                                <Button type="button" variant="ghost" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl transition-colors" onClick={() => handleRemoveTrack(index)}>
+                                                    <Trash2 className="h-4 w-4 mr-2" /> Remove Track
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* ROUNDS */}
+                <motion.div id="event-form-rounds" custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-pink-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-rose-500/10 group-hover:to-pink-500/10" />
+                    <div className="relative">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-gradient-to-br from-rose-500/20 to-pink-600/20 rounded-2xl text-rose-600 ring-1 ring-rose-500/20">
+                                    <FileText className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-pink-500">Rounds</h3>
+                                    <p className="text-muted-foreground mt-1">Configure submission stages for the participants.</p>
+                                </div>
+                            </div>
+                            {canModifyStructure && (
+                                <Button type="button" variant="outline" className="gap-2 rounded-xl border-rose-500/20 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950" onClick={() => appendRound({ roundNumber: roundFields.length + 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true })}>
+                                    <Plus className="h-4 w-4" /> Add Round
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="space-y-4">
+                            <AnimatePresence mode="popLayout">
+                                {roundFields.map((field, index) => (
+                                    <motion.div
+                                        key={field.id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 bg-background/50 border border-border/50 rounded-2xl items-start relative group/item hover:border-rose-500/30 hover:shadow-sm transition-all"
+                                    >
+                                        <div className="md:col-span-2">
+                                            <FormField control={control} name={`rounds.${index}.roundNumber`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Round # *</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-5">
+                                            <FormField control={control} name={`rounds.${index}.name`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Round Name *</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="e.g. Semi-final" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-5 flex justify-between items-end gap-3">
+                                            <FormField control={control} name={`rounds.${index}.submissionDeadline`} render={({ field }) => (
+                                                <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline {!isEdit && "*"}</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4">
+                                            <FormField control={control} name={`rounds.${index}.submissionType`} render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Submission Type *</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="bg-card/50 rounded-lg">
+                                                                <SelectValue>
+                                                                    {field.value === 'file' ? 'Project File (ZIP/RAR)' : field.value === 'github_link' ? 'GitHub Link' : 'Select Type'}
+                                                                </SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent className="rounded-xl">
+                                                            <SelectItem value="file">Project File (ZIP/RAR)</SelectItem>
+                                                            <SelectItem value="github_link">GitHub Link</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4">
+                                            <FormField control={control} name={`rounds.${index}.maxFileSizeMb`} render={({ field }) => (
+                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max File Size (MB)</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
+                                        <div className="md:col-span-4 flex items-center justify-end mt-6">
+                                            {roundFields.length > 1 && canModifyStructure && (
+                                                <Button type="button" variant="ghost" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl transition-colors" onClick={() => handleRemoveRound(index)}>
+                                                    <Trash2 className="h-4 w-4 mr-2" /> Remove Round
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="md:col-span-12 flex items-center justify-between mt-2 pt-4 border-t border-border/50">
+                                            <FormField control={control} name={`rounds.${index}.isTrackSpecific`} render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
+                                                            checked={field.value}
+                                                            onChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel className="text-sm font-medium text-foreground">Separate submissions by Track</FormLabel>
+                                                        <p className="text-xs text-muted-foreground">If checked, files will be saved in track-specific folders.</p>
+                                                    </div>
+                                                </FormItem>
+                                            )} />
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </motion.div>
+                        <div className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-border/60 pt-6">
+                            <Button type="submit" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600" disabled={isLoading || isUploading}>
+                                {isLoading ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                                ) : (
+                                    <>{isEdit ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Create Event</>}</>
+                                )}
+                            </Button>
+                        </div>
+                    <motion.div id="event-form-logistics" custom={4} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-yellow-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-orange-500/10 group-hover:to-yellow-500/10" />
                     <div className="relative">
                         <div className="flex items-center gap-4 mb-8">
@@ -1089,184 +1367,18 @@ export default function EventForm({ initialData }: EventFormProps) {
                     </div>
                 </motion.div>
 
-                {/* TRACKS */}
-                <motion.div id="event-form-tracks" custom={3} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-emerald-500/10 group-hover:to-teal-500/10" />
-                    <div className="relative">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-600/20 rounded-2xl text-emerald-600 ring-1 ring-emerald-500/20">
-                                    <GitMerge className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">Tracks</h3>
-                                    <p className="text-muted-foreground mt-1">Define categories or themes for the competition.</p>
-                                </div>
-                            </div>
-                            {canModifyStructure && (
-                                <Button type="button" variant="outline" className="gap-2 rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950" onClick={() => appendTrack({ name: "", description: "", maxTeams: 50, maxMembersPerTeam: 4 })}>
-                                    <Plus className="h-4 w-4" /> Add Track
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="space-y-4">
-                            <AnimatePresence mode="popLayout">
-                                {trackFields.map((field, index) => (
-                                    <motion.div
-                                        key={field.id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 bg-background/50 border border-border/50 rounded-2xl items-start relative group/item hover:border-emerald-500/30 hover:shadow-sm transition-all"
-                                    >
-                                        <div className="md:col-span-4">
-                                            <FormField control={control} name={`tracks.${index}.name`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Track Name *</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="e.g. AI Track" {...field} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-8">
-                                            <FormField control={control} name={`tracks.${index}.description`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Description {!isEdit && "*"}</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="Track focus area..." {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4">
-                                            <FormField control={control} name={`tracks.${index}.maxTeams`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Teams {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4">
-                                            <FormField control={control} name={`tracks.${index}.maxMembersPerTeam`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max Members {!isEdit && "*"}</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4 flex justify-end items-end">
-                                            {trackFields.length > 1 && canModifyStructure && (
-                                                <Button type="button" variant="ghost" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl transition-colors" onClick={() => handleRemoveTrack(index)}>
-                                                    <Trash2 className="h-4 w-4 mr-2" /> Remove Track
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* ROUNDS */}
-                <motion.div id="event-form-rounds" custom={4} variants={sectionVariants} initial="hidden" animate="visible" className="relative scroll-mt-24 group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-pink-500/5 rounded-3xl blur-xl transition-all duration-500 group-hover:from-rose-500/10 group-hover:to-pink-500/10" />
-                    <div className="relative">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-gradient-to-br from-rose-500/20 to-pink-600/20 rounded-2xl text-rose-600 ring-1 ring-rose-500/20">
-                                    <FileText className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-pink-500">Rounds</h3>
-                                    <p className="text-muted-foreground mt-1">Configure submission stages for the participants.</p>
-                                </div>
-                            </div>
-                            {canModifyStructure && (
-                                <Button type="button" variant="outline" className="gap-2 rounded-xl border-rose-500/20 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950" onClick={() => appendRound({ roundNumber: roundFields.length + 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true })}>
-                                    <Plus className="h-4 w-4" /> Add Round
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="space-y-4">
-                            <AnimatePresence mode="popLayout">
-                                {roundFields.map((field, index) => (
-                                    <motion.div
-                                        key={field.id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 bg-background/50 border border-border/50 rounded-2xl items-start relative group/item hover:border-rose-500/30 hover:shadow-sm transition-all"
-                                    >
-                                        <div className="md:col-span-2">
-                                            <FormField control={control} name={`rounds.${index}.roundNumber`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Round # *</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-5">
-                                            <FormField control={control} name={`rounds.${index}.name`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Round Name *</FormLabel><FormControl><Input className="bg-card/50 rounded-lg" placeholder="e.g. Semi-final" {...field} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-5 flex justify-between items-end gap-3">
-                                            <FormField control={control} name={`rounds.${index}.submissionDeadline`} render={({ field }) => (
-                                                <FormItem className="flex-1"><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Deadline {!isEdit && "*"}</FormLabel><FormControl><Input type="datetime-local" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4">
-                                            <FormField control={control} name={`rounds.${index}.submissionType`} render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Submission Type *</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-card/50 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent className="rounded-xl">
-                                                            <SelectItem value="file">Project File (ZIP/RAR)</SelectItem>
-                                                            <SelectItem value="github_link">GitHub Link</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4">
-                                            <FormField control={control} name={`rounds.${index}.maxFileSizeMb`} render={({ field }) => (
-                                                <FormItem><FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Max File Size (MB)</FormLabel><FormControl><Input type="number" className="bg-card/50 rounded-lg" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <div className="md:col-span-4 flex items-center justify-end mt-6">
-                                            {roundFields.length > 1 && canModifyStructure && (
-                                                <Button type="button" variant="ghost" className="text-red-500/70 hover:text-red-600 hover:bg-red-100/50 rounded-xl transition-colors" onClick={() => handleRemoveRound(index)}>
-                                                    <Trash2 className="h-4 w-4 mr-2" /> Remove Round
-                                                </Button>
-                                            )}
-                                        </div>
-                                        <div className="md:col-span-12 flex items-center justify-between mt-2 pt-4 border-t border-border/50">
-                                            <FormField control={control} name={`rounds.${index}.isTrackSpecific`} render={({ field }) => (
-                                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                                    <FormControl>
-                                                        <input
-                                                            type="checkbox"
-                                                            className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
-                                                            checked={field.value}
-                                                            onChange={field.onChange}
-                                                        />
-                                                    </FormControl>
-                                                    <div className="space-y-1 leading-none">
-                                                        <FormLabel className="text-sm font-medium text-foreground">Separate submissions by Track</FormLabel>
-                                                        <p className="text-xs text-muted-foreground">If checked, files will be saved in track-specific folders.</p>
-                                                    </div>
-                                                </FormItem>
-                                            )} />
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-                </motion.div>
-                        <div className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-border/60 pt-6">
-                            <Button type="submit" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600" disabled={isLoading || isUploading}>
-                                {isLoading ? (
-                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
-                                ) : (
-                                    <>{isEdit ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Create Event</>}</>
-                                )}
-                            </Button>
-                        </div>
-                    </main>
+                <div className="sticky bottom-6 z-50 mt-8 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl">
+                    <Button type="submit" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600" disabled={isLoading || isUploading}>
+                        {isLoading ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                        ) : (
+                            <>{isEdit ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Create Event</>}</>
+                        )}
+                    </Button>
                 </div>
-            </form>
-        </Form>
+            </main>
+        </div>
+    </form>
+</Form>
     );
 }

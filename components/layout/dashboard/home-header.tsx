@@ -127,14 +127,14 @@ export default function HomeHeader({ customCenterContent, showLogo = true }: { c
                                     className="w-60 border border-border bg-popover/95 backdrop-blur-xl p-2 rounded-xl shadow-xl"
                                 >
                                     <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
-                                        <Link href={getProfileHref()} className="flex items-center gap-2">
+                                        <Link href={`${getProfileHref()}?tab=info`} className="flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                             My Profile
                                         </Link>
                                     </DropdownMenuItem>
                                     
                                     <DropdownMenuItem asChild className="cursor-pointer rounded-lg py-2">
-                                        <Link href={getProfileHref()} className="flex items-center gap-2">
+                                        <Link href={`${getProfileHref()}?tab=history`} className="flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                             Participation History
                                         </Link>
