@@ -1,4 +1,5 @@
 import { axiosClient } from "@/lib/axios";
+import { getOrganizerEvents } from "@/lib/api/organizer-events.api";
 import { QUICK_ACTIONS } from "@/lib/admin-dashboard/dashboard-constants";
 import type {
   AdminDashboardData,
@@ -15,7 +16,6 @@ type JsonRecord = Record<string, unknown>;
 
 const asRecord = (value: unknown): JsonRecord =>
   value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
-const asArray = (value: unknown): unknown[] => Array.isArray(value) ? value : [];
 const number = (value: unknown) => Number.isFinite(Number(value)) ? Number(value) : 0;
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
 const unwrap = (value: unknown): unknown => {
@@ -137,17 +137,18 @@ export interface DashboardFilterOptions {
 }
 
 export async function getDashboardFilterOptions(): Promise<DashboardFilterOptions> {
-  const response = await axiosClient.get("/organizer/dashboard/filter-options");
-  const payload = unwrap(response.data);
-  const record = asRecord(payload);
-  const events = listFrom(record.events ?? payload, "events").map((item) => {
+  const organizerEvents = await getOrganizerEvents();
+  const events = organizerEvents.map((item) => {
     const event = asRecord(item);
-    return { value: String(get(event, "id", "value", "eventId") ?? ""), label: text(get(event, "name", "label", "title")), participants: number(get(event, "participants", "approved")), registrations: number(get(event, "registrations", "registrationCount")), teams: number(get(event, "teams", "teamCount")), submissions: number(get(event, "submissions", "submissionCount")), capacity: number(get(event, "capacity", "maxParticipants")) };
+    const counts = asRecord(event._count);
+    return { value: String(event.id ?? ""), label: text(get(event, "name", "title")), participants: number(get(event, "participants", "approved")), registrations: number(get(event, "registrations", "registrationCount")), teams: number(get(counts, "teams") ?? get(event, "teams", "teamCount")), submissions: number(get(counts, "submissions") ?? get(event, "submissions", "submissionCount")), capacity: number(get(event, "capacity", "maxParticipants")) };
   }).filter((event) => event.value && event.label);
+  const seasons = [...new Set(organizerEvents.map((event) => event.season).filter((season): season is NonNullable<typeof season> => Boolean(season)))];
+  const years = [...new Set(organizerEvents.map((event) => Number(event.year)).filter(Number.isFinite))].sort((a, b) => b - a);
   return {
     events,
-    seasons: asArray(record.seasons).map(String),
-    years: asArray(record.years).map(Number).filter(Number.isFinite),
+    seasons,
+    years,
   };
 }
 
@@ -156,13 +157,12 @@ export const adminDashboardService = {
   async getDashboard(filters: DashboardFilters, cachedFilterOptions?: DashboardFilterOptions): Promise<AdminDashboardData> {
     const eventQuery = filters.eventId !== "all" ? `&eventId=${encodeURIComponent(filters.eventId)}` : "";
     const filterOptions = cachedFilterOptions ?? await getDashboardFilterOptions();
-    const [monthResponse, statusResponse, registrationsResponse, trendResponse, submissionResponses, activityResponses, deadlinesResponse] = await Promise.all([
+    const [monthResponse, statusResponse, registrationsResponse, trendResponse, submissionResponses, deadlinesResponse] = await Promise.all([
       axiosClient.get(`/organizer/dashboard/events-by-month?year=${filters.year}`),
       axiosClient.get(`/organizer/dashboard/event-status?year=${filters.year}${eventQuery}`),
       axiosClient.get(`/organizer/dashboard/recent-registrations?limit=10${eventQuery}`),
       axiosClient.get(`/organizer/dashboard/registration-trend?groupBy=day${eventQuery}`),
       Promise.all([axiosClient.get(`/organizer/dashboard/submissions?groupBy=day${eventQuery}`)]),
-      Promise.all([axiosClient.get(`/organizer/dashboard/user-activity?period=24h${eventQuery}`)]),
       axiosClient.get(`/organizer/dashboard/upcoming-deadlines?withinDays=30${eventQuery}`),
     ]);
 
@@ -175,17 +175,12 @@ export const adminDashboardService = {
       const row = asRecord(item);
       return { date: text(get(row, "date", "day", "label")), Registrations: number(get(row, "Registrations", "registrations", "total")), Participants: number(get(row, "Participants", "participants", "approved")) };
     });
-    const hourlyMap = new Map<string, number>(); const roleMap = new Map<string, number>(); let activeTotal = 0;
-    activityResponses.forEach((response) => { const payload = asRecord(unwrap(response.data)); activeTotal += number(get(payload, "total", "activeUsers")); listFrom(response.data, "activity", "hourly", "items", "records").forEach((item) => { const row = asRecord(item); const hour = text(get(row, "hour", "time", "label")); hourlyMap.set(hour, (hourlyMap.get(hour) ?? 0) + number(get(row, "Users", "users", "count", "total"))); }); listFrom(payload, "byRole", "roles", "activeUsersByRole").forEach((item) => { const row = asRecord(item); const role = text(get(row, "role", "label")); roleMap.set(role, (roleMap.get(role) ?? 0) + number(get(row, "value", "count"))); }); });
-    const activeUsersHourly = [...hourlyMap].map(([hour, Users]) => ({ hour, Users }));
-    const activeUsersByRole = [...roleMap].map(([role, value]) => ({ role, value, delta: 0 }));
     const submissionActivityMap = new Map<string, number>();
     submissionResponses.forEach((response) => { const payload = asRecord(unwrap(response.data)); listFrom(payload, "activity", "trend", "submissionActivity").forEach((item) => { const row = asRecord(item); const date = text(get(row, "date", "day", "label")); submissionActivityMap.set(date, (submissionActivityMap.get(date) ?? 0) + number(get(row, "Submissions", "submissions", "count"))); }); });
     const submissionActivity = [...submissionActivityMap].map(([date, Submissions]) => ({ date, Submissions }));
     const totalRegistrations = trend.reduce((sum, item) => sum + item.Registrations, 0) || recentRegistrations.length;
     const participants = trend.reduce((sum, item) => sum + item.Participants, 0) || recentRegistrations.filter((item) => item.status === "Approved").length;
     const totalSubmissions = submissionStatus.reduce((sum, item) => sum + (item.status.toLowerCase().includes("evaluat") ? 0 : item.value), 0);
-    const activePeople = activeTotal || activeUsersHourly.reduce((max, item) => Math.max(max, item.Users), 0);
     const activeEvents = eventStatus.filter((item) => ["active", "ongoing", "registration open"].includes(item.status.toLowerCase())).reduce((sum, item) => sum + item.value, 0);
     const totalEvents = eventStatus.reduce((sum, item) => sum + item.value, 0) || filterOptions.events.length;
     const metric = (id: string, label: string, value: number, icon: "events" | "active" | "registrations" | "participants" | "submissions" | "users", href: string, detail: string) => ({ id, label, value, delta: 0, detail, comparison: "Live API data", href, sparkline: [], icon });
@@ -197,7 +192,6 @@ export const adminDashboardService = {
         metric("registrations", "Total Registrations", totalRegistrations, "registrations", "/organizer/registrations", `${recentRegistrations.length} recent registrations loaded`),
         metric("participants", "Total Participants", participants, "participants", "/organizer/registrations?status=approved", "Approved participants"),
         metric("submissions", "Total Submissions", totalSubmissions, "submissions", "/organizer/submissions", "Across selected events"),
-        metric("users", "Active People 24h", activePeople, "users", "/organizer/people", "From user activity records"),
       ] },
       eventsByMonth: normalizeMonthly(monthResponse.data),
       eventStatus,
@@ -210,8 +204,6 @@ export const adminDashboardService = {
       participantsByEvent: filterOptions.events.map((event) => ({ id: event.value, event: event.label, Participants: event.participants ?? 0, registrations: event.registrations ?? 0, teams: event.teams ?? 0, submissions: event.submissions ?? 0, capacity: event.capacity ?? 0 })),
       submissionStatus,
       submissionActivity,
-      activeUsersHourly,
-      activeUsersByRole,
       deadlines: normalizeDeadlines(deadlinesResponse.data),
       recentRegistrations,
       quickActions: QUICK_ACTIONS,

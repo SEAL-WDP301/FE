@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, CalendarDays, ChevronLeft, ClipboardCheck, FileCheck,
+  CalendarDays, ChevronLeft, ClipboardCheck, FileCheck,
   LayoutDashboard, Menu, Users,
 } from "lucide-react";
 import Logo from "@/components/ui/logo";
@@ -20,12 +20,6 @@ const groups = [
       { label: "Registrations", href: "/organizer/registrations", icon: ClipboardCheck },
       { label: "People", href: "/organizer/people", icon: Users },
       { label: "Submissions", href: "/organizer/submissions", icon: FileCheck },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { label: "Notifications", href: "/organizer/notifications", icon: Bell },
     ],
   },
 ];

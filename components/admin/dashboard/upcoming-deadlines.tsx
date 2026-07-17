@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Send } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardSection } from "./dashboard-section";
@@ -19,7 +19,6 @@ export function UpcomingDeadlines({ data }: { data: UpcomingDeadlineItem[] }) {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm"><Link href="/organizer/events">Open Event</Link></Button>
-          {item.status === "Urgent" && <Button asChild variant="soft" size="icon-sm"><Link aria-label={`Send reminder for ${item.event}`} href={`/organizer/notifications/new?eventId=${item.eventId}`}><Send /></Link></Button>}
         </div>
       </div>)}
     </div>

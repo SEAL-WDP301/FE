@@ -122,8 +122,6 @@ export interface AdminDashboardData {
   participantsByEvent: ParticipantsByEventMetric[];
   submissionStatus: SubmissionStatusMetric[];
   submissionActivity: SubmissionActivityMetric[];
-  activeUsersHourly: ActiveUsersHourlyMetric[];
-  activeUsersByRole: ActiveUsersByRoleMetric[];
   deadlines: UpcomingDeadlineItem[];
   recentRegistrations: RecentRegistrationItem[];
   quickActions: QuickActionItem[];

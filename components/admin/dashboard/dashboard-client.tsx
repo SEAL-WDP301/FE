@@ -18,8 +18,6 @@ import { adminDashboardService } from "@/services/admin-dashboard.service";
 const ParticipantsByEventChart = dynamic(() => import("./participants-by-event-chart").then((module) => module.ParticipantsByEventChart), { ssr: false });
 const SubmissionStatusChart = dynamic(() => import("./submission-status-chart").then((module) => module.SubmissionStatusChart), { ssr: false });
 const SubmissionActivityChart = dynamic(() => import("./submission-activity-chart").then((module) => module.SubmissionActivityChart), { ssr: false });
-const ActiveUsersChart = dynamic(() => import("./active-users-chart").then((module) => module.ActiveUsersChart), { ssr: false });
-const ActiveUsersByRole = dynamic(() => import("./active-users-by-role").then((module) => module.ActiveUsersByRole), { ssr: false });
 const UpcomingDeadlines = dynamic(() => import("./upcoming-deadlines").then((module) => module.UpcomingDeadlines), { ssr: false });
 const QuickActions = dynamic(() => import("./quick-actions").then((module) => module.QuickActions), { ssr: false });
 const RecentRegistrations = dynamic(() => import("./recent-registrations").then((module) => module.RecentRegistrations), { ssr: false });
@@ -77,20 +75,19 @@ export function DashboardClient() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-400">System overview</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Organizer Dashboard</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Monitor events, participation, submissions, and user activity across SEAL.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Monitor events, participation, and submissions across SEAL.</p>
       </div>
       <DashboardFilters filters={filters} onChange={changeFilters} onRefresh={() => void dashboardQuery.refetch()} refreshing={refreshing} lastUpdated={lastUpdated} eventOptions={filterOptions.events} seasonOptions={filterOptions.seasons} yearOptions={filterOptions.years} />
       {failed ? <DashboardErrorState onRetry={() => { void filterOptionsQuery.refetch(); void dashboardQuery.refetch(); }} /> : (
         <>
           <section aria-label="Key performance indicators" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {loading || !data ? Array.from({ length: 6 }, (_, index) => <MetricCardSkeleton key={index} />) : data.overview.metrics.map((metric, index) => <MetricCard key={metric.id} metric={metric} wide={index >= 4} />)}
+            {loading || !data ? Array.from({ length: 5 }, (_, index) => <MetricCardSkeleton key={index} />) : data.overview.metrics.map((metric, index) => <MetricCard key={metric.id} metric={metric} wide={index >= 4} />)}
           </section>
           {data && <>
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><EventsByMonthChart data={data.eventsByMonth} /></div><EventStatusChart data={data.eventStatus} /></section>
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><RegistrationParticipationChart data={data.registrationTrend} /></div><ParticipationConversion data={data.conversion} /></section>
             <ParticipantsByEventChart data={data.participantsByEvent} />
             <section className="grid gap-6 xl:grid-cols-2"><SubmissionStatusChart data={data.submissionStatus} /><SubmissionActivityChart data={data.submissionActivity} /></section>
-            <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><ActiveUsersChart data={data.activeUsersHourly} /></div><ActiveUsersByRole data={data.activeUsersByRole} /></section>
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><UpcomingDeadlines data={data.deadlines} /></div><QuickActions data={data.quickActions} /></section>
             <RecentRegistrations data={data.recentRegistrations} />
           </>}

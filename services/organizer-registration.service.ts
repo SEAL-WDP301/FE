@@ -1,4 +1,5 @@
 import { axiosClient } from "@/lib/axios";
+import { getOrganizerEvents } from "@/lib/api/organizer-events.api";
 import type {
   ApproveRegistrationInput, EventCapacityOverview, PaginatedRegistrationResponse,
   RegistrationDetails, RegistrationFilters, RegistrationOverview,
@@ -106,8 +107,7 @@ export const organizerRegistrationService = {
     return array(response.data, "trend", "registrationTrend", "items").map((value) => { const row = record(value); return { date: string(pick(row, "date", "day", "label")), Total: numeric(pick(row, "Total", "total", "registrations")), Approved: numeric(pick(row, "Approved", "approved", "participants")) }; });
   },
   async getCapacity(eventId?: string): Promise<EventCapacityOverview> {
-    const response = await axiosClient.get("/organizer/dashboard/filter-options");
-    const events = array(response.data, "events", "items").map(record);
+    const events = (await getOrganizerEvents()).map(record);
     const event = events.find((item) => String(pick(item, "id", "eventId", "value")) === eventId) ?? events[0] ?? {};
     return { eventId: String(pick(event, "id", "eventId", "value") ?? ""), eventName: string(pick(event, "name", "title", "label"), "No event"), capacity: numeric(pick(event, "capacity", "maxParticipants")), approved: numeric(pick(event, "approved", "participants")), waitlisted: numeric(event.waitlisted) };
   },

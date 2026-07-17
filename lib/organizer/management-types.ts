@@ -17,13 +17,6 @@ export interface OrganizerSubmission {
 export interface SubmissionFilters { search: string; status: string; evaluation: string; page: number; limit: number; }
 export interface SubmissionActivityPoint { date: string; Submissions: number; }
 
-export type NotificationStatus = "Scheduled" | "Sent" | "Cancelled" | "Failed";
-export interface OrganizerNotification {
-  id: string; subject: string; event: string; audience: string; channels: string[];
-  scheduledAt?: string; sentAt?: string; recipients: number; success: number; failed: number; read: number; status: NotificationStatus;
-}
-export interface NotificationTemplate { id: string; name: string; subject: string; message: string; archived: boolean; }
-
 export interface OrganizerSettings {
   profile: { fullName: string; email: string; phone: string; department: string; position: string; bio: string; };
   eventDefaults: { season: string; minTeamSize: number; maxTeamSize: number; registrationMode: string; fileLimit: number; timezone: string; visibility: string; dateFormat: string; };
