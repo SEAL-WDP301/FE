@@ -17,10 +17,13 @@ import {
     createOrganizerEvent,
     updateOrganizerEvent,
     type OrganizerEvent,
+    type OrganizerEventContact,
+    type OrganizerEventFAQItem,
     type OrganizerEventPayload,
 } from "@/lib/api/organizer-events.api";
 import { uploadFile } from "@/lib/api/upload.api";
 import { ImageCropper } from "@/components/ui/image-cropper";
+import { cn } from "@/lib/utils";
 
 const defaultLocation = {
     venueName: "FPT University Ho Chi Minh City",
@@ -93,6 +96,13 @@ const defaultFaqItems = [
     },
 ];
 
+interface RuleGroupSource {
+    title?: string;
+    name?: string;
+    category?: string;
+    rules?: string[];
+}
+
 function linesToList(value?: string) {
     return (value || "")
         .split(/\r?\n/)
@@ -110,7 +120,7 @@ function parseJsonSafe<T>(jsonStr: string | null | undefined, fallback: T): T {
 }
 
 function normalizeRuleGroups(event?: OrganizerEvent) {
-    const rulesArray = parseJsonSafe<any[]>(event?.rules, []);
+    const rulesArray = parseJsonSafe<RuleGroupSource[]>(event?.rules, []);
     if (!rulesArray.length) return defaultRuleGroups;
     return rulesArray.map((group) => ({
         title: group.title || group.name || group.category || "Rules",
@@ -120,7 +130,7 @@ function normalizeRuleGroups(event?: OrganizerEvent) {
 
 function normalizeFaqItems(event?: OrganizerEvent) {
     if (!event?.faq?.length) return defaultFaqItems;
-    return event.faq.map((faq: any) => ({
+    return event.faq.map((faq: OrganizerEventFAQItem) => ({
         question: faq.question || faq.q || faq.title || "",
         answer: faq.answer || faq.a || faq.content || "",
     }));
@@ -387,6 +397,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const isEdit = !!initialData;
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [currentStep, setCurrentStep] = useState(0);
     
     // Cropper states
     const [cropDialogOpen, setCropDialogOpen] = useState(false);
@@ -421,10 +432,10 @@ export default function EventForm({ initialData }: EventFormProps) {
         })) || [{ roundNumber: 1, name: "", submissionType: "file", submissionDeadline: "", maxFileSizeMb: 20, isTrackSpecific: true }],
         location: {
             ...defaultLocation,
-            ...parseJsonSafe<any>(initialData?.location, {}),
+            ...parseJsonSafe<Partial<typeof defaultLocation>>(initialData?.location, {}),
         },
         contacts: (() => {
-            const parsedContacts = parseJsonSafe<any[]>(initialData?.contact, []);
+            const parsedContacts = parseJsonSafe<OrganizerEventContact[]>(initialData?.contact, []);
             return parsedContacts.length ? parsedContacts.map((contact) => ({
                 label: contact.label || contact.type || "",
                 name: contact.name || contact.title || "",
@@ -843,7 +854,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                                             const res = await uploadFile(croppedFile);
                                                             field.onChange(res.data.fileUrl);
                                                             enqueueSnackbar('Cover image uploaded successfully', { variant: 'success' });
-                                                        } catch (err) {
+                                                        } catch {
                                                             enqueueSnackbar('Failed to upload cropped image', { variant: 'error' });
                                                         } finally {
                                                             setIsUploading(false);

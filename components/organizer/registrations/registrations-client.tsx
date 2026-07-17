@@ -1,0 +1,91 @@
+"use client";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { RowSelectionState, VisibilityState } from "@tanstack/react-table";
+import { Download, Send } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { enqueueSnackbar } from "notistack";
+import { Button } from "@/components/ui/button";
+import { RegistrationKpiGrid } from "./registration-kpi-grid"; import { RegistrationTrendChart } from "./registration-trend-chart"; import { EventCapacityCard } from "./event-capacity-card";
+import { RegistrationToolbar } from "./registration-toolbar"; import { RegistrationTable } from "./registration-table"; import { RegistrationTableSkeleton } from "./registration-table-skeleton"; import { RegistrationEmptyState } from "./registration-empty-state"; import { RegistrationErrorState } from "./registration-error-state";
+import { RegistrationDetailsDrawer } from "./registration-details-drawer"; import { ApproveRegistrationDialog } from "./approve-registration-dialog"; import { RejectRegistrationDialog } from "./reject-registration-dialog"; import { WaitlistRegistrationDialog } from "./waitlist-registration-dialog"; import { BulkRegistrationActions } from "./bulk-registration-actions"; import { ExportRegistrationDialog } from "./export-registration-dialog"; import { SendRegistrationNotificationDialog } from "./send-registration-notification-dialog";
+import { defaultRegistrationFilters, parseRegistrationFilters } from "@/lib/organizer/registrations/registration-search-params";
+import type { ApproveRegistrationInput, RegistrationFilters, RegistrationListItem, RegistrationNotificationInput, RejectRegistrationInput, WaitlistRegistrationInput } from "@/lib/organizer/registrations/registration-types";
+import { organizerRegistrationService } from "@/services/organizer-registration.service";
+import { getDashboardFilterOptions } from "@/services/admin-dashboard.service";
+
+type ActionType = "approve" | "reject" | "waitlist" | null;
+
+export function RegistrationsClient() {
+  const router = useRouter(); const pathname = usePathname(); const searchParams = useSearchParams(); const queryClient = useQueryClient();
+  const [filters, setFilters] = useState<RegistrationFilters>(() => parseRegistrationFilters(searchParams));
+  const [search, setSearch] = useState(filters.search); const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [selectedRegistration, setSelectedRegistration] = useState<RegistrationListItem | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false); const [action, setAction] = useState<ActionType>(null);
+  const [exportOpen, setExportOpen] = useState(false); const [notificationOpen, setNotificationOpen] = useState(false);
+
+  const updateFilters = useCallback((patch: Partial<RegistrationFilters>) => {
+    const next = { ...filters, ...patch, page: "page" in patch ? patch.page ?? filters.page : 1 };
+    const params = new URLSearchParams();
+    Object.entries(next).forEach(([key, value]) => { if (String(value) !== String(defaultRegistrationFilters[key as keyof RegistrationFilters])) params.set(key, String(value)); });
+    setFilters(next);
+    router.replace(`${pathname}${params.size ? `?${params.toString()}` : ""}`, { scroll: false });
+    setRowSelection({});
+  }, [filters, pathname, router]);
+
+  useEffect(() => { const timer = window.setTimeout(() => { if (search !== filters.search) updateFilters({ search }); }, 400); return () => window.clearTimeout(timer); }, [filters.search, search, updateFilters]);
+
+  const overviewQuery = useQuery({ queryKey: ["organizer-registration-overview"], queryFn: () => organizerRegistrationService.getOverview() });
+  const trendQuery = useQuery({ queryKey: ["organizer-registration-trend"], queryFn: () => organizerRegistrationService.getTrend() });
+  const capacityQuery = useQuery({ queryKey: ["organizer-registration-capacity", filters.eventId], queryFn: () => organizerRegistrationService.getCapacity(filters.eventId) });
+  const registrationsQuery = useQuery({ queryKey: ["organizer-registrations", filters], queryFn: () => organizerRegistrationService.getRegistrations(filters), placeholderData: (previous) => previous });
+  const detailsQuery = useQuery({ queryKey: ["organizer-registration", selectedRegistration?.id], queryFn: () => organizerRegistrationService.getRegistration(selectedRegistration?.id ?? ""), enabled: detailsOpen && Boolean(selectedRegistration) });
+  const filterOptionsQuery = useQuery({ queryKey: ["organizer-dashboard-filter-options"], queryFn: getDashboardFilterOptions });
+
+  const mutation = useMutation({
+    mutationFn: async ({ type, registration, input }: { type: Exclude<ActionType, null>; registration: RegistrationListItem; input: ApproveRegistrationInput | RejectRegistrationInput | WaitlistRegistrationInput }) => {
+      if (type === "approve") return organizerRegistrationService.approve(registration.id, input as ApproveRegistrationInput);
+      if (type === "reject") return organizerRegistrationService.reject(registration.id, input as RejectRegistrationInput);
+      return organizerRegistrationService.waitlist(registration.id, input as WaitlistRegistrationInput);
+    },
+    onSuccess: (_, variables) => { enqueueSnackbar(`${variables.registration.student.fullName} moved to ${variables.type === "approve" ? "Approved" : variables.type === "reject" ? "Rejected" : "Waitlisted"}.`, { variant: "success" }); setAction(null); void queryClient.invalidateQueries({ queryKey: ["organizer-registrations"] }); },
+    onError: () => enqueueSnackbar("Unable to update registration.", { variant: "error" }),
+  });
+
+  const openAction = useCallback((type: Exclude<ActionType, null>, registration: RegistrationListItem) => { setSelectedRegistration(registration); setAction(type); }, []);
+  const actions = useMemo(() => ({
+    view: (registration: RegistrationListItem) => { setSelectedRegistration(registration); setDetailsOpen(true); },
+    approve: (registration: RegistrationListItem) => openAction("approve", registration),
+    reject: (registration: RegistrationListItem) => openAction("reject", registration),
+    waitlist: (registration: RegistrationListItem) => openAction("waitlist", registration),
+  }), [openAction]);
+
+  const selectedRows = registrationsQuery.data?.data.filter((record) => rowSelection[record.id]) ?? [];
+  const canBulkApprove = selectedRows.length > 0 && selectedRows.every((record) => record.status === "Pending" && record.eligibility === "Eligible");
+  const runBulk = async (type: Exclude<ActionType, null>) => {
+    if (!window.confirm(`Apply ${type} to ${selectedRows.length} selected registrations?`)) return;
+    const eligible = selectedRows.filter((record) => type !== "approve" || (record.status === "Pending" && record.eligibility === "Eligible"));
+    await Promise.all(eligible.map((record) => type === "approve" ? organizerRegistrationService.approve(record.id, { sendNotification: true, includeTeamInstructions: true }) : type === "reject" ? organizerRegistrationService.reject(record.id, { reason: "Bulk review", note: "", sendNotification: true, allowRegisterAgain: false }) : organizerRegistrationService.waitlist(record.id, { reason: "Capacity review", priority: "Normal", sendNotification: true })));
+    enqueueSnackbar(`${eligible.length} succeeded${eligible.length < selectedRows.length ? `, ${selectedRows.length - eligible.length} skipped` : ""}.`, { variant: eligible.length === selectedRows.length ? "success" : "warning" }); setRowSelection({}); void queryClient.invalidateQueries({ queryKey: ["organizer-registrations"] });
+  };
+
+  const resetFilters = () => { setSearch(""); updateFilters(defaultRegistrationFilters); };
+  const exportRegistrations = (scope: "filtered" | "selected") => { enqueueSnackbar(`${scope === "selected" ? selectedRows.length : registrationsQuery.data?.pagination.total ?? 0} registrations queued for CSV export.`, { variant: "success" }); setExportOpen(false); };
+  const sendNotification = (input: RegistrationNotificationInput) => { enqueueSnackbar(`Notification "${input.subject}" queued successfully.`, { variant: "success" }); setNotificationOpen(false); };
+
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-400">Participant operations</p><h1 className="mt-2 text-2xl font-semibold sm:text-3xl">Registrations</h1><p className="mt-2 text-sm text-muted-foreground">Review and manage student registrations across your assigned events.</p></div><div className="flex gap-2"><Button variant="outline" onClick={() => setExportOpen(true)}><Download /> Export CSV</Button><Button onClick={() => setNotificationOpen(true)}><Send /> Send Notification</Button></div></div>
+    {overviewQuery.data ? <RegistrationKpiGrid overview={overviewQuery.data} /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">{Array.from({ length: 6 }, (_, index) => <div key={index} className="h-40 animate-pulse rounded-2xl bg-muted/50" />)}</div>}
+    <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2">{trendQuery.data ? <RegistrationTrendChart data={trendQuery.data} /> : <div className="h-96 animate-pulse rounded-2xl bg-muted/50" />}</div>{capacityQuery.data ? <EventCapacityCard capacity={capacityQuery.data} /> : <div className="h-96 animate-pulse rounded-2xl bg-muted/50" />}</section>
+    <RegistrationToolbar filters={filters} search={search} onSearchChange={setSearch} onChange={updateFilters} onReset={resetFilters} onExport={() => setExportOpen(true)} eventOptions={filterOptionsQuery.data?.events} />
+    {registrationsQuery.isError ? <RegistrationErrorState onRetry={() => void registrationsQuery.refetch()} /> : registrationsQuery.isLoading || !registrationsQuery.data ? <RegistrationTableSkeleton /> : registrationsQuery.data.data.length === 0 ? <RegistrationEmptyState onReset={resetFilters} /> : <RegistrationTable response={registrationsQuery.data} filters={filters} rowSelection={rowSelection} onRowSelectionChange={setRowSelection} columnVisibility={columnVisibility} onColumnVisibilityChange={setColumnVisibility} actions={actions} onChange={updateFilters} />}
+    <BulkRegistrationActions count={selectedRows.length} canApprove={canBulkApprove} onApprove={() => void runBulk("approve")} onReject={() => void runBulk("reject")} onWaitlist={() => void runBulk("waitlist")} onExport={() => setExportOpen(true)} onClear={() => setRowSelection({})} />
+    <RegistrationDetailsDrawer registration={detailsQuery.data ?? null} open={detailsOpen} onOpenChange={setDetailsOpen} />
+    <ApproveRegistrationDialog registration={selectedRegistration} open={action === "approve"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "approve", registration: selectedRegistration, input })} />
+    <RejectRegistrationDialog registration={selectedRegistration} open={action === "reject"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "reject", registration: selectedRegistration, input })} />
+    <WaitlistRegistrationDialog registration={selectedRegistration} open={action === "waitlist"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "waitlist", registration: selectedRegistration, input })} />
+    <ExportRegistrationDialog open={exportOpen} onOpenChange={setExportOpen} selectedCount={selectedRows.length} onConfirm={exportRegistrations} />
+    <SendRegistrationNotificationDialog open={notificationOpen} onOpenChange={setNotificationOpen} selectedCount={selectedRows.length} filteredCount={registrationsQuery.data?.pagination.total ?? 0} onConfirm={sendNotification} />
+  </div>;
+}

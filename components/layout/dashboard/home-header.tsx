@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import Logo from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from './theme-toggle';
 import { LayoutDashboard, ChevronDown } from 'lucide-react';
 import { getRoleHomePath } from '@/components/auth/role-guard';
@@ -20,7 +20,7 @@ import { useAuthStore } from '@/lib/stores/auth.store';
 
 // ORGANIZER_MENUS removed per user request
 
-export default function HomeHeader({ customCenterContent }: { customCenterContent?: React.ReactNode } = {}) {
+export default function HomeHeader({ customCenterContent, showLogo = true }: { customCenterContent?: React.ReactNode; showLogo?: boolean } = {}) {
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -67,7 +67,7 @@ export default function HomeHeader({ customCenterContent }: { customCenterConten
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
             <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
                 {/* Logo */}
-                <Logo size='sm' href="/home" />
+                {showLogo ? <Logo size='sm' href="/home" /> : <div />}
 
                 {/* Center Navigation */}
                 {customCenterContent ? (
