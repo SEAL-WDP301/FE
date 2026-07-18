@@ -89,13 +89,13 @@ export function MentorSidebar({
   });
 
   const { data: feedbacks } = useQuery({
-    queryKey: ["mentor-feedbacks"],
-    queryFn: getMentorFeedback,
+    queryKey: ["mentorFeedback", eventId],
+    queryFn: () => getMentorFeedback(eventId),
   });
 
   const { data: submissions } = useQuery({
-    queryKey: ["mentor-submissions"],
-    queryFn: getMentorSubmissions,
+    queryKey: ["mentorSubmissions", eventId],
+    queryFn: () => getMentorSubmissions(eventId),
   });
 
   const feedbackCount = feedbacks?.length || 0;

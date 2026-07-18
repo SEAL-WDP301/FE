@@ -19,8 +19,8 @@ import {
 export default function SubmissionsReviewPage() {
   const params = useParams();
   const query = useQuery({
-    queryKey: ["mentorSubmissions"],
-    queryFn: getMentorSubmissions,
+    queryKey: ["mentorSubmissions", params.eventId],
+    queryFn: () => getMentorSubmissions(params.eventId as string),
   });
 
   if (query.isLoading) return <MentorLoadingState />;
