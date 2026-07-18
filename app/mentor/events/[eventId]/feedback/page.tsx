@@ -20,8 +20,8 @@ import {
 export default function FeedbackManagementPage() {
   const params = useParams();
   const query = useQuery({
-    queryKey: ["mentorFeedback"],
-    queryFn: getMentorFeedback,
+    queryKey: ["mentorFeedback", params.eventId],
+    queryFn: () => getMentorFeedback(params.eventId as string),
   });
 
   const feedbackItems = query.data || [];

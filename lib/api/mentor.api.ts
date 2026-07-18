@@ -216,8 +216,9 @@ export async function getMentorTeamSubmissions(teamId: string | number) {
   })) as MentorSubmission[];
 }
 
-export async function getMentorSubmissions() {
-  const response = await axiosClient.get("/mentor/submissions");
+export async function getMentorSubmissions(eventId?: string | number) {
+  const url = eventId ? `/mentor/submissions?eventId=${eventId}` : "/mentor/submissions";
+  const response = await axiosClient.get(url);
   return unwrapData<MentorSubmission[]>(response) || [];
 }
 
@@ -226,8 +227,9 @@ export async function getMentorSubmission(submissionId: string | number) {
   return unwrapData<MentorSubmission>(response);
 }
 
-export async function getMentorFeedback() {
-  const response = await axiosClient.get("/mentor/feedback");
+export async function getMentorFeedback(eventId?: string | number) {
+  const url = eventId ? `/mentor/feedback?eventId=${eventId}` : "/mentor/feedback";
+  const response = await axiosClient.get(url);
   return unwrapData<MentorFeedback[]>(response) || [];
 }
 
