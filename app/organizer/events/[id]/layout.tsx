@@ -27,6 +27,8 @@ import { useEffect, useState } from "react";
 import { axiosClient } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
+import Logo from "@/components/ui/logo";
+import { ThemeToggle } from "@/components/layout/dashboard/theme-toggle";
 
 export default function EventDashboardLayout({
   children,
@@ -72,7 +74,7 @@ export default function EventDashboardLayout({
     : isError
       ? "Event unavailable"
       : event?.name || "Event Control";
-  const eventIconUrl = event?.icons?.[0]?.url;
+  const eventIconUrl = event?.imageUrl || event?.image_url || event?.icons?.[0]?.url;
 
   const { data: user } = useQuery({
     queryKey: ['userProfile'],
@@ -160,6 +162,13 @@ export default function EventDashboardLayout({
       {/* Global Header */}
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="flex h-16 items-center px-6 gap-6 max-w-[1600px] mx-auto w-full">
+          {/* App Logo */}
+          <div className="shrink-0 transition-transform hover:scale-105">
+            <Logo size="sm" />
+          </div>
+
+          <div className="h-6 w-px bg-border shrink-0" />
+
           {/* Event Info */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="h-8 w-8 bg-blue-500/20 text-blue-500 rounded-xl flex items-center justify-center font-bold overflow-hidden shrink-0">
@@ -232,6 +241,11 @@ export default function EventDashboardLayout({
               </div>
             </>
           )}
+
+          {/* Right Actions */}
+          <div className={sortedRounds.length === 0 ? "ml-auto flex items-center shrink-0" : "flex items-center shrink-0 ml-4"}>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -285,7 +299,7 @@ export default function EventDashboardLayout({
                         <div className={cn(
                           "absolute inset-[1px] rounded-xl transition-colors duration-300",
                           isActive
-                            ? "bg-orange-500/10 dark:bg-[#1a202c]"
+                            ? "bg-orange-50/80 dark:bg-[#1a202c]"
                             : "bg-transparent group-hover:bg-orange-500/5 dark:group-hover:bg-[#1f2937]"
                         )} />
 
@@ -293,7 +307,7 @@ export default function EventDashboardLayout({
                           <item.icon className={cn(
                             "shrink-0 transition-colors",
                             isActive
-                              ? "text-orange-500 drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
+                              ? "text-orange-600 drop-shadow-none dark:text-orange-500 dark:drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
                               : "text-muted-foreground group-hover:text-orange-500",
                             isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5"
                           )} />
@@ -315,7 +329,7 @@ export default function EventDashboardLayout({
                           {isActive && (
                             <motion.div
                               layoutId="sidebarEventIndicator"
-                              className="absolute left-[-4px] top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.9)]"
+                              className="absolute left-[-4px] top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 shadow-none dark:shadow-[0_0_10px_rgba(249,115,22,0.9)]"
                               transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                             />
                           )}
@@ -357,18 +371,18 @@ export default function EventDashboardLayout({
                           {/* Inner Background */}
                           <div className={cn(
                             "absolute inset-[1px] rounded-xl transition-colors",
-                            isActive ? "bg-blue-500/10 dark:bg-[#1a202c]" : "bg-transparent group-hover:bg-muted/80 dark:group-hover:bg-[#1f2937]"
+                            isActive ? "bg-blue-50/80 dark:bg-[#1a202c]" : "bg-transparent group-hover:bg-muted/80 dark:group-hover:bg-[#1f2937]"
                           )} />
 
                           <div className={cn("relative z-10 flex items-center px-3 py-2.5 w-full", !isSidebarExpanded && "justify-center")}>
-                            <item.icon className={cn("shrink-0", isActive ? "text-blue-500 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
+                            <item.icon className={cn("shrink-0", isActive ? "text-blue-600 drop-shadow-none dark:text-blue-500 dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "text-muted-foreground group-hover:text-foreground", isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5")} />
                             {isSidebarExpanded && (
                               <span className={cn("truncate flex-1", isActive ? "text-blue-600 dark:text-blue-400 font-bold" : "text-muted-foreground group-hover:text-foreground")}>{item.name}</span>
                             )}
                             {isActive && (
                               <motion.div
                                 layoutId="sidebarIndicator2"
-                                className="absolute left-[-4px] top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+                                className="absolute left-[-4px] top-1/2 -translate-y-1/2 h-8 w-1 rounded-r-full bg-blue-500 shadow-none dark:shadow-[0_0_10px_rgba(59,130,246,0.8)]"
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                               />
                             )}

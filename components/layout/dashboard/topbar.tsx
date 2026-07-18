@@ -40,8 +40,6 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
     };
 
     const userRole = user?.role?.toLowerCase();
-    const linksDirectlyToProfile =
-        userRole === "judge" || userRole === "mentor" || userRole === "stakeholder";
 
     const renderUserIdentity = (showChevron: boolean) => (
         <>
@@ -91,69 +89,57 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                 <NotificationsMenu />
 
                 {/* User */}
-                {linksDirectlyToProfile ? (
-                    <Link
-                        href={getProfileHref()}
-                        aria-label="Open profile"
-                        className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 outline-none transition-colors hover:border-orange-500/30 hover:bg-muted focus-visible:ring-2 focus-visible:ring-orange-500/40"
+                <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 outline-none transition-colors hover:bg-muted">
+                        {renderUserIdentity(true)}
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                        align="end"
+                        className="w-56 border border-border bg-popover/95 backdrop-blur-xl"
                     >
-                        {renderUserIdentity(false)}
-                    </Link>
-                ) : (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center gap-3 rounded-2xl border border-border bg-card px-2 py-1.5 outline-none transition-colors hover:bg-muted">
-                            {renderUserIdentity(true)}
-                        </DropdownMenuTrigger>
+                        <DropdownMenuLabel>
+                            My Account
+                        </DropdownMenuLabel>
 
-                        <DropdownMenuContent
-                            align="end"
-                            className="w-56 border border-border bg-popover/95 backdrop-blur-xl"
-                        >
-                            <DropdownMenuLabel>
-                                My Account
-                            </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
 
-                            <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href={`${getProfileHref()}?tab=info`} className="flex items-center gap-2 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                My Profile
+                            </Link>
+                        </DropdownMenuItem>
 
+                        <DropdownMenuItem asChild>
+                            <Link href={`${getProfileHref()}?tab=history`} className="flex items-center gap-2 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Participation History
+                            </Link>
+                        </DropdownMenuItem>
+
+                        {userRole === "student" && (
                             <DropdownMenuItem asChild>
-                                <Link href={`${getProfileHref()}?tab=info`} className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                    My Profile
-                                </Link>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem asChild>
-                                <Link href={`${getProfileHref()}?tab=history`} className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                    Participation History
-                                </Link>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem asChild>
-                                <Link href="/student/settings">
+                                <Link href="/student/settings" className="cursor-pointer">
                                     Team Settings
                                 </Link>
                             </DropdownMenuItem>
+                        )}
 
-                            <DropdownMenuItem>
-                                Preferences
-                            </DropdownMenuItem>
+                        <DropdownMenuSeparator />
 
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                                className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
-                                onClick={() => {
-                                    useAuthStore.getState().clearAccessToken();
-                                    window.dispatchEvent(new Event('auth-unauthorized'));
-                                    window.location.href = '/login';
-                                }}
-                            >
-                                Logout
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                        <DropdownMenuItem
+                            className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
+                            onClick={() => {
+                                useAuthStore.getState().clearAccessToken();
+                                window.dispatchEvent(new Event('auth-unauthorized'));
+                                window.location.href = '/login';
+                            }}
+                        >
+                            Logout
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
             </div>
         </header>
