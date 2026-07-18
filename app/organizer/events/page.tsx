@@ -177,7 +177,7 @@ export default function OrganizerEventsPage() {
                                     </div>
                                 </div>
                                 
-                                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-blue-500 transition-colors line-clamp-1">
+                                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-blue-500 transition-colors line-clamp-2">
                                     {event.name}
                                 </h3>
                                 <p className="text-sm text-muted-foreground line-clamp-2 mb-6">
@@ -209,12 +209,19 @@ export default function OrganizerEventsPage() {
                                     ID #{event.id}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Link href={`/organizer/events/${event.id}/edit`}>
-                                        <Button size="sm" variant="outline" className="border-blue-500/20 hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-900/20">
+                                    {event.status === 'draft' ? (
+                                        <Link href={`/organizer/events/${event.id}/edit`}>
+                                            <Button size="sm" variant="outline" className="border-blue-500/20 hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-900/20">
+                                                <Pencil className="h-3.5 w-3.5" />
+                                                Edit
+                                            </Button>
+                                        </Link>
+                                    ) : (
+                                        <Button size="sm" variant="outline" disabled title="Chỉ event draft mới được edit" className="border-gray-500/20 text-gray-500 cursor-not-allowed">
                                             <Pencil className="h-3.5 w-3.5" />
                                             Edit
                                         </Button>
-                                    </Link>
+                                    )}
                                     <Button
                                         size="sm"
                                         variant="destructive"

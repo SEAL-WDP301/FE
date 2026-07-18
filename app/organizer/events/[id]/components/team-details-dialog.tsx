@@ -15,9 +15,10 @@ interface TeamDetailsDialogProps {
   onClose: () => void;
   team: any;
   eventId: string | number;
+  showRejected?: boolean;
 }
 
-export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetailsDialogProps) {
+export function TeamDetailsDialog({ isOpen, onClose, team, eventId, showRejected = true }: TeamDetailsDialogProps) {
   const queryClient = useQueryClient();
   const [isAssignMentorOpen, setIsAssignMentorOpen] = useState(false);
   const [selectedMentorUser, setSelectedMentorUser] = useState<number | "">("");
@@ -142,7 +143,17 @@ export function TeamDetailsDialog({ isOpen, onClose, team, eventId }: TeamDetail
           {/* Members */}
           <div className="p-4 border border-border rounded-lg bg-muted/20">
             {(() => {
-              const otherMembers = team?.members?.filter((m: any) => m.role !== 'leader') || [];
+              let otherMembers = team?.members?.filter((m: any) => m.role !== 'leader') || [];
+              if (!showRejected) {
+                otherMembers = otherMembers.filter((m: any) => m.status !== 'rejected');
+              }
+              otherMembers.sort((a: any, b: any) => {
+                const statusOrder: Record<string, number> = { accepted: 1, pending: 2, rejected: 3 };
+                const orderA = statusOrder[a.status] || 99;
+                const orderB = statusOrder[b.status] || 99;
+                return orderA - orderB;
+              });
+
               return (
                 <>
                   <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">

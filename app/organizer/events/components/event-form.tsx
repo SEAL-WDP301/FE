@@ -24,7 +24,6 @@ import {
 import { uploadFile } from "@/lib/api/upload.api";
 import { cn } from "@/lib/utils";
 import { ImageCropper } from "@/components/ui/image-cropper";
-import { cn } from "@/lib/utils";
 
 const defaultLocation = {
     venueName: "FPT University Ho Chi Minh City",
@@ -408,8 +407,6 @@ export default function EventForm({ initialData }: EventFormProps) {
     // Cropper states
     const [cropDialogOpen, setCropDialogOpen] = useState(false);
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-    const [cropDialogOpen, setCropDialogOpen] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
 
     const defaultValues: Partial<EventFormValues> = {
         name: initialData?.name || "",
@@ -469,6 +466,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     const form = useForm<EventFormValues>({
         resolver: zodResolver(eventSchema) as Resolver<EventFormValues>,
         defaultValues,
+        mode: "onChange",
     });
 
     const watchedStatus = useWatch({ control: form.control, name: "status" });

@@ -825,6 +825,19 @@ export default function EventDetailPage() {
         );
       }
 
+      if (eventPendingInvitations.length > 0) {
+        return (
+          <Button 
+            size="lg" 
+            disabled 
+            title="Bạn đang có lời mời vào nhóm chờ xử lý. Vui lòng hủy hoặc từ chối lời mời trước khi đăng ký event." 
+            className="w-full sm:w-auto px-8 bg-orange-500/50 cursor-not-allowed"
+          >
+            Register Now
+          </Button>
+        );
+      }
+
       return (
         <Link href={`/home/events/${eventId}/register`}>
           <Button size="lg" className="w-full sm:w-auto px-8 bg-orange-500 hover:bg-orange-600">

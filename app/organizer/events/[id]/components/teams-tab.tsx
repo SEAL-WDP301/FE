@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { enqueueSnackbar } from "notistack";
-import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, Crown, Users, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TeamDetailsDialog } from "./team-details-dialog";
 import { useAdminSocket } from "@/hooks/use-admin-socket";
@@ -21,29 +21,55 @@ export default function TeamsTab({ event }: { event: any }) {
     const [selectedTrackId, setSelectedTrackId] = useState<number | "all">("all");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
+    
+    // Bulk actions
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+    const [isBulkStatusOpen, setIsBulkStatusOpen] = useState(false);
+    const [bulkActionType, setBulkActionType] = useState<'approved' | 'rejected'>('approved');
+    const [bulkStatusReason, setBulkStatusReason] = useState("");
 
     const [eliminationReason, setEliminationReason] = useState("");
     const [teamToEliminate, setTeamToEliminate] = useState<number | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<any | null>(null);
 
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+            setPage(1); // Reset page on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset page on filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [selectedTrackId, selectedStatus]);
 
     // Fetch Teams for the selected track and round
-    const { data: teams, isLoading } = useQuery({
-        queryKey: ['organizerTeams', event.id, selectedTrackId, roundId],
+    const { data: queryData, isLoading } = useQuery({
+        queryKey: ['organizerTeams', event.id, selectedTrackId, roundId, page, limit, selectedStatus, debouncedSearchTerm],
         queryFn: async () => {
-            let url = `/organizer/teams/events/${event.id}?`;
+            let url = `/organizer/teams/events/${event.id}?page=${page}&limit=${limit}&`;
             if (selectedTrackId !== "all") url += `trackId=${selectedTrackId}&`;
             if (roundId) url += `roundId=${roundId}&`;
+            if (selectedStatus !== "all") url += `status=${selectedStatus}&`;
+            if (debouncedSearchTerm) url += `search=${debouncedSearchTerm}&`;
             
-            const finalUrl = url.endsWith('?') ? url.slice(0, -1) : url;
+            const finalUrl = url.endsWith('&') ? url.slice(0, -1) : url.endsWith('?') ? url.slice(0, -1) : url;
             const res = await axiosClient.get(finalUrl);
-            return res.data.data;
+            return res.data;
         },
         enabled: true,
     });
+
+    const teams = queryData?.data || [];
+    const meta = queryData?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
 
     const { socket, isConnected } = useAdminSocket({ eventId: event.id, roundId });
 
@@ -135,13 +161,24 @@ export default function TeamsTab({ event }: { event: any }) {
         }
     });
 
-    // Filter teams locally based on status and search term
-    const filteredTeams = teams?.filter((team: any) => {
-        const matchesStatus = selectedStatus === "all" || team.status === selectedStatus;
-        const matchesSearch = !searchTerm || team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              team.leader?.email.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesStatus && matchesSearch;
-    }) || [];
+    // Bulk Status Mutation
+    const bulkStatusMutation = useMutation({
+        mutationFn: async ({ teamIds, status, reason }: { teamIds: number[], status: string, reason?: string }) => {
+            return axiosClient.post(`/organizer/teams/bulk-status`, { teamIds, status, reason });
+        },
+        onSuccess: () => {
+            enqueueSnackbar('Teams status updated successfully', { variant: 'success' });
+            queryClient.invalidateQueries({ queryKey: ['organizerTeams', event.id] });
+            setSelectedTeamIds([]);
+            setIsBulkStatusOpen(false);
+            setBulkStatusReason("");
+        },
+        onError: (error: any) => {
+            enqueueSnackbar(error.response?.data?.message || 'Failed to update teams status', { variant: 'error' });
+        }
+    });
+
+    const filteredTeams = teams; // Filtering is now done on the backend
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
@@ -162,12 +199,15 @@ export default function TeamsTab({ event }: { event: any }) {
     // Update selected team from updated cache
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentTeamDetails = teams?.find((t: any) => t.id === selectedTeamForDetails?.id) || selectedTeamForDetails;
+    
+    // Check if the current round is the first round or not in a round context
+    const isFirstRound = !roundId || event.rounds?.find((r: any) => r.id === Number(roundId))?.roundNumber === 1;
 
     return (
         <div className="bg-card border border-border rounded-xl flex flex-col min-h-[500px]">
             {/* Header & Controls */}
-            <div className="p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
+            <div className="p-6 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                <div className="shrink-0">
                     <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold text-foreground">Team Management</h3>
                         {isConnected && (
@@ -180,19 +220,41 @@ export default function TeamsTab({ event }: { event: any }) {
                     <p className="text-muted-foreground text-sm mt-1">Review and approve teams registered for the tracks.</p>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4">
-                    {/* Bulk Delete Button */}
+                <div className="flex flex-wrap items-center xl:justify-end gap-3 w-full">
+                    {/* Bulk Actions Button */}
                     {selectedTeamIds.length > 0 && (
-                        <Button 
-                            variant="destructive" 
-                            size="sm"
-                            className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
-                            onClick={() => setIsBulkDeleteOpen(true)}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Delete ({selectedTeamIds.length})
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2 xl:border-r border-border xl:pr-3">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="border-green-500/30 text-green-500 hover:bg-green-500/10 flex items-center gap-2"
+                                onClick={() => { setBulkActionType('approved'); setIsBulkStatusOpen(true); }}
+                            >
+                                <CheckCircle className="h-4 w-4" />
+                                Approve ({selectedTeamIds.length})
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="border-red-500/30 text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                                onClick={() => { setBulkActionType('rejected'); setIsBulkStatusOpen(true); }}
+                            >
+                                <XCircle className="h-4 w-4" />
+                                Reject ({selectedTeamIds.length})
+                            </Button>
+                            <Button 
+                                variant="destructive" 
+                                size="sm"
+                                className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
+                                onClick={() => setIsBulkDeleteOpen(true)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                            </Button>
+                        </div>
                     )}
+
+                    <div className="flex flex-wrap items-center gap-3">
 
                     {/* Status Selector */}
                     <select 
@@ -219,16 +281,16 @@ export default function TeamsTab({ event }: { event: any }) {
                             <option key={track.id} value={track.id}>{track.name}</option>
                         ))}
                     </select>
-
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <input 
-                            type="text" 
-                            placeholder="Search teams..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input 
+                                type="text" 
+                                placeholder="Search teams..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full sm:w-[200px]"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -298,7 +360,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                         {team.leader?.name || team.leader?.email}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {team.members?.length || 0} / {team.track?.maxMembersPerTeam || '∞'}
+                                        {team.members?.filter((m: any) => m.status === 'accepted' || m.role === 'leader').length || 0} / {team.track?.maxMembersPerTeam || '∞'}
                                     </td>
                                     <td className="px-6 py-4">
                                         {team.mentorAssignments && team.mentorAssignments.length > 0 ? (
@@ -382,6 +444,33 @@ export default function TeamsTab({ event }: { event: any }) {
                 </table>
             </div>
 
+            {/* Pagination Controls */}
+            {meta.totalPages > 1 && (
+                <div className="p-4 border-t border-border flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                        Showing {(meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} teams
+                    </span>
+                    <div className="flex gap-2">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={page === meta.totalPages}
+                            onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                        >
+                            Next <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Elimination Modal */}
             {teamToEliminate && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -424,6 +513,7 @@ export default function TeamsTab({ event }: { event: any }) {
                 onClose={() => setSelectedTeamForDetails(null)}
                 team={currentTeamDetails}
                 eventId={event.id}
+                showRejected={isFirstRound}
             />
 
             {/* Bulk Delete Confirmation Dialog */}
@@ -457,6 +547,43 @@ export default function TeamsTab({ event }: { event: any }) {
                             disabled={bulkDeleteMutation.isPending}
                         >
                             {bulkDeleteMutation.isPending ? "Deleting..." : "Delete"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Status Confirmation Dialog */}
+            <Dialog open={isBulkStatusOpen} onOpenChange={setIsBulkStatusOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Bulk {bulkActionType === 'approved' ? 'Approval' : 'Rejection'}</DialogTitle>
+                        <DialogDescription>
+                            You are about to mark {selectedTeamIds.length} team(s) as {bulkActionType}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {bulkActionType === 'rejected' && (
+                        <div className="mt-4">
+                            <label className="text-sm font-medium text-foreground mb-1 block">Reason for Rejection *</label>
+                            <textarea
+                                className="w-full bg-background border border-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none min-h-[80px]"
+                                placeholder="Enter reason for rejecting these teams..."
+                                value={bulkStatusReason}
+                                onChange={(e) => setBulkStatusReason(e.target.value)}
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 mt-4">
+                        <Button variant="ghost" onClick={() => { setIsBulkStatusOpen(false); setBulkStatusReason(""); }}>
+                            Cancel
+                        </Button>
+                        <Button 
+                            className={bulkActionType === 'approved' ? "bg-green-500 hover:bg-green-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"}
+                            onClick={() => bulkStatusMutation.mutate({ teamIds: selectedTeamIds, status: bulkActionType, reason: bulkStatusReason })}
+                            disabled={bulkStatusMutation.isPending || (bulkActionType === 'rejected' && !bulkStatusReason.trim())}
+                        >
+                            {bulkStatusMutation.isPending ? "Processing..." : "Confirm Action"}
                         </Button>
                     </div>
                 </DialogContent>
