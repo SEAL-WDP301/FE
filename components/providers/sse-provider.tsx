@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import { axiosClient } from "@/lib/axios";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
@@ -49,6 +50,11 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
           async onopen(response) {
             if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
               return; // everything's good
+            } else if (response.status === 401) {
+              // Trigger a token refresh via axios interceptor
+              axiosClient.get('/users/profile').catch(() => {});
+              // Stop this connection, wait for token-refreshed event to trigger a reconnect
+              throw new FatalError("Unauthorized - token expired");
             } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
               // client-side errors are usually non-retriable:
               throw new FatalError(`SSE Connection failed with status: ${response.status}`);
