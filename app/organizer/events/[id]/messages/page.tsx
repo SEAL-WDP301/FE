@@ -107,6 +107,7 @@ export default function EventMessagesPage() {
           const latestTeamRound = team.teamRounds?.sort((a: any, b: any) => (b.round?.roundNumber || 0) - (a.round?.roundNumber || 0))?.[0];
           const currentRound = latestTeamRound?.round;
           const status = latestTeamRound?.status; // "competing", "advanced", "eliminated"
+          const acceptedMembers = (team.members || []).filter((m: any) => m.status === 'accepted' || m.role === 'leader');
           
           let statusBadge = null;
           if (status === "eliminated") {
@@ -125,11 +126,17 @@ export default function EventMessagesPage() {
             <Card 
               key={team.id}
               onClick={() => handleTeamSelect(team)}
-              className={`relative p-2.5 cursor-pointer transition-all hover:border-orange-500/50 hover:shadow-sm ${selectedTeamId === team.id ? 'border-orange-500 ring-1 ring-orange-500 shadow-sm bg-orange-50/50 dark:bg-orange-500/10' : ''}`}
+              className={`relative p-2.5 cursor-pointer transition-all hover:border-orange-500/50 hover:shadow-sm ${
+                selectedTeamId === team.id 
+                  ? 'border-orange-500 ring-1 ring-orange-500 shadow-sm bg-orange-50/50 dark:bg-orange-500/10' 
+                  : team.unreadCount > 0
+                  ? 'border-red-400 bg-red-50 dark:bg-red-950/40 ring-1 ring-red-400/50 shadow-sm'
+                  : ''
+              }`}
             >
               {team.unreadCount > 0 && (
-                <div className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[18px] h-4.5 px-1 bg-red-500 text-white border-2 border-background rounded-full shadow-sm text-[9px] font-bold">
-                  {team.unreadCount > 99 ? '99+' : `+${team.unreadCount}`}
+                <div className="absolute -top-2 -right-2 z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white border-2 border-background rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)] text-[10px] font-bold animate-pulse">
+                  {team.unreadCount > 99 ? '99+' : team.unreadCount}
                 </div>
               )}
               <div className="flex justify-between items-start mb-1">
@@ -149,27 +156,27 @@ export default function EventMessagesPage() {
 
               {team.lastMessage && (
                 <div className="text-[11px] text-muted-foreground mb-2 line-clamp-1 pr-4" title={team.lastMessage.content}>
-                  <span className="font-medium text-foreground/80">{team.lastMessage.sender?.id === user?.id ? 'Bạn' : (team.lastMessage.sender?.name || 'System')}:</span> <span className={team.unreadCount > 0 ? "text-foreground font-medium" : ""}>{team.lastMessage.content}</span>
+                  <span className="font-medium text-foreground/80">{team.lastMessage.sender?.id === user?.id ? 'Bạn' : (team.lastMessage.sender?.name || 'System')}:</span> <span className={team.unreadCount > 0 ? "text-foreground font-bold" : ""}>{team.lastMessage.content}</span>
                 </div>
               )}
               
               <div className="flex items-center justify-between mt-1">
                 <div className="flex -space-x-1">
-                   {(team.members || []).slice(0, 3).map((m: any, idx: number) => (
+                   {acceptedMembers.slice(0, 3).map((m: any, idx: number) => (
                      <Avatar key={`avatar-${team.id}-${m.user?.id || 'anon'}-${idx}`} className="h-4 w-4 border border-background">
                        <AvatarImage src={m.user?.avatarUrl || m.user?.avatar_url} />
                        <AvatarFallback className="text-[6px]">{m.user?.name?.charAt(0) || 'U'}</AvatarFallback>
                      </Avatar>
                    ))}
-                   {(team.members?.length || 0) > 3 && (
+                   {acceptedMembers.length > 3 && (
                      <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center text-[6px] border border-background z-10 font-medium">
-                       +{(team.members?.length || 0) - 3}
+                       +{acceptedMembers.length - 3}
                      </div>
                    )}
                 </div>
                 <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
                   <Users className="h-3 w-3" />
-                  <span>{team.members?.length || 0}</span>
+                  <span>{acceptedMembers.length}</span>
                 </div>
               </div>
             </Card>
