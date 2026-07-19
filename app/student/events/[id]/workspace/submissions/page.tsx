@@ -292,7 +292,7 @@ export default function SubmissionsPage() {
                   <Star className="h-6 w-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Tổng điểm trung bình (Tham khảo)</p>
+                  <p className="text-sm text-muted-foreground">Average Total Score (Reference)</p>
                   <p className="text-4xl font-bold mt-0.5">
                     {Number(pastScore).toFixed(2)}
                     <span className="text-lg text-muted-foreground font-normal ml-1">/ 10.00</span>
@@ -303,7 +303,7 @@ export default function SubmissionsPage() {
 
             {judgeList.length > 0 && (
               <GlassCard className="p-6 rounded-[24px]">
-                <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Chi tiết điểm từ Ban Giám Khảo</h3>
+                <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Detailed Scores from Judges</h3>
                 <div className="space-y-6">
                   {judgeList.map((j: any, idx: number) => {
                     // Calculate total score from this judge
@@ -322,7 +322,7 @@ export default function SubmissionsPage() {
                           )}
                           <div>
                             <p className="font-semibold">{j.judge.name}</p>
-                            <p className="text-xs text-muted-foreground">Giám khảo • Tổng điểm: {totalJudgeScore} / {totalMaxScore}</p>
+                            <p className="text-xs text-muted-foreground">Judge • Total score: {totalJudgeScore} / {totalMaxScore}</p>
                           </div>
                         </div>
                         
@@ -360,17 +360,16 @@ export default function SubmissionsPage() {
         <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
           <Info className="h-5 w-5 mt-0.5 shrink-0" />
           <div>
-            <h4 className="font-semibold text-sm">📌 Lưu ý về điểm số giám khảo</h4>
+            <h4 className="font-semibold text-sm">📌 Note on judge scores</h4>
             <p className="text-sm mt-1 opacity-90">
-              Điểm số trên chỉ mang tính tham khảo. Mọi quyết định về đội nào lọt vào vòng trong đều thuộc về
-              Ban Giám Khảo và Ban Tổ Chức dựa trên đánh giá chuyên môn toàn diện, không chỉ dựa trên điểm số.
+              Scores are for reference only. All decisions on advancing teams are made by the Judges and Organizing Committee based on comprehensive evaluation, not just scores.
             </p>
           </div>
         </div>
 
         {/* Submitted File / Link */}
         <GlassCard className="p-6 rounded-[24px]">
-          <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Bài Nộp — {displayRound?.name}</h3>
+          <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Submission — {displayRound?.name}</h3>
           {pastSubmission ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -378,7 +377,7 @@ export default function SubmissionsPage() {
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-medium">Đã nộp bài</p>
+                  <p className="font-medium">Submitted</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(pastSubmission.updatedAt).toLocaleString()}
                   </p>
@@ -387,7 +386,7 @@ export default function SubmissionsPage() {
 
               {pastSubmission.description && (
                 <div className="bg-muted/30 rounded-xl p-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Mô tả dự án</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Project Description</p>
                   <p className="text-sm">{pastSubmission.description}</p>
                 </div>
               )}
@@ -401,7 +400,7 @@ export default function SubmissionsPage() {
                 >
                   <File className="h-5 w-5 text-orange-500 shrink-0" />
                   <div className="min-w-0">
-                    <p className="font-medium text-sm">File nộp bài</p>
+                    <p className="font-medium text-sm">Submitted File</p>
                     <p className="text-xs text-muted-foreground truncate">{pastSubmission.fileUrl}</p>
                   </div>
                   <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 ml-auto" />
@@ -427,7 +426,7 @@ export default function SubmissionsPage() {
           ) : (
             <div className="flex items-center gap-3 text-muted-foreground">
               <AlertCircle className="h-5 w-5" />
-              <p className="text-sm">Không có bài nộp nào cho vòng này.</p>
+              <p className="text-sm">No submissions for this round.</p>
             </div>
           )}
         </GlassCard>
@@ -464,10 +463,9 @@ export default function SubmissionsPage() {
       <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
         <Info className="h-5 w-5 mt-0.5 shrink-0" />
         <div>
-          <h4 className="font-semibold text-sm">📌 Lưu ý về điểm số giám khảo</h4>
+          <h4 className="font-semibold text-sm">📌 Note on judge scores</h4>
           <p className="text-sm mt-1 opacity-90">
-            Điểm số từ giám khảo chỉ mang tính tham khảo. Mọi quyết định về đội nào lọt vào vòng trong
-            đều thuộc về Ban Giám Khảo và Ban Tổ Chức dựa trên đánh giá chuyên môn toàn diện.
+            Judge scores are for reference only. Decisions on advancing teams are based on comprehensive evaluation by the Judges and Organizing Committee.
           </p>
         </div>
       </div>
@@ -489,9 +487,9 @@ export default function SubmissionsPage() {
         <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
           <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
           <div>
-            <h4 className="font-semibold text-sm">Team chưa được duyệt</h4>
+            <h4 className="font-semibold text-sm">Team not approved</h4>
             <p className="text-sm mt-1 opacity-90">
-              Organizer cần approve team trước khi bạn nộp bài và nhận link GitHub repo của team.
+              Organizer must approve your team before you can submit or get the GitHub repo link.
             </p>
           </div>
         </div>
@@ -501,9 +499,9 @@ export default function SubmissionsPage() {
         <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
           <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
           <div>
-            <h4 className="font-semibold text-sm">Chưa có GitHub repo</h4>
+            <h4 className="font-semibold text-sm">No GitHub repo yet</h4>
             <p className="text-sm mt-1 opacity-90">
-              Repo sẽ được tạo tự động khi team được approve. Hãy push code vào repo đó rồi submit.
+              Repo will be created automatically upon approval. Push your code there before submitting.
             </p>
           </div>
         </div>
@@ -516,7 +514,7 @@ export default function SubmissionsPage() {
             <div className="min-w-0">
               <h4 className="font-semibold">Assigned Team Repository</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Đây là repo chính thức của team bạn. Push code vào đây, rồi bấm Submit — hệ thống tự dùng link này để chấm.
+                This is your team's official repo. Push your code here, then click Submit — the system will use this link for grading.
               </p>
               <a
                 href={assignedRepoUrl}
@@ -608,14 +606,14 @@ export default function SubmissionsPage() {
                   Team GitHub Repository
                 </label>
                 <Input
-                  placeholder="Repo sẽ hiện sau khi team được approve"
+                  placeholder="Repo will appear after team approval"
                   className="bg-background border-border h-12"
                   value={assignedRepoUrl || githubUrl || ""}
                   readOnly
                   disabled
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Link repo gắn với team — không nhập tay URL khác.
+                  Repo link assigned to team — do not enter URL manually.
                 </p>
               </div>
               )}

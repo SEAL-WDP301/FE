@@ -138,6 +138,11 @@ export default function MentorSubmissionDetailPage() {
             <div className="mt-6 flex flex-col items-center py-8 text-center">
               <MessageSquareText className="h-7 w-7 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium">No feedback available</p>
+              <Button asChild variant="outline" className="mt-4 rounded-xl">
+                <Link href={`/mentor/events/${params.eventId}/teams/${teamId}`}>
+                  Write Feedback in Team Dashboard
+                </Link>
+              </Button>
             </div>
           )}
         </GlassCard>

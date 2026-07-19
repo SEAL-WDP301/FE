@@ -51,8 +51,6 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
     const handleStatusClick = (feedbackId: number | string, currentStatus: string) => {
         if (isReadOnly) return;
         if (currentStatus === "unread") {
-            updateStatusMutation.mutate({ feedbackId, status: "acknowledged" });
-        } else if (currentStatus === "acknowledged") {
             updateStatusMutation.mutate({ feedbackId, status: "completed" });
         }
     };
@@ -127,38 +125,25 @@ export function FeedbackThreadCard({ items, mentor }: FeedbackThreadCardProps) {
                                             </p>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status:</span>
-                                                <Badge variant={unresolved ? "warning" : "success"}>
-                                                    {capitalizedStatus}
-                                                </Badge>
-                                                {item.status === "unread" && (
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost"
-                                                        title="Acknowledge feedback"
-                                                        className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
-                                                        disabled={isReadOnly || isUpdating}
-                                                        onClick={() => handleStatusClick(item.id, "unread")}
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                                {item.status === "acknowledged" && (
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost"
-                                                        title="Mark as Completed"
-                                                        className="h-6 w-6 rounded-full text-green-500 hover:bg-green-500/10 hover:text-green-600"
-                                                        disabled={isReadOnly || isUpdating}
-                                                        onClick={() => handleStatusClick(item.id, "acknowledged")}
-                                                    >
-                                                        <CheckCircle2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
+                                            <div className="flex flex-col items-end gap-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant={unresolved ? "warning" : "success"}>
+                                                        {capitalizedStatus}
+                                                    </Badge>
+                                                    {item.status === "unread" && (
+                                                        <Button 
+                                                            size="icon" 
+                                                            variant="ghost"
+                                                            title="Mark as Completed"
+                                                            className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                                                            disabled={isReadOnly || isUpdating}
+                                                            onClick={() => handleStatusClick(item.id, "unread")}
+                                                        >
+                                                            <CheckCircle2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
                                     </div>
 
                                     <p className="mt-4 text-sm leading-6 text-foreground/90">

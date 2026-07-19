@@ -45,7 +45,7 @@ export function CriteriaScoring({
                 <div className="flex items-center gap-3 flex-wrap">
                   <h3 className="text-xl font-semibold">{item.name}</h3>
                   <Badge variant="highlight">Weight {weight}</Badge>
-                  <Badge variant="outline">Max {item.maxScore}</Badge>
+                  <Badge variant="ai">Max {item.maxScore}</Badge>
                 </div>
                 {item.description && (
                   <p className="mt-2 text-sm text-muted-foreground">

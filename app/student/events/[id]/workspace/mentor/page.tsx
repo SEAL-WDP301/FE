@@ -132,32 +132,20 @@ export default function MentorWorkspacePage() {
   const mentor =
     mentorQuery.data || data.team?.mentorAssignments?.[0]?.mentor || null;
   const feedbackItems = normalizeFeedbackItems(data);
-  const resolvedCount = feedbackItems.filter(
-    (feedback) =>
-      feedback.status === "published" || feedback.status === "resolved"
+  const completedCount = feedbackItems.filter(
+    (feedback) => feedback.status === "completed"
   ).length;
-  const pendingCount = feedbackItems.length - resolvedCount;
+  const unreadCount = feedbackItems.filter(
+    (feedback) => feedback.status === "unread"
+  ).length;
   const resolvedProgress =
     feedbackItems.length > 0
-      ? Math.round((resolvedCount / feedbackItems.length) * 100)
+      ? Math.round((completedCount / feedbackItems.length) * 100)
       : 0;
   const feedbackStats = [
     { label: "Total feedback", value: String(feedbackItems.length) },
-    { label: "Published", value: String(resolvedCount) },
-    { label: "Pending", value: String(pendingCount) },
-    {
-      label: "Current round",
-      value: (() => {
-        if (selectedRoundId) {
-          const rs = (data.submissions || []).find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (e: any) => e.round?.id === selectedRoundId
-          );
-          if (rs?.round?.name) return rs.round.name;
-        }
-        return data.currentActiveRound?.name || "N/A";
-      })(),
-    },
+    { label: "Unread", value: String(unreadCount) },
+    { label: "Completed", value: String(completedCount) },
   ];
 
   return (

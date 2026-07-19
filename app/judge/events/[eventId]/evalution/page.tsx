@@ -127,9 +127,36 @@ export default function EvaluationPage() {
   useEffect(() => {
     if (!submissionDetail) return;
     const next = buildScoreState(submissionDetail.rubrics, submissionDetail.myScores);
+    
+    if (selectedSubmissionId) {
+      try {
+        const draftKey = `judge_draft_${selectedSubmissionId}`;
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft) {
+          const parsed = JSON.parse(savedDraft);
+          setScores(parsed.scores || next.scores);
+          setComments(parsed.comments || next.comments);
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to load draft", e);
+      }
+    }
+
     setScores(next.scores);
     setComments(next.comments);
-  }, [submissionDetail]);
+  }, [submissionDetail, selectedSubmissionId]);
+
+  const handleSaveDraft = useCallback(() => {
+    if (!selectedSubmissionId) return;
+    const draftKey = `judge_draft_${selectedSubmissionId}`;
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({ scores, comments }));
+      enqueueSnackbar("Bản nháp đã được lưu tạm trên trình duyệt", { variant: "info" });
+    } catch (e) {
+      enqueueSnackbar("Không thể lưu bản nháp", { variant: "error" });
+    }
+  }, [selectedSubmissionId, scores, comments, enqueueSnackbar]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -150,7 +177,10 @@ export default function EvaluationPage() {
       return judgeApi.submitScores(selectedSubmissionId, payload);
     },
     onSuccess: (data) => {
-      enqueueSnackbar("Scores saved successfully", { variant: "success" });
+      if (selectedSubmissionId) {
+        localStorage.removeItem(`judge_draft_${selectedSubmissionId}`);
+      }
+      enqueueSnackbar("Đã nộp điểm thành công", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["judge", "submission", selectedSubmissionId] });
       queryClient.invalidateQueries({ queryKey: ["judge", "round-submissions", selectedRoundId] });
     },
@@ -304,7 +334,7 @@ export default function EvaluationPage() {
                         weightedScore={submissionDetail?.weightedScore}
                         isSaving={saveMutation.isPending}
                         disabled={scoringLocked}
-                        onSaveDraft={() => saveMutation.mutate()}
+                        onSaveDraft={handleSaveDraft}
                         onSubmit={() => saveMutation.mutate()}
                       />
                     </div>

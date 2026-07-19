@@ -153,8 +153,8 @@ export default function EventSubmissionsPage() {
               className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
             >
               <option value="all">All Statuses</option>
-              <option value="submitted">Đã nộp</option>
-              <option value="unsubmitted">Chưa nộp</option>
+              <option value="submitted">Submitted</option>
+              <option value="unsubmitted">Unsubmitted</option>
             </select>
             <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-border">
               Total: <span className="font-bold text-foreground">{totalRows}</span> rows
@@ -211,7 +211,7 @@ export default function EventSubmissionsPage() {
                         sub.submittedBy?.name || sub.submittedBy?.email || "Team Leader"
                       ) : (
                         <span className="text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-1 rounded-md">
-                          Chưa nộp
+                          Unsubmitted
                         </span>
                       )}
                     </td>
@@ -241,9 +241,9 @@ export default function EventSubmissionsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link href={`/organizer/events/${eventId}/messages?teamId=${sub.team?.id}`}>
-                        <Button variant="ghost" size="icon-sm" className="text-orange-500 hover:text-orange-600 hover:bg-orange-50" title="Nhắn tin với nhóm">
+                        <Button variant="ghost" size="icon-sm" className="text-orange-500 hover:text-orange-600 hover:bg-orange-50" title="Message team">
                           <Send className="h-4 w-4" />
-                          <span className="sr-only">Nhắn tin</span>
+                          <span className="sr-only">Message</span>
                         </Button>
                       </Link>
                     </td>

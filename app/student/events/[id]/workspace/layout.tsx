@@ -91,7 +91,6 @@ export default function TrackWorkspaceLayout({
     { name: "My Team", href: `${basePath}/my-team`, icon: Users },
     { name: "Mentor", href: `${basePath}/mentor`, icon: UserCheck },
     ...(roleTab ? [roleTab] : []),
-    { name: "Schedule", href: `${basePath}/schedule`, icon: Calendar },
   ];
 
   const customTabsContent = (
@@ -187,9 +186,9 @@ export default function TrackWorkspaceLayout({
           <div className="mb-8 p-4 rounded-2xl border border-red-500/20 bg-red-500/10 flex items-start gap-3 shadow-sm">
             <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-red-600 dark:text-red-400">Đội của bạn đã dừng chân tại vòng thi này</h4>
+              <h4 className="font-semibold text-red-600 dark:text-red-400">Your team has been eliminated from this round</h4>
               <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">
-                Cảm ơn bạn đã tham gia cuộc thi. Bạn vẫn có thể xem lại kết quả và nhận xét của giám khảo cho các vòng thi đã qua, nhưng sẽ không thể tham gia các vòng tiếp theo. Hẹn gặp lại bạn ở những sự kiện sắp tới!
+                Thank you for participating in the competition. You can still review the results and mentor feedback for past rounds, but you will not be able to participate in upcoming rounds. See you at our future events!
               </p>
             </div>
           </div>

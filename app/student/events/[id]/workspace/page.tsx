@@ -414,9 +414,9 @@ export default function WorkspaceOverviewPage() {
                         <Trophy className="h-5 w-5 text-green-500" />
                         <span className="text-sm font-semibold uppercase tracking-wider text-green-500">Round Passed</span>
                       </div>
-                      <h2 className="mb-2 text-3xl font-bold">Chúc mừng! Bạn đã vượt qua vòng này</h2>
+                      <h2 className="mb-2 text-3xl font-bold">Congratulations! You passed this round</h2>
                       <p className="max-w-md text-muted-foreground">
-                        Đây là kết quả của vòng thi trước. Đội của bạn đã xuất sắc lọt vào vòng trong. Bạn có thể xem lại bài nộp và nhận xét của giám khảo.
+                        This is the result of the previous round. Your team has successfully advanced. You can review your submission and judge's feedback.
                       </p>
                     </>
                   ) : (

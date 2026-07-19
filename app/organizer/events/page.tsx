@@ -212,7 +212,7 @@ export default function OrganizerEventsPage() {
                                             </Button>
                                         </Link>
                                     ) : (
-                                        <Button size="sm" variant="outline" disabled title="Chỉ event draft mới được edit" className="border-gray-500/20 text-gray-500 cursor-not-allowed">
+                                        <Button size="sm" variant="outline" disabled title="Only draft events can be edited" className="border-gray-500/20 text-gray-500 cursor-not-allowed">
                                             <Pencil className="h-3.5 w-3.5" />
                                             Edit
                                         </Button>

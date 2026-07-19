@@ -121,7 +121,7 @@ export function TeamListPanel({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-24">
           {isLoading ? (
             <p className="p-4 text-sm text-muted-foreground">Loading teams...</p>
           ) : filteredTeams.length === 0 ? (
@@ -168,7 +168,7 @@ export function TeamListPanel({
                           </p>
                         </div>
 
-                        <span className="text-lg font-bold text-orange-500 shrink-0">
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400 shrink-0">
                           {team.weightedScore != null
                             ? team.weightedScore.toFixed(1)
                             : "—"}

@@ -94,7 +94,7 @@ export default function EventDashboardLayout({
   const handleLogout = () => {
     useAuthStore.getState().clearAccessToken();
     queryClient.setQueryData(['userProfile'], null);
-    enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
+    enqueueSnackbar('Logged out successfully!', { variant: 'info' });
     router.push('/');
   };
 
@@ -290,7 +290,7 @@ export default function EventDashboardLayout({
                               "absolute inset-[-100%] animate-spin transition-opacity",
                               isActive
                                 ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#f97316_50%,transparent_100%)] opacity-100"
-                                : "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#f97316_30%,transparent_100%)] opacity-0 group-hover:opacity-70"
+                                : "opacity-0"
                             )}
                             style={{ animationDuration: "3s" }}
                           />
@@ -300,7 +300,7 @@ export default function EventDashboardLayout({
                           "absolute inset-[1px] rounded-xl transition-colors duration-300",
                           isActive
                             ? "bg-orange-50/80 dark:bg-[#1a202c]"
-                            : "bg-transparent group-hover:bg-orange-500/5 dark:group-hover:bg-[#1f2937]"
+                            : "bg-transparent group-hover:bg-muted/80 dark:group-hover:bg-[#1f2937]"
                         )} />
 
                         <div className={cn("relative z-10 flex w-full items-center px-3 py-2.5", !isSidebarExpanded && "justify-center")}>
@@ -309,7 +309,7 @@ export default function EventDashboardLayout({
                               "shrink-0 transition-colors",
                               isActive
                                 ? "text-orange-600 drop-shadow-none dark:text-orange-500 dark:drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
-                                : "text-muted-foreground group-hover:text-orange-500",
+                                : "text-muted-foreground group-hover:text-foreground",
                               isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5"
                             )} />
                             {!isSidebarExpanded && item.badge !== undefined && item.badge > 0 && (
@@ -325,7 +325,7 @@ export default function EventDashboardLayout({
                                 "truncate flex-1 transition-colors",
                                 isActive
                                   ? "font-bold text-orange-600 dark:text-orange-400"
-                                  : "text-muted-foreground group-hover:text-orange-500"
+                                  : "text-muted-foreground group-hover:text-foreground"
                               )}>
                                 {item.name}
                               </span>
@@ -373,8 +373,8 @@ export default function EventDashboardLayout({
                           {/* Electric Animation Border */}
                           <div className="absolute inset-0 overflow-hidden rounded-xl">
                             <div className={cn(
-                              "absolute inset-[-100%] animate-spin opacity-50 group-hover:opacity-100 transition-opacity",
-                              isActive ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_50%,transparent_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_30%,transparent_100%)] opacity-0"
+                              "absolute inset-[-100%] animate-spin transition-opacity",
+                              isActive ? "bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_50%,transparent_100%)] opacity-100" : "opacity-0"
                             )} style={{ animationDuration: '3s' }} />
                           </div>
                           
