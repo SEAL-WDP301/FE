@@ -6,6 +6,7 @@ import type {
   DashboardFilters,
   EventMonthlyMetric,
   EventStatusMetric,
+  ParticipantsByEventMetric,
   RecentRegistrationItem,
   RegistrationStatus,
   SubmissionStatusMetric,
@@ -73,11 +74,45 @@ function normalizeRecent(payload: unknown): RecentRegistrationItem[] {
   });
 }
 
+function normalizeParticipantsByEvent(
+  payload: unknown,
+  filterOptions: DashboardFilterOptions,
+): ParticipantsByEventMetric[] {
+  const fallbackById = new Map(filterOptions.events.map((event) => [event.value, event]));
+  return listFrom(payload, "participantsByEvent", "events", "items").map((item, index) => {
+    const row = asRecord(item);
+    const event = asRecord(row.event);
+    const id = String(get(row, "eventId", "id") ?? get(event, "id", "eventId") ?? index);
+    const fallback = fallbackById.get(id);
+    return {
+      id,
+      event: text(
+        get(row, "eventName", "name", "label"),
+        text(get(event, "name", "title"), fallback?.label ?? `Event ${index + 1}`),
+      ),
+      Participants: number(get(row, "Participants", "participants", "participantCount", "approvedParticipants", "approved")),
+      registrations: number(get(row, "Registrations", "registrations", "registrationCount", "totalRegistrations")),
+      teams: number(get(row, "Teams", "teams", "teamCount")) || fallback?.teams || 0,
+      submissions: number(get(row, "Submissions", "submissions", "submissionCount")) || fallback?.submissions || 0,
+      capacity: number(get(row, "Capacity", "capacity", "maxParticipants")) || fallback?.capacity || 0,
+    };
+  });
+}
+
+function monthLabel(value: unknown, index: number) {
+  if (typeof value === "string" && value.trim()) return value;
+  const monthNumber = Number(value);
+  if (Number.isInteger(monthNumber) && monthNumber >= 1 && monthNumber <= 12) {
+    return new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(2026, monthNumber - 1, 1));
+  }
+  return `Month ${index + 1}`;
+}
+
 function normalizeMonthly(payload: unknown): EventMonthlyMetric[] {
-  return listFrom(payload, "eventsByMonth", "months", "items").map((item) => {
+  return listFrom(payload, "eventsByMonth", "months", "items").map((item, index) => {
     const row = asRecord(item);
     return {
-      month: text(get(row, "month", "label", "date")),
+      month: monthLabel(get(row, "month", "label", "date"), index),
       Created: number(get(row, "Created", "created", "total")),
       Starting: number(get(row, "Starting", "starting", "started")),
       Completed: number(get(row, "Completed", "completed", "closed")),
@@ -157,16 +192,18 @@ export const adminDashboardService = {
   async getDashboard(filters: DashboardFilters, cachedFilterOptions?: DashboardFilterOptions): Promise<AdminDashboardData> {
     const eventQuery = filters.eventId !== "all" ? `&eventId=${encodeURIComponent(filters.eventId)}` : "";
     const filterOptions = cachedFilterOptions ?? await getDashboardFilterOptions();
-    const [monthResponse, statusResponse, registrationsResponse, trendResponse, submissionResponses, deadlinesResponse] = await Promise.all([
+    const [monthResponse, statusResponse, registrationsResponse, trendResponse, submissionResponses, deadlinesResponse, participantsByEventResponse] = await Promise.all([
       axiosClient.get(`/organizer/dashboard/events-by-month?year=${filters.year}`),
       axiosClient.get(`/organizer/dashboard/event-status?year=${filters.year}${eventQuery}`),
       axiosClient.get(`/organizer/dashboard/recent-registrations?limit=10${eventQuery}`),
       axiosClient.get(`/organizer/dashboard/registration-trend?groupBy=day${eventQuery}`),
       Promise.all([axiosClient.get(`/organizer/dashboard/submissions?groupBy=day${eventQuery}`)]),
       axiosClient.get(`/organizer/dashboard/upcoming-deadlines?withinDays=30${eventQuery}`),
+      axiosClient.get(`/organizer/dashboard/participants-by-event?year=${filters.year}${eventQuery}`),
     ]);
 
     const recentRegistrations = normalizeRecent(registrationsResponse.data);
+    const participantsByEvent = normalizeParticipantsByEvent(participantsByEventResponse.data, filterOptions);
     const eventStatus = normalizeEventStatus(statusResponse.data);
     const submissionStatusMap = new Map<string, SubmissionStatusMetric>();
     submissionResponses.flatMap((response) => normalizeSubmissionStatus(response.data)).forEach((item) => submissionStatusMap.set(item.status, { ...item, value: (submissionStatusMap.get(item.status)?.value ?? 0) + item.value }));
@@ -201,7 +238,7 @@ export const adminDashboardService = {
         { stage: "Approved", value: participants, rate: totalRegistrations ? participants / totalRegistrations * 100 : 0, previousRate: 0 },
         { stage: "Submitted", value: totalSubmissions, rate: totalRegistrations ? totalSubmissions / totalRegistrations * 100 : 0, previousRate: 0 },
       ],
-      participantsByEvent: filterOptions.events.map((event) => ({ id: event.value, event: event.label, Participants: event.participants ?? 0, registrations: event.registrations ?? 0, teams: event.teams ?? 0, submissions: event.submissions ?? 0, capacity: event.capacity ?? 0 })),
+      participantsByEvent,
       submissionStatus,
       submissionActivity,
       deadlines: normalizeDeadlines(deadlinesResponse.data),

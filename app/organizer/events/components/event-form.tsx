@@ -769,7 +769,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
                                 <motion.div
                                     className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
-                                    animate={{ width: `${((currentStep + 1) / eventFormSteps.length) * 100}%` }}
+                                    animate={{ inlineSize: `${((currentStep + 1) / eventFormSteps.length) * 100}%` }}
                                     transition={{ type: "spring", stiffness: 120, damping: 20 }}
                                 />
                             </div>

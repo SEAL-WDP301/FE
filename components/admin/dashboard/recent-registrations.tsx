@@ -17,7 +17,7 @@ export function RecentRegistrations({ data }: { data: RecentRegistrationItem[] }
         <TableCell className="text-muted-foreground">{item.time}</TableCell>
         <TableCell><Badge variant={variants[item.status]}>{item.status}</Badge></TableCell>
         <TableCell className="text-muted-foreground">{item.teamStatus}</TableCell>
-        <TableCell className="text-right"><Button asChild variant="ghost" size="sm"><Link href={`/organizer/registrations/${item.id}`}>View</Link></Button></TableCell>
+        <TableCell className="text-right"><Button asChild variant="ghost" size="sm"><Link href={`/organizer/registrations?registrationId=${encodeURIComponent(item.id)}`}>View details</Link></Button></TableCell>
       </TableRow>)}</TableBody>
     </Table>
   </DashboardSection>;

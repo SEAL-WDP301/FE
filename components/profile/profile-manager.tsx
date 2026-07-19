@@ -288,9 +288,9 @@ function ProfileManagerContent({
 
   if (isError || !user) {
     return (
-      <div className="rounded-[22px] border border-orange-500/20 bg-[#14100c] p-8">
-        <h1 className="text-2xl font-semibold text-[#f5f2ec]">Profile unavailable</h1>
-        <p className="mt-2 text-sm text-[#a39c8f]">The profile API did not return user data.</p>
+      <div className="rounded-[22px] border border-orange-500/20 bg-card p-8">
+        <h1 className="text-2xl font-semibold text-foreground">Profile unavailable</h1>
+        <p className="mt-2 text-sm text-muted-foreground">The profile API did not return user data.</p>
         <Button type="button" onClick={() => refetch()} className="mt-5">
           Retry
         </Button>
@@ -301,7 +301,7 @@ function ProfileManagerContent({
   const roleLabel = user.role || (resolvedMode === "student" ? "student" : "stakeholder");
 
   return (
-    <div className="relative isolate overflow-hidden rounded-[28px] bg-[#08060a] px-4 py-10 text-[#f5f2ec] sm:px-6 lg:px-8">
+    <div className="relative isolate overflow-hidden rounded-[28px] bg-background px-4 py-10 text-foreground transition-colors dark:bg-[#08060a] dark:text-[#f5f2ec] sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(255,154,60,0.25),transparent_70%)] blur-[70px]" />
       <div className="pointer-events-none absolute -bottom-24 -left-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,90,26,0.16),transparent_70%)] blur-[70px]" />
 
@@ -312,24 +312,24 @@ function ProfileManagerContent({
         <h1 className="mt-3 text-[clamp(2rem,4vw,3.5rem)] font-extrabold tracking-normal">
           {title}
         </h1>
-        <p className="mt-3 max-w-[60ch] text-[15.5px] leading-7 text-[#a39c8f]">
+        <p className="mt-3 max-w-[60ch] text-[15.5px] leading-7 text-muted-foreground dark:text-[#a39c8f]">
           {subtitle}
         </p>
 
         <div className="mt-7 flex flex-wrap items-center gap-3">
-          <div className="h-1.5 w-full max-w-[280px] overflow-hidden rounded-full bg-[#14100c]">
+          <div className="h-1.5 w-full max-w-[280px] overflow-hidden rounded-full bg-muted dark:bg-[#14100c]">
             <div
               className="h-full rounded-full bg-[linear-gradient(90deg,#ff9a3c,#ff6a1a)] shadow-[0_0_12px_rgba(255,122,26,0.35)] transition-all duration-700"
               style={{ width: `${completion.percent}%` }}
             />
           </div>
-          <p className="text-sm text-[#6f685c]">
-            <b className="text-[#f5f2ec]">{completion.done}/{completion.total}</b> fields complete
+          <p className="text-sm text-muted-foreground dark:text-[#6f685c]">
+            <b className="text-foreground dark:text-[#f5f2ec]">{completion.done}/{completion.total}</b> fields complete
           </p>
         </div>
 
         <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-10">
-          <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-[#14100c] border border-[rgba(255,154,60,0.16)]">
+          <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 border border-border bg-muted dark:border-[rgba(255,154,60,0.16)] dark:bg-[#14100c]">
             <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
             <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-[#1a0e04] data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
           </TabsList>
@@ -436,7 +436,7 @@ function ProfilePreviewCard({
         ];
 
   return (
-    <aside className="overflow-hidden rounded-[22px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(255,154,60,0.34)] hover:shadow-[0_24px_60px_-24px_rgba(255,122,26,0.25)]">
+    <aside className="overflow-hidden rounded-[22px] border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/35 hover:shadow-[0_24px_60px_-24px_rgba(255,122,26,0.25)] dark:border-[rgba(255,154,60,0.16)] dark:bg-[#14100c]">
       <div className="relative h-[84px] overflow-hidden bg-[linear-gradient(120deg,#3a2010,#1a1108_40%,#2a1810)] before:absolute before:inset-[-40%] before:animate-[profile-spin_8s_linear_infinite] before:bg-[conic-gradient(from_0deg,transparent,rgba(255,154,60,0.35),transparent_30%)]" />
 
       <div className="relative -mt-[46px] px-7 pb-6 text-center">
@@ -446,19 +446,19 @@ function ProfilePreviewCard({
         </span>
 
         <div className="relative mx-auto mb-4 h-[92px] w-[92px]">
-          <Avatar className="h-full w-full border-4 border-[#14100c] transition-transform duration-300 hover:scale-105">
+          <Avatar className="h-full w-full border-4 border-card transition-transform duration-300 hover:scale-105 dark:border-[#14100c]">
             {avatarUrl ? <AvatarImage src={avatarUrl} alt={user.name || "User"} /> : null}
             <AvatarFallback className="text-2xl font-black">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-[#14100c] bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] text-[#1a0e04] shadow-[0_4px_12px_-4px_rgba(255,122,26,0.35)] transition-transform hover:scale-110 hover:-rotate-6">
+          <div className="absolute -bottom-0.5 -right-0.5 flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-card bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] text-[#1a0e04] shadow-[0_4px_12px_-4px_rgba(255,122,26,0.35)] transition-transform hover:scale-110 hover:-rotate-6 dark:border-[#14100c]">
             <Camera className="h-3.5 w-3.5" />
           </div>
         </div>
 
         <h2 className="text-xl font-bold">{user.name || "Unnamed user"}</h2>
-        <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-[#6f685c]">
+        <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground dark:text-[#6f685c]">
           <Mail className="h-3.5 w-3.5" />
           <span className="max-w-[230px] truncate">{user.email || "No email"}</span>
         </div>
@@ -467,7 +467,7 @@ function ProfilePreviewCard({
           <span className="rounded-full border border-[rgba(255,154,60,0.3)] bg-[rgba(255,154,60,0.14)] px-3 py-1.5 text-xs font-semibold capitalize text-[#ff9a3c]">
             {roleLabel}
           </span>
-          <span className="rounded-full border border-[rgba(255,154,60,0.16)] bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-[#a39c8f]">
+          <span className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground dark:border-[rgba(255,154,60,0.16)] dark:bg-white/[0.05] dark:text-[#a39c8f]">
             {hasProfile ? "Profile ready" : "Create profile"}
           </span>
         </div>
@@ -498,7 +498,7 @@ function StudentProfileForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-[22px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] p-6 transition-colors duration-300 hover:border-[rgba(255,154,60,0.25)] sm:p-8"
+      className="rounded-[22px] border border-border bg-card p-6 transition-colors duration-300 hover:border-orange-500/30 dark:border-[rgba(255,154,60,0.16)] dark:bg-[#14100c] sm:p-8"
     >
       <FormHeader
         title="Student Information"
@@ -577,7 +577,7 @@ function StudentProfileForm({
             placeholder="octocat"
             className={inputClassName}
           />
-          <p className="mt-1.5 text-xs text-[#6f685c]">
+          <p className="mt-1.5 text-xs text-muted-foreground dark:text-[#6f685c]">
             Used to link your commits and pull requests to submissions.
           </p>
         </Field>
@@ -602,7 +602,7 @@ function ProfessionalProfileForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-[22px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] p-6 transition-colors duration-300 hover:border-[rgba(255,154,60,0.25)] sm:p-8"
+      className="rounded-[22px] border border-border bg-card p-6 transition-colors duration-300 hover:border-orange-500/30 dark:border-[rgba(255,154,60,0.16)] dark:bg-[#14100c] sm:p-8"
     >
       <FormHeader
         title="Professional Information"
@@ -693,8 +693,8 @@ function FormHeader({
   return (
     <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h2 className="text-xl font-bold text-[#f5f2ec]">{title}</h2>
-        <p className="mt-1 text-sm text-[#a39c8f]">{description}</p>
+        <h2 className="text-xl font-bold text-foreground dark:text-[#f5f2ec]">{title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground dark:text-[#a39c8f]">{description}</p>
       </div>
       <div className="flex shrink-0 gap-2">
         <Button
@@ -703,7 +703,7 @@ function FormHeader({
           size="sm"
           onClick={onRevert}
           disabled={isSaving}
-          className="border-[rgba(255,154,60,0.16)] bg-transparent text-[#a39c8f] hover:border-[#a39c8f] hover:bg-transparent hover:text-[#f5f2ec]"
+          className="border-border bg-transparent text-muted-foreground hover:border-foreground/40 hover:bg-transparent hover:text-foreground dark:border-[rgba(255,154,60,0.16)] dark:text-[#a39c8f] dark:hover:border-[#a39c8f] dark:hover:text-[#f5f2ec]"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           Revert
@@ -743,7 +743,7 @@ function FormSection({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label className="mb-2 block text-xs font-semibold text-[#6f685c]">{label}</Label>
+      <Label className="mb-2 block text-xs font-semibold text-muted-foreground dark:text-[#6f685c]">{label}</Label>
       {children}
     </div>
   );
@@ -762,7 +762,7 @@ function InfoRow({
 }) {
   const toneClass = {
     a: "bg-[rgba(255,154,60,0.14)] text-[#ff9a3c]",
-    b: "bg-white/[0.06] text-[#a39c8f]",
+    b: "bg-muted text-muted-foreground dark:bg-white/[0.06] dark:text-[#a39c8f]",
     c: "bg-[rgba(90,169,230,0.14)] text-[#7fc4f0]",
   }[tone];
 
@@ -772,14 +772,14 @@ function InfoRow({
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#6f685c]">
+        <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground dark:text-[#6f685c]">
           {label}
         </div>
-        <div className="truncate text-sm font-semibold text-[#f5f2ec]">{value}</div>
+        <div className="truncate text-sm font-semibold text-foreground dark:text-[#f5f2ec]">{value}</div>
       </div>
     </div>
   );
 }
 
 const inputClassName =
-  "mt-0 h-auto w-full rounded-[10px] border border-[rgba(255,154,60,0.16)] bg-[#1a1410] px-3.5 py-3 text-[14.5px] text-[#f5f2ec] outline-none transition-colors placeholder:text-[#6f685c] focus-visible:border-[#ff9a3c] focus-visible:ring-3 focus-visible:ring-[rgba(255,154,60,0.12)] disabled:opacity-70";
+  "mt-0 h-auto w-full rounded-[10px] border border-border bg-background px-3.5 py-3 text-[14.5px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-[#ff9a3c] focus-visible:ring-3 focus-visible:ring-[rgba(255,154,60,0.12)] disabled:opacity-70 dark:border-[rgba(255,154,60,0.16)] dark:bg-[#1a1410] dark:text-[#f5f2ec] dark:placeholder:text-[#6f685c]";

@@ -5,6 +5,7 @@ import type { RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { Download, Send } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
+import { isAxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { RegistrationKpiGrid } from "./registration-kpi-grid"; import { RegistrationTrendChart } from "./registration-trend-chart"; import { EventCapacityCard } from "./event-capacity-card";
 import { RegistrationToolbar } from "./registration-toolbar"; import { RegistrationTable } from "./registration-table"; import { RegistrationTableSkeleton } from "./registration-table-skeleton"; import { RegistrationEmptyState } from "./registration-empty-state"; import { RegistrationErrorState } from "./registration-error-state";
@@ -16,13 +17,26 @@ import { getDashboardFilterOptions } from "@/services/admin-dashboard.service";
 
 type ActionType = "approve" | "reject" | "waitlist" | null;
 
+function getActionErrorMessage(error: unknown) {
+  if (isAxiosError<{ message?: string }>(error)) {
+    if (error.response?.status === 404) {
+      return "Registration review API is not available on the backend yet.";
+    }
+    return error.response?.data?.message || "Unable to update registration.";
+  }
+  return "Unable to update registration.";
+}
+
 export function RegistrationsClient() {
   const router = useRouter(); const pathname = usePathname(); const searchParams = useSearchParams(); const queryClient = useQueryClient();
   const [filters, setFilters] = useState<RegistrationFilters>(() => parseRegistrationFilters(searchParams));
   const [search, setSearch] = useState(filters.search); const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ eligibility: false, reviewedBy: false });
   const [selectedRegistration, setSelectedRegistration] = useState<RegistrationListItem | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false); const [action, setAction] = useState<ActionType>(null);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(
+    () => searchParams.get("registrationId")
+  );
+  const [detailsOpen, setDetailsOpen] = useState(() => Boolean(searchParams.get("registrationId"))); const [action, setAction] = useState<ActionType>(null);
   const [exportOpen, setExportOpen] = useState(false); const [notificationOpen, setNotificationOpen] = useState(false);
 
   const updateFilters = useCallback((patch: Partial<RegistrationFilters>) => {
@@ -40,7 +54,7 @@ export function RegistrationsClient() {
   const trendQuery = useQuery({ queryKey: ["organizer-registration-trend"], queryFn: () => organizerRegistrationService.getTrend() });
   const capacityQuery = useQuery({ queryKey: ["organizer-registration-capacity", filters.eventId], queryFn: () => organizerRegistrationService.getCapacity(filters.eventId) });
   const registrationsQuery = useQuery({ queryKey: ["organizer-registrations", filters], queryFn: () => organizerRegistrationService.getRegistrations(filters), placeholderData: (previous) => previous });
-  const detailsQuery = useQuery({ queryKey: ["organizer-registration", selectedRegistration?.id], queryFn: () => organizerRegistrationService.getRegistration(selectedRegistration?.id ?? ""), enabled: detailsOpen && Boolean(selectedRegistration) });
+  const detailsQuery = useQuery({ queryKey: ["organizer-registration", selectedRegistrationId], queryFn: () => organizerRegistrationService.getRegistration(selectedRegistrationId ?? ""), enabled: detailsOpen && Boolean(selectedRegistrationId) });
   const filterOptionsQuery = useQuery({ queryKey: ["organizer-dashboard-filter-options"], queryFn: getDashboardFilterOptions });
 
   const mutation = useMutation({
@@ -50,24 +64,47 @@ export function RegistrationsClient() {
       return organizerRegistrationService.waitlist(registration.id, input as WaitlistRegistrationInput);
     },
     onSuccess: (_, variables) => { enqueueSnackbar(`${variables.registration.student.fullName} moved to ${variables.type === "approve" ? "Approved" : variables.type === "reject" ? "Rejected" : "Waitlisted"}.`, { variant: "success" }); setAction(null); void queryClient.invalidateQueries({ queryKey: ["organizer-registrations"] }); },
-    onError: () => enqueueSnackbar("Unable to update registration.", { variant: "error" }),
+    onError: (error) => enqueueSnackbar(getActionErrorMessage(error), { variant: "error" }),
   });
 
   const openAction = useCallback((type: Exclude<ActionType, null>, registration: RegistrationListItem) => { setSelectedRegistration(registration); setAction(type); }, []);
   const actions = useMemo(() => ({
-    view: (registration: RegistrationListItem) => { setSelectedRegistration(registration); setDetailsOpen(true); },
+    view: (registration: RegistrationListItem) => { setSelectedRegistration(registration); setSelectedRegistrationId(registration.id); setDetailsOpen(true); },
     approve: (registration: RegistrationListItem) => openAction("approve", registration),
     reject: (registration: RegistrationListItem) => openAction("reject", registration),
     waitlist: (registration: RegistrationListItem) => openAction("waitlist", registration),
   }), [openAction]);
+
+  const handleDetailsOpenChange = (open: boolean) => {
+    setDetailsOpen(open);
+    if (open || !searchParams.has("registrationId")) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("registrationId");
+    router.replace(`${pathname}${params.size ? `?${params.toString()}` : ""}`, { scroll: false });
+  };
 
   const selectedRows = registrationsQuery.data?.data.filter((record) => rowSelection[record.id]) ?? [];
   const canBulkApprove = selectedRows.length > 0 && selectedRows.every((record) => record.status === "Pending" && record.eligibility === "Eligible");
   const runBulk = async (type: Exclude<ActionType, null>) => {
     if (!window.confirm(`Apply ${type} to ${selectedRows.length} selected registrations?`)) return;
     const eligible = selectedRows.filter((record) => type !== "approve" || (record.status === "Pending" && record.eligibility === "Eligible"));
-    await Promise.all(eligible.map((record) => type === "approve" ? organizerRegistrationService.approve(record.id, { sendNotification: true, includeTeamInstructions: true }) : type === "reject" ? organizerRegistrationService.reject(record.id, { reason: "Bulk review", note: "", sendNotification: true, allowRegisterAgain: false }) : organizerRegistrationService.waitlist(record.id, { reason: "Capacity review", priority: "Normal", sendNotification: true })));
-    enqueueSnackbar(`${eligible.length} succeeded${eligible.length < selectedRows.length ? `, ${selectedRows.length - eligible.length} skipped` : ""}.`, { variant: eligible.length === selectedRows.length ? "success" : "warning" }); setRowSelection({}); void queryClient.invalidateQueries({ queryKey: ["organizer-registrations"] });
+    const results = await Promise.allSettled(eligible.map((record) => type === "approve" ? organizerRegistrationService.approve(record.id, { sendNotification: true, includeTeamInstructions: true }) : type === "reject" ? organizerRegistrationService.reject(record.id, { reason: "Bulk review", note: "", sendNotification: true, allowRegisterAgain: false }) : organizerRegistrationService.waitlist(record.id, { reason: "Capacity review", priority: "Normal", sendNotification: true })));
+    const succeeded = results.filter((result) => result.status === "fulfilled").length;
+    const failedResults = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+
+    if (succeeded === 0 && failedResults.length > 0) {
+      enqueueSnackbar(getActionErrorMessage(failedResults[0].reason), { variant: "error" });
+      return;
+    }
+
+    const skipped = selectedRows.length - eligible.length;
+    const failed = failedResults.length;
+    enqueueSnackbar(
+      `${succeeded} succeeded${failed ? `, ${failed} failed` : ""}${skipped ? `, ${skipped} skipped` : ""}.`,
+      { variant: failed || skipped ? "warning" : "success" },
+    );
+    setRowSelection({});
+    void queryClient.invalidateQueries({ queryKey: ["organizer-registrations"] });
   };
 
   const resetFilters = () => { setSearch(""); updateFilters(defaultRegistrationFilters); };
@@ -81,7 +118,7 @@ export function RegistrationsClient() {
     <RegistrationToolbar filters={filters} search={search} onSearchChange={setSearch} onChange={updateFilters} onReset={resetFilters} onExport={() => setExportOpen(true)} eventOptions={filterOptionsQuery.data?.events} />
     {registrationsQuery.isError ? <RegistrationErrorState onRetry={() => void registrationsQuery.refetch()} /> : registrationsQuery.isLoading || !registrationsQuery.data ? <RegistrationTableSkeleton /> : registrationsQuery.data.data.length === 0 ? <RegistrationEmptyState onReset={resetFilters} /> : <RegistrationTable response={registrationsQuery.data} filters={filters} rowSelection={rowSelection} onRowSelectionChange={setRowSelection} columnVisibility={columnVisibility} onColumnVisibilityChange={setColumnVisibility} actions={actions} onChange={updateFilters} />}
     <BulkRegistrationActions count={selectedRows.length} canApprove={canBulkApprove} onApprove={() => void runBulk("approve")} onReject={() => void runBulk("reject")} onWaitlist={() => void runBulk("waitlist")} onExport={() => setExportOpen(true)} onClear={() => setRowSelection({})} />
-    <RegistrationDetailsDrawer registration={detailsQuery.data ?? null} open={detailsOpen} onOpenChange={setDetailsOpen} />
+    <RegistrationDetailsDrawer registration={detailsQuery.data ?? null} open={detailsOpen} onOpenChange={handleDetailsOpenChange} />
     <ApproveRegistrationDialog registration={selectedRegistration} open={action === "approve"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "approve", registration: selectedRegistration, input })} />
     <RejectRegistrationDialog registration={selectedRegistration} open={action === "reject"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "reject", registration: selectedRegistration, input })} />
     <WaitlistRegistrationDialog registration={selectedRegistration} open={action === "waitlist"} onOpenChange={(open) => !open && setAction(null)} pending={mutation.isPending} onConfirm={(input) => selectedRegistration && mutation.mutate({ type: "waitlist", registration: selectedRegistration, input })} />

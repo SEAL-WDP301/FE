@@ -22,12 +22,14 @@ export function MetricCard({ metric, wide = false }: { metric: MetricCardData; w
             {metric.delta >= 0 ? "+" : ""}{metric.delta}%
           </span>
         </div>
-        <div className="mt-5 grid grid-cols-[1fr_110px] items-end gap-3">
+        <div className={cn("mt-5 grid items-end gap-3", sparkData.length > 0 && "grid-cols-[1fr_110px]")}>
           <div>
             <p className="text-sm text-muted-foreground">{metric.label}</p>
             <p className="mt-1 text-3xl font-bold tracking-tight">{formatNumber(metric.value)}</p>
           </div>
-          <SparkAreaChart data={sparkData} index="index" categories={["value"]} colors={["orange"]} className="h-12" />
+          {sparkData.length > 0 ? (
+            <SparkAreaChart data={sparkData} index="index" categories={["value"]} colors={["orange"]} className="h-12" />
+          ) : null}
         </div>
         <p className="mt-4 text-xs font-medium text-foreground/80">{metric.detail}</p>
         <p className="mt-1 text-[11px] text-muted-foreground">{metric.comparison}</p>

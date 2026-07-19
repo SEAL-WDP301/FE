@@ -30,7 +30,7 @@ const buttonVariants = cva(
         authPrimary:
           "rounded-[2rem] bg-[linear-gradient(180deg,#ff873f,#ff6f22)] text-black shadow-[0_18px_50px_rgba(255,112,34,0.28)] hover:brightness-110 focus-visible:ring-4 focus-visible:ring-[#ff7629]/30 active:translate-y-px",
         authSecondary:
-          "rounded-[2rem] border border-white/15 bg-white/[0.025] text-foreground hover:border-[#ff7629]/50 hover:bg-white/[0.05] focus-visible:ring-4 focus-visible:ring-[#ff7629]/20 active:translate-y-px",
+          "rounded-[2rem] border border-border bg-background/70 text-foreground hover:border-[#ff7629]/50 hover:bg-muted focus-visible:ring-4 focus-visible:ring-[#ff7629]/20 active:translate-y-px dark:border-white/15 dark:bg-white/[0.025] dark:hover:bg-white/[0.05]",
         subtleIcon:
           "text-[#aa9b93] hover:text-primary",
         eventTab:
