@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, ExternalLink } from "lucide-react";
+import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { useAdminSocket } from "@/hooks/use-admin-socket";
-import { useEffect } from "react";
+// removed duplicate React imports
 import { enqueueSnackbar } from "notistack";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function EventSubmissionsPage() {
   const params = useParams();
@@ -17,6 +19,9 @@ export default function EventSubmissionsPage() {
   const roundId = params.roundId as string;
   const [selectedTrackId, setSelectedTrackId] = useState<number | "">("");
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "unsubmitted">("all");
+  const [page, setPage] = useState(1);
+  const [isBulkReminderOpen, setIsBulkReminderOpen] = useState(false);
+  const PAGE_SIZE = 10;
   const queryClient = useQueryClient();
 
   // Fetch event to get tracks and rounds for filters
@@ -59,11 +64,36 @@ export default function EventSubmissionsPage() {
     };
   }, [socket, eventId, queryClient]);
 
+  // Bulk Reminder Mutation
+  const bulkRemindMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosClient.post(`/organizer/submissions/events/${eventId}/rounds/${roundId}/bulk-remind`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      enqueueSnackbar(`Successfully sent reminders to ${data.data?.unsubmittedCount + data.data?.submittedCount} teams!`, { variant: "success" });
+      setIsBulkReminderOpen(false);
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to send bulk reminders", { variant: "error" });
+      setIsBulkReminderOpen(false);
+    },
+  });
+
   const filteredSubmissions = submissions?.filter((sub: any) => {
     if (submissionFilter === "submitted") return sub.isSubmittedStatus === true;
     if (submissionFilter === "unsubmitted") return sub.isSubmittedStatus === false;
     return true;
-  });
+  }) || [];
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTrackId, submissionFilter]);
+
+  const totalRows = filteredSubmissions.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+  const paginatedSubmissions = filteredSubmissions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -100,31 +130,45 @@ export default function EventSubmissionsPage() {
 
       <GlassCard className="p-6 rounded-[24px]">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <select
-            value={selectedTrackId}
-            onChange={(e) => {
-              setSelectedTrackId(e.target.value ? Number(e.target.value) : "");
-            }}
-            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <select
+              value={selectedTrackId}
+              onChange={(e) => {
+                setSelectedTrackId(e.target.value ? Number(e.target.value) : "");
+              }}
+              className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
+            >
+              <option value="">All Tracks</option>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {event?.tracks?.map((track: any) => (
+                <option key={track.id} value={track.id}>{track.name}</option>
+              ))}
+            </select>
+            <select
+              value={submissionFilter}
+              onChange={(e) => {
+                setSubmissionFilter(e.target.value as "all" | "submitted" | "unsubmitted");
+              }}
+              className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
+            >
+              <option value="all">All Statuses</option>
+              <option value="submitted">Đã nộp</option>
+              <option value="unsubmitted">Chưa nộp</option>
+            </select>
+            <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-border">
+              Total: <span className="font-bold text-foreground">{totalRows}</span> rows
+            </div>
+          </div>
+          
+          <Button 
+            variant="orange" 
+            className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)]"
+            onClick={() => setIsBulkReminderOpen(true)}
           >
-            <option value="">All Tracks</option>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {event?.tracks?.map((track: any) => (
-              <option key={track.id} value={track.id}>{track.name}</option>
-            ))}
-          </select>
-          <select
-            value={submissionFilter}
-            onChange={(e) => {
-              setSubmissionFilter(e.target.value as "all" | "submitted" | "unsubmitted");
-            }}
-            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"
-          >
-            <option value="all">All Statuses</option>
-            <option value="submitted">Đã nộp</option>
-            <option value="unsubmitted">Chưa nộp</option>
-          </select>
+            <BellRing className="h-4 w-4" />
+            Bulk Reminder
+          </Button>
         </div>
 
         {/* Table */}
@@ -132,24 +176,29 @@ export default function EventSubmissionsPage() {
           <table className="w-full text-sm text-left">
             <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
               <tr>
+                <th className="px-6 py-4 font-semibold w-16">#</th>
                 <th className="px-6 py-4 font-semibold">Team Name</th>
                 <th className="px-6 py-4 font-semibold">Track & Round</th>
                 <th className="px-6 py-4 font-semibold">Submitted By</th>
                 <th className="px-6 py-4 font-semibold">Links</th>
                 <th className="px-6 py-4 font-semibold">Time</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                   </td>
                 </tr>
-              ) : filteredSubmissions && filteredSubmissions.length > 0 ? (
+              ) : paginatedSubmissions.length > 0 ? (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                filteredSubmissions.map((sub: any) => (
+                paginatedSubmissions.map((sub: any, idx: number) => (
                   <tr key={sub.id} className="border-b border-border hover:bg-muted/10">
+                    <td className="px-6 py-4 font-medium text-muted-foreground">
+                      {(page - 1) * PAGE_SIZE + idx + 1}
+                    </td>
                     <td className="px-6 py-4 font-medium">{sub.team?.name}</td>
                     <td className="px-6 py-4">
                       <div className="text-xs">
@@ -190,11 +239,19 @@ export default function EventSubmissionsPage() {
                         <span className="text-muted-foreground">-</span>
                       )}
                     </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/organizer/events/${eventId}/messages?teamId=${sub.team?.id}`}>
+                        <Button variant="ghost" size="icon-sm" className="text-orange-500 hover:text-orange-600 hover:bg-orange-50" title="Nhắn tin với nhóm">
+                          <Send className="h-4 w-4" />
+                          <span className="sr-only">Nhắn tin</span>
+                        </Button>
+                      </Link>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                     No submissions found for the selected filters.
                   </td>
                 </tr>
@@ -202,7 +259,101 @@ export default function EventSubmissionsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {!isLoading && totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border mt-4 pt-4">
+            <span className="text-sm text-muted-foreground">
+              Showing <span className="font-semibold text-foreground">{(page - 1) * PAGE_SIZE + 1}</span> to <span className="font-semibold text-foreground">{Math.min(page * PAGE_SIZE, totalRows)}</span> of <span className="font-semibold text-foreground">{totalRows}</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Prev
+              </Button>
+              <div className="text-sm font-medium px-2">
+                Page {page} / {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </GlassCard>
+
+      {/* Bulk Reminder Modal */}
+      <Dialog open={isBulkReminderOpen} onOpenChange={setIsBulkReminderOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BellRing className="h-5 w-5 text-orange-500" />
+              Send Bulk Reminders
+            </DialogTitle>
+            <DialogDescription>
+              This will send automated notifications (In-app & Email) to all teams competing in this round.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            <div className="bg-muted/50 p-4 rounded-xl space-y-3">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-orange-500 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-foreground text-sm">For unsubmitted teams:</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    "Urgent Reminder: Submission Deadline for [Round Name]... Deadline: [Date] | Time Remaining: [X days, Y hours]... Please submit your files or code repositories before the deadline."
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 pt-2 border-t border-border">
+                <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-foreground text-sm">For submitted teams:</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    "Reminder: Review your submission for [Round Name]... The system will close at: [Date] | Time Remaining: [X days, Y hours]... We recommend that you double-check your uploaded files."
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-foreground">
+              Are you sure you want to proceed?
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkReminderOpen(false)} disabled={bulkRemindMutation.isPending}>
+              Cancel
+            </Button>
+            <Button 
+              variant="orange" 
+              onClick={() => bulkRemindMutation.mutate()}
+              disabled={bulkRemindMutation.isPending}
+            >
+              {bulkRemindMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Reminders"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

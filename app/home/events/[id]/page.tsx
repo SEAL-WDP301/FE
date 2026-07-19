@@ -14,6 +14,8 @@ import Link from 'next/link';
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
+  Award,
   BellRing,
   Calendar,
   ChevronDown,
@@ -776,43 +778,82 @@ export default function EventDetailPage() {
         );
 
         return (
-          <div className="bg-card/40 backdrop-blur-md border border-border/50 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full sm:w-auto shadow-lg shadow-black/5">
-            <div>
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Users className="h-4 w-4 text-orange-500" />
-                {teamInfo ? `Team: ${teamInfo.team.name}` : 'Individual Registration'}
-              </p>
-              <div className="text-xs text-muted-foreground uppercase mt-2 font-medium flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  {displayStatus === 'pending' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>}
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${displayStatus === 'pending' || displayStatus === 'Invitation Pending' ? 'bg-yellow-500' : displayStatus === 'approved' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                </span>
-                Status: <span className="text-foreground">{displayStatus}</span>
+          <>
+            <div className="bg-card/40 backdrop-blur-md border border-border/50 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full sm:w-auto shadow-lg shadow-black/5">
+              <div className="flex items-center gap-4">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4 text-orange-500" />
+                  {teamInfo ? `Team: ${teamInfo.team.name}` : 'Individual Registration'}
+                </p>
+                <div className="text-xs text-muted-foreground uppercase font-medium flex items-center gap-1.5">
+                  {event.status === 'closed' ? (
+                    teamInfo?.team?.award ? (
+                      <span className="flex items-center gap-1.5 text-yellow-500 font-bold">
+                        <Trophy className="h-3.5 w-3.5" />
+                        {teamInfo.team.award.name}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">COMPLETED</span>
+                    )
+                  ) : (
+                    <>
+                      <span className="relative flex h-2 w-2">
+                        {displayStatus === 'pending' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>}
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${displayStatus === 'pending' || displayStatus === 'Invitation Pending' ? 'bg-yellow-500' : displayStatus === 'approved' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                      </span>
+                      <span className="text-foreground">{displayStatus}</span>
+                    </>
+                  )}
+                </div>
               </div>
+
+              {displayStatus === 'pending' && teamInfo?.role === 'leader' && (
+                <Link href={`/home/events/${eventId}/register`}>
+                  <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 transition-colors">
+                    Edit Registration
+                  </Button>
+                </Link>
+              )}
+              {(displayStatus === 'rejected' || displayStatus === 'disqualified') && (
+                <Link href={`/home/events/${eventId}/register`}>
+                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                    Register Again
+                  </Button>
+                </Link>
+              )}
             </div>
 
-            {displayStatus === 'pending' && teamInfo?.role === 'leader' && (
-              <Link href={`/home/events/${eventId}/register`}>
-                <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 transition-colors">
-                  Edit Registration
-                </Button>
-              </Link>
-            )}
             {displayStatus === 'approved' && (
-              <Link href={`/student/events/${eventId}/workspace`}>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white transition-colors">
+              <Link href={`/student/events/${eventId}/workspace`} className="ml-auto order-last">
+                <Button size="lg" className="w-full sm:w-auto px-8 bg-green-600 hover:bg-green-700 text-white transition-colors flex items-center justify-center gap-2">
                   {canEnterWorkspace ? 'Enter Workspace' : 'View Workspace'}
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
             )}
-            {(displayStatus === 'rejected' || displayStatus === 'disqualified') && (
-              <Link href={`/home/events/${eventId}/register`}>
-                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white transition-colors">
-                  Register Again
-                </Button>
-              </Link>
+
+            {displayStatus === 'approved' && event.status === 'closed' && (
+              <div className="w-full order-first mb-2 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-400 flex items-start gap-3 shadow-sm">
+                {teamInfo?.team?.award ? (
+                  <>
+                    <Trophy className="h-5 w-5 shrink-0 mt-0.5 text-yellow-500" />
+                    <div>
+                      <p className="font-semibold text-yellow-600 dark:text-yellow-500">Congratulations! Your team won the {teamInfo.team.award.name}!</p>
+                      <p className="text-xs opacity-90 mt-1">This event has concluded. Click "View Workspace" to review your team's complete activity history, submissions, and feedback from the judges.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Award className="h-5 w-5 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">A Memorable Journey!</p>
+                      <p className="text-xs opacity-90 mt-1">This event has concluded. Although you didn't win the top prize, your team's efforts are commendable. Click "View Workspace" to review your activity history.</p>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
-          </div>
+          </>
         );
       }
 
@@ -906,9 +947,27 @@ export default function EventDetailPage() {
           <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-orange-500/10 blur-[100px]" />
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 mb-6 text-sm font-medium">
-              <Calendar className="h-4 w-4" />
-              {event.season} {event.year}
+            <div className="flex items-center justify-between gap-3 mb-6 w-full">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-sm font-medium">
+                <Calendar className="h-4 w-4" />
+                {event.season} {event.year}
+              </div>
+              {event.status && (
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                  event.status === 'closed' ? 'bg-muted/50 text-muted-foreground border border-border/50' :
+                  event.status === 'ongoing' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' :
+                  event.status === 'active' ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' :
+                  'bg-muted text-muted-foreground border border-border'
+                }`}>
+                  <div className={`h-1.5 w-1.5 rounded-full ${
+                    event.status === 'closed' ? 'bg-muted-foreground' :
+                    event.status === 'ongoing' ? 'bg-blue-500' :
+                    event.status === 'active' ? 'bg-green-500' :
+                    'bg-muted-foreground'
+                  }`} />
+                  {event.status}
+                </div>
+              )}
             </div>
 
             <h1 className="text-4xl md:text-5xl font-black text-foreground mb-6">
@@ -958,7 +1017,7 @@ export default function EventDetailPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 w-full">
               {renderActionButton()}
 
               {event.githubOrgUrl && (
@@ -1077,7 +1136,7 @@ export default function EventDetailPage() {
               <Trophy className="h-6 w-6 text-amber-500" />
               Prizes & Awards
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6">
               {event.prizes.map((prize, index) => (
                 <div key={prize.id || index} className="bg-card border border-border rounded-2xl p-6 hover:border-amber-500/30 transition-colors shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4 opacity-10">

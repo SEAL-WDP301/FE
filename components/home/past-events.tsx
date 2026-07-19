@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { getPublicEvents, isAutomationEvent } from "@/lib/api/public-events.api";
 import type { OrganizerEvent } from "@/lib/api/organizer-events.api";
@@ -94,8 +94,6 @@ export default function PastEvents() {
                                         </>
                                     )}
                                     
-                                    {/* Gradient Overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
                                 </div>
 
                                 {/* Content */}
@@ -106,7 +104,7 @@ export default function PastEvents() {
                                             #{event.season}
                                         </span>
                                         {event.status === 'closed' && (
-                                            <span className="text-xs font-semibold text-red-500">
+                                            <span className="text-xs font-semibold text-muted-foreground">
                                                 #Finished
                                             </span>
                                         )}
@@ -132,12 +130,12 @@ export default function PastEvents() {
                                         {event.description}
                                     </p>
 
-                                    <div className="mb-6 grid gap-2 text-xs text-muted-foreground grid-cols-2">
-                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-2">
-                                            <CalendarDays className="size-4 shrink-0 text-orange-500" />
+                                    <div className="mb-6 flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
+                                        <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-2">
+                                            <Calendar className="size-4 shrink-0 text-orange-500" />
                                             <span className="truncate">Reg: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-2">
+                                        <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-2">
                                             <CalendarDays className="size-4 shrink-0 text-orange-500" />
                                             <span className="truncate">End: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
                                         </div>
@@ -148,12 +146,12 @@ export default function PastEvents() {
                                         <span className={`text-sm font-medium flex items-center gap-1.5 ${
                                             event.status === 'active' ? 'text-blue-500' :
                                             event.status === 'ongoing' ? 'text-yellow-500' :
-                                            event.status === 'closed' ? 'text-red-500' : 'text-muted-foreground'
+                                            event.status === 'closed' ? 'text-muted-foreground' : 'text-muted-foreground'
                                         }`}>
                                             <span className={`size-2 rounded-full ${
                                                 event.status === 'active' ? 'bg-blue-500 animate-pulse' :
                                                 event.status === 'ongoing' ? 'bg-yellow-500 animate-pulse' :
-                                                event.status === 'closed' ? 'bg-red-500' : 'bg-muted-foreground'
+                                                event.status === 'closed' ? 'bg-muted-foreground' : 'bg-muted-foreground'
                                             }`}></span>
                                             {event.status === 'closed' ? 'Ended' : event.status === 'active' ? 'Registration Open' : 'Ongoing'}
                                         </span>

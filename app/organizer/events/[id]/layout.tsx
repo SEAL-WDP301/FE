@@ -304,27 +304,37 @@ export default function EventDashboardLayout({
                         )} />
 
                         <div className={cn("relative z-10 flex w-full items-center px-3 py-2.5", !isSidebarExpanded && "justify-center")}>
-                          <item.icon className={cn(
-                            "shrink-0 transition-colors",
-                            isActive
-                              ? "text-orange-600 drop-shadow-none dark:text-orange-500 dark:drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
-                              : "text-muted-foreground group-hover:text-orange-500",
-                            isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5"
-                          )} />
-                          {isSidebarExpanded && (
-                            <span className={cn(
-                              "truncate flex-1 transition-colors",
+                          <div className="relative flex items-center justify-center">
+                            <item.icon className={cn(
+                              "shrink-0 transition-colors",
                               isActive
-                                ? "font-bold text-orange-600 dark:text-orange-400"
-                                : "text-muted-foreground group-hover:text-orange-500"
-                            )}>
-                              {item.name}
-                            </span>
-                          )}
-                          {item.badge !== undefined && item.badge > 0 && (
-                            <div className={cn("flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px]", isSidebarExpanded ? "h-5 min-w-5 px-1 ml-2" : "absolute top-0 right-0 h-3.5 min-w-3.5 px-0.5")}>
-                              {item.badge > 99 ? '99+' : item.badge}
-                            </div>
+                                ? "text-orange-600 drop-shadow-none dark:text-orange-500 dark:drop-shadow-[0_0_5px_rgba(249,115,22,0.6)]"
+                                : "text-muted-foreground group-hover:text-orange-500",
+                              isSidebarExpanded ? "h-5 w-5 mr-3" : "h-5 w-5"
+                            )} />
+                            {!isSidebarExpanded && item.badge !== undefined && item.badge > 0 && (
+                              <div className="absolute -top-1.5 -right-2 flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px] h-4 min-w-4 px-1 shadow-sm">
+                                {item.badge > 99 ? '99+' : item.badge}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {isSidebarExpanded && (
+                            <>
+                              <span className={cn(
+                                "truncate flex-1 transition-colors",
+                                isActive
+                                  ? "font-bold text-orange-600 dark:text-orange-400"
+                                  : "text-muted-foreground group-hover:text-orange-500"
+                              )}>
+                                {item.name}
+                              </span>
+                              {item.badge !== undefined && item.badge > 0 && (
+                                <div className="flex items-center justify-center bg-red-500 text-white font-bold rounded-full text-[10px] h-5 min-w-5 px-1 ml-2">
+                                  {item.badge > 99 ? '99+' : item.badge}
+                                </div>
+                              )}
+                            </>
                           )}
                           {isActive && (
                             <motion.div
