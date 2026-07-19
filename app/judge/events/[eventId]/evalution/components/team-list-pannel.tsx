@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   type JudgeRoundSubmission,
   mapScoringStatusLabel,
@@ -175,8 +176,14 @@ export function TeamListPanel({
                       </div>
 
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline">{team.track?.name}</Badge>
-                        <span className="text-xs text-orange-400">• {statusLabel}</span>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                          statusLabel === "Pending" ? "bg-amber-500/10 text-amber-500" :
+                          statusLabel === "Evaluated" || statusLabel === "Completed" || statusLabel === "Done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                          "bg-blue-500/10 text-blue-500"
+                        )}>
+                          {statusLabel}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {team.scoredCriteria}/{team.totalCriteria} criteria
                         </span>

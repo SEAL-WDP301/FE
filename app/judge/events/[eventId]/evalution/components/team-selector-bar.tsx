@@ -1,6 +1,7 @@
 "use client";
 
 import { Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   Select,
@@ -84,11 +85,26 @@ export function TeamSelectorBar({
             <SelectTrigger className="h-11 w-full border-orange-500/30 bg-background/60">
               <SelectValue placeholder="Chọn team...">
                 {selectedTeam ? (
-                  <>
+                  <div className="flex items-center gap-2">
                     <span className="font-medium">{selectedTeam.teamName}</span>
-                    {" · "}
-                    {selectedTeam.track?.name}
-                  </>
+                    <span className="text-muted-foreground text-xs">·</span>
+                    <span className="text-muted-foreground text-xs">{selectedTeam.track?.name}</span>
+                    <span className="text-muted-foreground text-xs">·</span>
+                    <span className={cn(
+                      "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                      selectedTeam.scoringStatus === "pending" ? "bg-amber-500/10 text-amber-500" :
+                      selectedTeam.scoringStatus === "evaluated" || selectedTeam.scoringStatus === "completed" || selectedTeam.scoringStatus === "done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                      "bg-blue-500/10 text-blue-500"
+                    )}>
+                      {mapScoringStatusLabel(selectedTeam.scoringStatus)}
+                    </span>
+                    {selectedTeam.weightedScore != null && (
+                      <>
+                        <span className="text-muted-foreground text-xs">·</span>
+                        <span className="font-bold text-green-600 dark:text-green-400 text-sm">{selectedTeam.weightedScore.toFixed(1)} đ</span>
+                      </>
+                    )}
+                  </div>
                 ) : (
                   "Chọn team..."
                 )}
@@ -98,17 +114,31 @@ export function TeamSelectorBar({
               {teams.map((team) => {
                 const submissionId = team.submissionId ?? team.id;
                 const statusLabel = mapScoringStatusLabel(team.scoringStatus);
+                const isPending = team.scoringStatus === "pending";
+                const isEvaluated = team.scoringStatus === "evaluated";
 
                 return (
                   <SelectItem key={submissionId} value={String(submissionId)}>
-                    <span className="font-medium">{team.teamName}</span>
-                    {" · "}
-                    {team.track?.name}
-                    {" · "}
-                    {statusLabel}
-                    {team.weightedScore != null
-                      ? ` · ${team.weightedScore.toFixed(1)} đ`
-                      : ""}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{team.teamName}</span>
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <span className="text-muted-foreground text-xs">{team.track?.name}</span>
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                        isPending ? "bg-amber-500/10 text-amber-500" :
+                        isEvaluated ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                        "bg-blue-500/10 text-blue-500"
+                      )}>
+                        {statusLabel}
+                      </span>
+                      {team.weightedScore != null && (
+                        <>
+                          <span className="text-muted-foreground text-xs">·</span>
+                          <span className="font-bold text-green-600 dark:text-green-400 text-sm">{team.weightedScore.toFixed(1)} đ</span>
+                        </>
+                      )}
+                    </div>
                   </SelectItem>
                 );
               })}

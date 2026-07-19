@@ -1,6 +1,7 @@
 import { Building2, Tag, Shield } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { JudgeSubmissionDetail } from "@/lib/api/judge.api";
 
 interface TeamHeaderProps {
@@ -38,10 +39,14 @@ export function TeamHeader({ detail, roundName }: TeamHeaderProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-2xl font-bold">{team.name}</h2>
-            <Badge className="capitalize">{detail.status}</Badge>
-            <Badge variant="outline" className="gap-1">
-              <Shield className="h-3 w-3" />
-              Chấm ẩn danh
+            <Badge 
+              variant={detail.status.toLowerCase() === 'submitted' ? "outline" : "default"}
+              className={cn(
+                "capitalize",
+                detail.status.toLowerCase() === 'submitted' ? "border-green-500 text-green-600 dark:border-green-400 dark:text-green-400" : ""
+              )}
+            >
+              {detail.status}
             </Badge>
           </div>
 
@@ -49,11 +54,6 @@ export function TeamHeader({ detail, roundName }: TeamHeaderProps) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Tag size={16} />
               Track: {team.track?.name}
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Building2 size={16} />
-              Danh tính team được ẩn trong giai đoạn chấm
             </div>
           </div>
         </div>
