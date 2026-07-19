@@ -187,11 +187,11 @@ export default function OrganizerEventsPage() {
                                 <div className="space-y-3">
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4 mr-2" />
-                                        <span>Registration: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
+                                        <span>Reg: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <CalendarClock className="h-4 w-4 mr-2" />
-                                        <span>Ends: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
+                                        <span>End: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Users className="h-4 w-4 mr-2" />

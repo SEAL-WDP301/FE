@@ -132,14 +132,14 @@ export default function PastEvents() {
                                         {event.description}
                                     </p>
 
-                                    <div className="mb-6 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+                                    <div className="mb-6 grid gap-2 text-xs text-muted-foreground grid-cols-2">
+                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-2">
                                             <CalendarDays className="size-4 shrink-0 text-orange-500" />
-                                            <span>Registration: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
+                                            <span className="truncate">Reg: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+                                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-2">
                                             <CalendarDays className="size-4 shrink-0 text-orange-500" />
-                                            <span>Ends: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
+                                            <span className="truncate">End: {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy') : 'TBA'}</span>
                                         </div>
                                     </div>
 
