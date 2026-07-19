@@ -40,11 +40,15 @@ export default function MentorDashboardPage() {
   }
 
   const teams = teamsQuery.data || [];
-  const notifications = notificationsQuery.data || [];
+  const rawNotifications = notificationsQuery.data;
+  const notifications = Array.isArray(rawNotifications) 
+    ? rawNotifications 
+    : (rawNotifications as any)?.pages?.flatMap((p: any) => p.data) || [];
+  
   const stats = [
     { label: "Assigned teams", value: teams.length, icon: UsersRound },
     { label: "Notifications", value: notifications.length, icon: Bell },
-    { label: "Unread updates", value: notifications.filter((item) => !item.isRead).length, icon: Bell },
+    { label: "Unread updates", value: notifications.filter((item: any) => !item.isRead).length, icon: Bell },
   ];
 
   return (

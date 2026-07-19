@@ -15,44 +15,39 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
 export function NotificationsMenu() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useInfiniteQuery({
     queryKey: ['userNotifications'],
-    queryFn: async () => {
-      const res = await axiosClient.get('/users/notifications');
-      return res.data.data;
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const res = await axiosClient.get(`/notifications?page=${pageParam}&limit=25`);
+      return res.data;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.page < lastPage.meta.totalPages) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    }
   });
 
   const handleNotificationClick = async (notif: any) => {
     if (!notif.isRead) {
       try {
-        await axiosClient.patch(`/users/notifications/${notif.id}/read`);
+        await axiosClient.patch(`/notifications/${notif.id}/read`);
         queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
       } catch (err) {
         console.error("Failed to mark notification as read", err);
       }
     }
-
-    if (notif.eventId) {
-      switch (notif.type) {
-        case 'judge_assigned':
-          router.push(`/judge/events/${notif.eventId}`);
-          break;
-        case 'mentor_assigned':
-          router.push(`/mentor/events/${notif.eventId}`);
-          break;
-        default:
-          router.push(`/home/events/${notif.eventId}`);
-      }
-    }
+    router.push(`/home/notifications?id=${notif.id}`);
   };
 
-  const notifications = data || [];
+  const notifications = data?.pages.flatMap((page: any) => page.data) || [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 

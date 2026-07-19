@@ -182,7 +182,7 @@ export async function getMentorProfile() {
 }
 
 export async function getMentorNotifications() {
-  const response = await axiosClient.get("/users/notifications");
+  const response = await axiosClient.get("/notifications");
   return unwrapData<UserNotification[]>(response) || [];
 }
 

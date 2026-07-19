@@ -1,20 +1,47 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, Suspense } from "react";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { Bell, Calendar, MailOpen, Mail, Clock, ExternalLink, Download, AlertCircle, CheckCircle2, XCircle, Trash2, CheckCheck } from "lucide-react";
+import { Bell, Calendar, MailOpen, Mail, Clock, ExternalLink, Download, AlertCircle, CheckCircle2, XCircle, Trash2, CheckCheck, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { enqueueSnackbar } from "notistack";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // ==========================================
 // DYNAMIC TEMPLATES
 // ==========================================
 
-const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
+const ActionUrlButton = ({ url }: { url?: string }) => {
+  if (!url) return null;
+  const isExternal = url.startsWith('http');
+  return (
+    <div className="mt-6 border-t border-border pt-4">
+      <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
+        <ExternalLink className="w-4 h-4 text-orange-500" />
+        QUICK ACTION
+      </h3>
+      {isExternal ? (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">
+            Open Link
+          </Button>
+        </a>
+      ) : (
+        <Link href={url}>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">
+            View Details
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+};
+
+const TeamAssignedTemplate = ({ notification }: { notification: any }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Hello,</p>
     <p>
@@ -40,6 +67,8 @@ const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-di
       </ul>
     </div>
     
+    <ActionUrlButton url={notification.actionUrl} />
+
     <div className="pt-6 border-t border-border mt-8">
       <p>Best regards,</p>
       <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name || 'Hệ thống SEAL'}</p>
@@ -47,112 +76,248 @@ const TeamAssignedTemplate = ({ notification }: { notification: any /* eslint-di
   </div>
 );
 
-const RegistrationApprovedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
+const RegistrationApprovedTemplate = ({ notification }: { notification: any }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Dear Team Leader,</p>
     
     <p>
-      Congratulations! Your team registration has been successfully approved.
+      Congratulations! Your team registration has been successfully evaluated and approved by the Review Committee. This is an exciting first step in your journey through our event.
     </p>
     
-    <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg">
-      <p className="text-green-600 dark:text-green-400 font-bold text-base mb-2 flex items-center gap-2">
+    <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-xl shadow-sm">
+      <p className="text-green-600 dark:text-green-400 font-bold text-base mb-3 flex items-center gap-2">
         <CheckCircle2 className="w-5 h-5" />
-        REGISTRATION APPROVED
+        REGISTRATION STATUS: APPROVED
       </p>
-      <p className="whitespace-pre-wrap">{notification.content}</p>
+      <p className="text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: formatNotificationContent(notification.content) }} />
     </div>
 
-    <div>
+    <div className="bg-muted/50 border border-border p-5 rounded-xl">
       <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
         <Download className="w-4 h-4 text-orange-500" />
-        IMPORTANT DOCUMENTS
+        Preparation & Resources
       </h3>
-      <p className="mb-2">Please download and carefully review the following event documents:</p>
+      <p className="text-muted-foreground mb-3">To ensure your team is fully prepared for the upcoming phases, please review the following essential resources:</p>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li><strong>Competition Rules:</strong> Understand the regulations and judging criteria.</li>
-        <li><strong>Platform Guide:</strong> Learn how to use the submission system.</li>
+        <li><strong>Competition Guidelines:</strong> Familiarize yourself with the grading rubrics and ethical standards.</li>
+        <li><strong>System Operations Guide:</strong> Understand the workflow for submitting your deliverables.</li>
       </ul>
     </div>
 
+    <ActionUrlButton url={notification.actionUrl} />
+
     <div className="pt-6 border-t border-border mt-8">
-      <p>Best regards,</p>
+      <p>Warm regards,</p>
       <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Organizing Committee ${notification.event.name}` : 'Event Organizing Committee'}</p>
     </div>
   </div>
 );
 
-const RegistrationRejectedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
+const RegistrationRejectedTemplate = ({ notification }: { notification: any }) => (
   <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
     <p className="font-medium text-lg">Dear Team Leader,</p>
     
     <p>
-       We regret to inform you that your registration did not meet the requirements for this event.
+       Thank you for your interest in participating. After careful consideration, we regret to inform you that your registration did not meet all the necessary criteria for this particular event.
     </p>
     
-    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg">
-      <p className="text-red-600 dark:text-red-400 font-bold text-base mb-2 flex items-center gap-2">
+    <div className="bg-red-500/10 border border-red-500/20 p-5 rounded-xl shadow-sm">
+      <p className="text-red-600 dark:text-red-400 font-bold text-base mb-3 flex items-center gap-2">
         <XCircle className="w-5 h-5" />
-        REJECTION REASON
+        REGISTRATION STATUS: REJECTED
       </p>
-      <p className="whitespace-pre-wrap">{notification.content}</p>
+      <p className="text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: formatNotificationContent(notification.content) }} />
     </div>
 
-    <div>
-      <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
+    <div className="bg-muted/50 border border-border p-5 rounded-xl">
+      <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
         <AlertCircle className="w-4 h-4 text-orange-500" />
-        NEXT ACTIONS
+        Guidance & Next Actions
       </h3>
+      <p className="text-muted-foreground mb-2">We deeply appreciate the effort you put into your application. Please do not be discouraged. You can still:</p>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li>If registration is still open, you may update the required information and resubmit your application.</li>
-        <li>Please carefully review your team information and attached documents.</li>
+        <li>Review the feedback provided above and identify areas for improvement.</li>
+        <li>If the registration window is still open, you may address the highlighted issues and submit a new application.</li>
+        <li>Stay tuned for future events and opportunities that might better align with your team's profile.</li>
       </ul>
     </div>
 
+    <ActionUrlButton url={notification.actionUrl} />
+
     <div className="pt-6 border-t border-border mt-8">
-      <p>Best regards,</p>
-      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Ban tổ chức ${notification.event.name}` : 'Ban tổ chức sự kiện'}</p>
+      <p>Warm regards,</p>
+      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Organizing Committee ${notification.event.name}` : 'Organizing Committee'}</p>
     </div>
   </div>
 );
 
-const RoundResultTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
-  <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
-    <p className="font-medium text-lg">Dear Team,</p>
-    
-    <p>
-      The results for the recent round have been officially announced. Thank you for your hard work and dedication.
-    </p>
-    
-    <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-lg">
-      <p className="text-orange-600 dark:text-orange-400 font-bold text-base mb-2">🎉 ROUND RESULTS</p>
-      <p className="whitespace-pre-wrap">{notification.content}</p>
-    </div>
+const formatNotificationContent = (content: string) => {
+  if (!content) return "";
+  let html = content;
+  
+  // Severe negative keywords (keep red)
+  html = html.replace(/(rejected|disqualified)/gi, '<span class="text-red-600 dark:text-red-400 font-bold bg-red-500/10 px-1.5 py-0.5 rounded-md">$&</span>');
 
-    <div>
-      <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
-        <ExternalLink className="w-4 h-4 text-orange-500" />
-        ADDITIONAL SUPPORT
-      </h3>
-      <p className="mb-2">If you have any questions regarding the evaluation results, please contact:</p>
-      <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-        <li><strong>Organizer Email:</strong> support@seal.edu.vn</li>
-        <li> Submit your inquiries through the competition Ticket System.</li>
-      </ul>
-    </div>
+  // Mild negative keywords (no background, just red text)
+  html = html.replace(/(did not advance|eliminated)/gi, '<span class="font-bold text-red-500">$&</span>');
+  
+  // Positive keywords (need to avoid overwriting 'did not advance')
+  const placeholder = '___DID_NOT_ADVANCE___';
+  html = html.replace(/<span class="font-bold text-red-500">did not advance<\/span>/gi, placeholder);
+  
+  html = html.replace(/(advanced|approved|finalist|winner|first prize|second prize|third prize|champion)/gi, '<span class="text-green-600 dark:text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded-md">$&</span>');
+  
+  html = html.replace(new RegExp(placeholder, 'g'), '<span class="font-bold text-red-500">did not advance</span>');
 
-    <div className="pt-6 border-t border-border mt-8">
-      <p>Best regards,</p>
-      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Evaluation Committee ${notification.event.name}` : 'Evaluation Committee'}</p>
-    </div>
-  </div>
-);
+  return html;
+};
 
-const GenericTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => (
+const RoundResultTemplate = ({ notification }: { notification: any }) => {
+  const contentLower = notification.content.toLowerCase();
+  const isAdvanced = contentLower.includes('advanced') && !contentLower.includes('did not advance');
+  const isEliminated = contentLower.includes('did not advance') || contentLower.includes('eliminated');
+  const isAwarded = /(winner|first prize|second prize|third prize|champion|finalist)/i.test(contentLower);
+  
+  const isSuccess = isAdvanced || isAwarded;
+
+  return (
+    <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
+      <p className="font-medium text-lg">Dear Team,</p>
+      
+      <p>
+        The Evaluation Committee has officially announced the results for the recent round. Thank you for your exceptional hard work, dedication, and innovative spirit throughout this phase of the competition.
+      </p>
+      
+      <div className={cn(
+        "border p-5 rounded-xl shadow-sm",
+        isAwarded ? "bg-amber-500/10 border-amber-500/30" :
+        isAdvanced ? "bg-green-500/5 border-green-500/20" : 
+        "bg-muted/30 border-border/50"
+      )}>
+        <p className="font-bold text-base mb-3 flex items-center gap-2">
+          {isAwarded ? <CheckCircle2 className="w-5 h-5 text-amber-500" /> : 
+           isAdvanced ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : 
+           <Info className="w-5 h-5 text-muted-foreground" />}
+          {isAwarded ? "🏆 OUTSTANDING ACHIEVEMENT!" : isAdvanced ? "🎉 CONGRATULATIONS!" : "📋 ROUND RESULTS"}
+        </p>
+        <p className="text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: formatNotificationContent(notification.content) }} />
+      </div>
+
+      {isAwarded && (
+        <div className="bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 p-5 rounded-xl">
+          <h3 className="font-bold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Hall of Fame & Next Steps
+          </h3>
+          <p className="text-muted-foreground mb-3">
+            Your outstanding performance has earned you a place among the top teams. The Organizing Committee would like to formally acknowledge your brilliant achievements and extend our highest commendations.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+            <li>Keep an eye on your email for the official Award Ceremony invitation.</li>
+            <li>Prepare a brief presentation or showcase if requested by the committee.</li>
+          </ul>
+        </div>
+      )}
+
+      {isAdvanced && !isAwarded && (
+        <div className="bg-muted/50 border border-border p-5 rounded-xl">
+          <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-green-500" />
+            Looking Ahead (Next Steps)
+          </h3>
+          <p className="text-muted-foreground mb-3">
+            We are thrilled to see your team move forward. This achievement is a testament to your excellent collaboration and technical proficiency. Please prepare diligently for the upcoming challenges. The journey ahead will demand even greater innovation and resilience.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+            <li>Review the guidelines for the next round immediately.</li>
+            <li>Schedule a strategic meeting with your mentor to refine your approach.</li>
+          </ul>
+        </div>
+      )}
+
+      {isEliminated && (
+        <div className="bg-muted/50 border border-border p-5 rounded-xl">
+          <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+            <ExternalLink className="w-4 h-4 text-orange-500" />
+            Acknowledgment & Encouragement
+          </h3>
+          <p className="text-muted-foreground">
+            Although your team did not advance this time, the Organizing Committee highly values the effort, creativity, and perseverance you have demonstrated. We hope the insights and feedback gained from this competition will serve as a strong foundation for your future academic and professional endeavors. Keep striving for excellence, and we look forward to seeing you in our upcoming events!
+          </p>
+        </div>
+      )}
+
+      <div>
+        <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
+          <Mail className="w-4 h-4 text-orange-500" />
+          Support & Inquiries
+        </h3>
+        <p className="mb-2 text-muted-foreground">If you have any questions regarding the evaluation results or require further feedback, please contact us:</p>
+        <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+          <li><strong>Organizer Email:</strong> support@seal.edu.vn</li>
+          <li>Submit a formal inquiry through the competition Ticket System.</li>
+        </ul>
+      </div>
+
+      <ActionUrlButton url={notification.actionUrl} />
+
+      <div className="pt-6 border-t border-border mt-8">
+        <p>Best regards,</p>
+        <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `Evaluation Committee ${notification.event.name}` : 'Evaluation Committee'}</p>
+      </div>
+    </div>
+  );
+};
+
+const TeamInvitationTemplate = ({ notification }: { notification: any }) => {
+  const isAccepted = notification.type === "team_invite_accepted";
+  const isRejected = notification.type === "team_invite_rejected";
+  
+  return (
+    <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
+      <p className="font-medium text-lg">Dear Team Leader,</p>
+      
+      <p>
+        There is an update regarding a recent invitation you sent out for your team.
+      </p>
+      
+      <div className={cn(
+        "border p-5 rounded-xl shadow-sm",
+        isAccepted ? "bg-green-500/5 border-green-500/20" : 
+        isRejected ? "bg-muted/30 border-border/50" : 
+        "bg-blue-500/5 border-blue-500/20"
+      )}>
+        <p className="font-bold text-base mb-3 flex items-center gap-2">
+          {isAccepted ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : 
+           isRejected ? <XCircle className="w-5 h-5 text-muted-foreground" /> : 
+           <Info className="w-5 h-5 text-blue-500" />}
+          {isAccepted ? "INVITATION ACCEPTED" : 
+           isRejected ? "INVITATION DECLINED" : "TEAM UPDATE"}
+        </p>
+        <p className="text-base leading-relaxed">
+          {notification.content}
+        </p>
+      </div>
+
+      <ActionUrlButton url={notification.actionUrl} />
+
+      <div className="pt-6 border-t border-border mt-8">
+        <p>Best regards,</p>
+        <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name ? `SEAL System - ${notification.event.name}` : 'SEAL System'}</p>
+      </div>
+    </div>
+  );
+};
+
+const GenericTemplate = ({ notification }: { notification: any }) => (
   <div className="space-y-4 text-sm text-foreground/90 leading-relaxed">
     <p>Hello,</p>
-    <p className="whitespace-pre-wrap">{notification.content}</p>
-    <br />
+    <div className="bg-muted/30 border border-border/50 p-4 rounded-lg">
+      <p className="whitespace-pre-wrap">{notification.content}</p>
+    </div>
+    
+    <ActionUrlButton url={notification.actionUrl} />
+    
     <div className="pt-6 border-t border-border mt-8">
       <p>Best regards,</p>
       <p className="font-bold">SEAL System</p>
@@ -160,10 +325,11 @@ const GenericTemplate = ({ notification }: { notification: any /* eslint-disable
   </div>
 );
 
-const StakeholderAssignedTemplate = ({ notification }: { notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ }) => {
+const StakeholderAssignedTemplate = ({ notification }: { notification: any }) => {
   const isMentor = notification.type === "mentor_assigned";
   const roleText = isMentor ? "Mentor" : "Judge";
   const basePath = isMentor ? `/mentor/events/${notification.eventId}` : `/judge/events/${notification.eventId}`;
+  const actionUrl = notification.actionUrl || basePath;
 
   return (
     <div className="space-y-6 text-sm text-foreground/90 leading-relaxed">
@@ -181,22 +347,7 @@ const StakeholderAssignedTemplate = ({ notification }: { notification: any /* es
         <p className="whitespace-pre-wrap">{notification.content}</p>
       </div>
 
-      <div>
-        <h3 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
-          <ExternalLink className="w-4 h-4 text-orange-500" />
-          ACCESS YOUR WORKSPACE
-        </h3>
-        <p className="mb-4">Please click the button below to access your dedicated workspace, where you can review team details, schedules, and grading rubrics.</p>
-        {notification.eventId ? (
-          <Link href={basePath}>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">
-              Go to {roleText} Workspace
-            </Button>
-          </Link>
-        ) : (
-          <p className="text-muted-foreground italic">Event link is unavailable.</p>
-        )}
-      </div>
+      <ActionUrlButton url={actionUrl} />
 
       <div className="pt-6 border-t border-border mt-8">
         <p>Best regards,</p>
@@ -210,25 +361,58 @@ const StakeholderAssignedTemplate = ({ notification }: { notification: any /* es
 // MAIN COMPONENT
 // ==========================================
 
-export default function NotificationsPage() {
+function NotificationsContent() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Fetch Real Data
-  const { data: notifications = [], isLoading } = useQuery({
+  const idParam = searchParams.get('id');
+
+  const { 
+    data, 
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ['userNotifications'],
-    queryFn: async () => {
-      const res = await axiosClient.get('/users/notifications');
-      return res.data.data;
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const res = await axiosClient.get(`/notifications?page=${pageParam}&limit=25`);
+      return res.data;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.page < lastPage.meta.totalPages) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    }
   });
 
-  const selectedNotification = notifications.find((n: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => n.id === selectedId) || notifications[0];
+  const notifications = data?.pages.flatMap((page) => page.data) || [];
+
+  useEffect(() => {
+    if (idParam && notifications.length > 0) {
+      const id = parseInt(idParam, 10);
+      if (!isNaN(id)) {
+        setSelectedId(id);
+        const notif = notifications.find((n: any) => n.id === id);
+        if (notif && !notif.isRead) {
+          markAsReadMutation.mutate(id);
+        }
+      }
+    } else if (!selectedId && notifications.length > 0) {
+      setSelectedId(notifications[0].id);
+    }
+  }, [idParam, notifications]);
+
+  const selectedNotification = notifications.find((n: any) => n.id === selectedId);
 
   // Mutations
   const markAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
-      await axiosClient.patch(`/users/notifications/${id}/read`);
+      await axiosClient.patch(`/notifications/${id}/read`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
@@ -237,7 +421,7 @@ export default function NotificationsPage() {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await axiosClient.patch('/users/notifications/read-all');
+      await axiosClient.patch('/notifications/read-all');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
@@ -247,35 +431,40 @@ export default function NotificationsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await axiosClient.delete(`/users/notifications/${id}`);
+      await axiosClient.delete(`/notifications/${id}`);
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
-      if (selectedId === id) setSelectedId(null);
+      if (selectedId === id) {
+        setSelectedId(null);
+        router.replace('/home/notifications');
+      }
       enqueueSnackbar("Notification removed", { variant: 'info' });
     }
   });
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      await axiosClient.delete('/users/notifications/all');
+      await axiosClient.delete('/notifications/all');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
       setSelectedId(null);
+      router.replace('/home/notifications');
       enqueueSnackbar("All notification have been deleted", { variant: 'info' });
     }
   });
 
-  const handleSelectNotification = (notif: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
+  const handleSelectNotification = (notif: any) => {
     setSelectedId(notif.id);
+    router.replace(`/home/notifications?id=${notif.id}`);
     if (!notif.isRead) {
       markAsReadMutation.mutate(notif.id);
     }
   };
 
   // Helper to map type to template
-  const renderTemplate = (notification: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
+  const renderTemplate = (notification: any) => {
     switch (notification.type) {
       case 'team_assigned':
         return <TeamAssignedTemplate notification={notification} />;
@@ -290,6 +479,10 @@ export default function NotificationsPage() {
       case 'mentor_assigned':
       case 'judge_assigned':
         return <StakeholderAssignedTemplate notification={notification} />;
+      case 'team_invite_accepted':
+      case 'team_invite_rejected':
+      case 'team_leadership_transfer':
+        return <TeamInvitationTemplate notification={notification} />;
       default:
         return <GenericTemplate notification={notification} />;
     }
@@ -326,7 +519,7 @@ export default function NotificationsPage() {
                   size="sm" 
                   className="flex-1 text-xs h-8 text-muted-foreground"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isPending || notifications.every((n: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => n.isRead)}
+                  disabled={markAllAsReadMutation.isPending || notifications.every((n: any) => n.isRead)}
                 >
                   <CheckCheck className="w-3.5 h-3.5 mr-1.5" />
                   Mark all read
@@ -356,8 +549,16 @@ export default function NotificationsPage() {
               <p>No notifications available.</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {notifications.map((notif: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
+            <div 
+              className="flex-1 overflow-y-auto p-2 space-y-1"
+              onScroll={(e) => {
+                const target = e.target as HTMLDivElement;
+                if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+                  if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+                }
+              }}
+            >
+              {notifications.map((notif: any) => {
                 const isSelected = selectedNotification?.id === notif.id;
                 return (
                   <div key={notif.id} className="relative group">
@@ -409,6 +610,11 @@ export default function NotificationsPage() {
                   </div>
                 );
               })}
+              {isFetchingNextPage && (
+                <div className="p-4 text-center text-xs text-muted-foreground animate-pulse">
+                  Loading more...
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -434,8 +640,14 @@ export default function NotificationsPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{selectedNotification.event?.name || 'SEAL System'}</p>
-                      <p className="text-xs text-muted-foreground">To: You</p>
+                      {selectedNotification.event?.id ? (
+                        <Link href={`/home/events/${selectedNotification.event.id}`} className="font-semibold text-foreground hover:text-orange-500 hover:underline transition-colors">
+                          {selectedNotification.event.name}
+                        </Link>
+                      ) : (
+                        <p className="font-semibold text-foreground">{selectedNotification.event?.name || 'SEAL System'}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5">To: You</p>
                     </div>
                   </div>
                   <div className="text-right hidden sm:block">
@@ -463,3 +675,12 @@ export default function NotificationsPage() {
     </div>
   );
 }
+
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotificationsContent />
+    </Suspense>
+  );
+}
+

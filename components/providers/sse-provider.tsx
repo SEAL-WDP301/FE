@@ -40,7 +40,7 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
 
     const connect = async () => {
       try {
-        await fetchEventSource(`${baseURL}/users/notifications/stream`, {
+        await fetchEventSource(`${baseURL}/notifications/stream`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
