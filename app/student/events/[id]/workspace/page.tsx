@@ -120,7 +120,15 @@ export default function WorkspaceOverviewPage() {
   // ── Prev / Next round navigation ──────────────────────────────────────────
   const selectedIdx = rounds.findIndex((r) => r.id === selectedRoundId);
   const prevRound = selectedIdx > 0 ? rounds[selectedIdx - 1] : null;
-  const nextRound = selectedIdx < rounds.length - 1 ? rounds[selectedIdx + 1] : null;
+  
+  let nextRound = null;
+  if (selectedIdx < rounds.length - 1) {
+    const nextCandidate = rounds[selectedIdx + 1];
+    const hasAccess = roundSubmissions.some((rs) => rs.round.id === nextCandidate.id && rs.teamRound !== null);
+    if (hasAccess) {
+      nextRound = nextCandidate;
+    }
+  }
 
   // ── Show the active round card based on selected round context ─────────────
   const selectedRoundEntry = selectedRoundId
@@ -226,10 +234,11 @@ export default function WorkspaceOverviewPage() {
                   ? "text-foreground font-semibold"
                   : "text-muted-foreground";
 
-                const NodeWrapper = isAfterEliminated ? "div" : Link;
-                const nodeProps = isAfterEliminated
-                  ? {}
-                  : { href: `${basePath}?roundId=${round.id}` };
+                const canAccessRound = isParticipated && !isAfterEliminated;
+                const NodeWrapper = canAccessRound ? Link : "div";
+                const nodeProps = canAccessRound
+                  ? { href: `${basePath}?roundId=${round.id}` }
+                  : {};
 
                 return (
                   <motion.div
@@ -360,29 +369,29 @@ export default function WorkspaceOverviewPage() {
                     Please submit your files and project links before the deadline.
                   </p>
                 </div>
-                <div className="flex flex-col items-center gap-4 bg-background/50 backdrop-blur-md p-6 rounded-2xl border border-white/5 min-w-[200px]">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <div className="flex flex-col items-center gap-4 bg-muted/50 backdrop-blur-md p-6 rounded-2xl border border-border/60 shadow-sm shrink-0">
+                  <div className="flex items-center gap-2 text-foreground/80 mb-1">
                     <Clock className="h-4 w-4" />
-                    <span className="text-sm font-medium">Time Remaining</span>
+                    <span className="text-sm font-semibold">Time Remaining</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {timeLeft.days > 0 && (
                       <>
-                        <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
-                          <span className="text-xl font-bold font-mono text-foreground leading-none">{timeLeft.days}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Days</span>
+                        <div className="flex flex-col items-center justify-center bg-background border border-border rounded-xl min-w-[3.75rem] py-2 px-1 shadow-md">
+                          <span className="text-2xl font-bold font-mono text-foreground leading-none tracking-tight">{timeLeft.days}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase mt-1.5 font-bold tracking-wider">Days</span>
                         </div>
                         <span className="text-muted-foreground font-bold text-lg mb-1">:</span>
                       </>
                     )}
-                    <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
-                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.hours).padStart(2, "0")}</span>
-                      <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Hrs</span>
+                    <div className="flex flex-col items-center justify-center bg-background border border-border rounded-xl min-w-[3.75rem] py-2 px-1 shadow-md">
+                      <span className="text-2xl font-bold font-mono text-foreground leading-none tracking-tight">{String(timeLeft.hours).padStart(2, "0")}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase mt-1.5 font-bold tracking-wider">Hrs</span>
                     </div>
                     <span className="text-muted-foreground font-bold text-lg mb-1">:</span>
-                    <div className="flex flex-col items-center justify-center bg-background/80 border border-border/50 rounded-lg w-[3.25rem] h-[3.25rem] shadow-sm">
-                      <span className="text-xl font-bold font-mono text-foreground leading-none">{String(timeLeft.minutes).padStart(2, "0")}</span>
-                      <span className="text-[10px] text-muted-foreground uppercase mt-1 font-medium tracking-wider">Mins</span>
+                    <div className="flex flex-col items-center justify-center bg-background border border-border rounded-xl min-w-[3.75rem] py-2 px-1 shadow-md">
+                      <span className="text-2xl font-bold font-mono text-foreground leading-none tracking-tight">{String(timeLeft.minutes).padStart(2, "0")}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase mt-1.5 font-bold tracking-wider">Mins</span>
                     </div>
                   </div>
                   <Link href={`${basePath}/submissions?roundId=${displayRound.id}`} className="w-full">

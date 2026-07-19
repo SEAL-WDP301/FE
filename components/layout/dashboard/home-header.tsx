@@ -171,6 +171,8 @@ export default function HomeHeader({ customCenterContent, showLogo = true }: { c
                     )}
                 </div>
             </nav>
+            {/* Soft top-to-bottom drop shadow */}
+            <div className="absolute -bottom-4 left-0 right-0 h-4 bg-gradient-to-b from-foreground/[0.08] to-transparent pointer-events-none" />
         </header>
     );
 }

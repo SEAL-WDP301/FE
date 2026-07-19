@@ -255,6 +255,9 @@ export default function TeamsTab({ event }: { event: any }) {
                     )}
 
                     <div className="flex flex-wrap items-center gap-3">
+                        <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-border">
+                            Total: <span className="font-bold text-foreground">{meta.total}</span>
+                        </div>
 
                     {/* Status Selector */}
                     <select 
@@ -308,6 +311,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                     onChange={handleSelectAll}
                                 />
                             </th>
+                            <th className="px-6 py-4 font-semibold w-16">#</th>
                             <th className="px-6 py-4 font-semibold">Team Name</th>
                             <th className="px-6 py-4 font-semibold">Leader</th>
                             <th className="px-6 py-4 font-semibold">Members</th>
@@ -320,12 +324,12 @@ export default function TeamsTab({ event }: { event: any }) {
                     <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={8} className="px-6 py-12 text-center">
+                                <td colSpan={9} className="px-6 py-12 text-center">
                                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
                                 </td>
                             </tr>
                         ) : filteredTeams && filteredTeams.length > 0 ? (
-                            filteredTeams.map((team: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                            filteredTeams.map((team: any, idx: number) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
                                 <tr key={team.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                                     <td className="px-6 py-4 text-center">
                                         <input 
@@ -334,6 +338,9 @@ export default function TeamsTab({ event }: { event: any }) {
                                             checked={selectedTeamIds.includes(team.id)}
                                             onChange={(e) => handleSelectTeam(team.id, e.target.checked)}
                                         />
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-muted-foreground">
+                                        {(meta.page - 1) * meta.limit + idx + 1}
                                     </td>
                                     <td className="px-6 py-4 font-medium text-foreground">
                                         <div className="flex items-center gap-2 flex-wrap">
@@ -435,7 +442,7 @@ export default function TeamsTab({ event }: { event: any }) {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                                <td colSpan={9} className="px-6 py-12 text-center text-muted-foreground">
                                     No teams found matching your filters.
                                 </td>
                             </tr>
@@ -445,29 +452,34 @@ export default function TeamsTab({ event }: { event: any }) {
             </div>
 
             {/* Pagination Controls */}
-            {meta.totalPages > 1 && (
+            {!isLoading && meta.total > 0 && (
                 <div className="p-4 border-t border-border flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                        Showing {(meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} teams
+                        Showing <span className="font-semibold text-foreground">{(meta.page - 1) * meta.limit + 1}</span> to <span className="font-semibold text-foreground">{Math.min(meta.page * meta.limit, meta.total)}</span> of <span className="font-semibold text-foreground">{meta.total}</span> teams
                     </span>
-                    <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            disabled={page === 1}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                        >
-                            <ChevronLeft className="h-4 w-4 mr-1" /> Prev
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            disabled={page === meta.totalPages}
-                            onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
-                        >
-                            Next <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                    </div>
+                    {meta.totalPages > 1 && (
+                        <div className="flex gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                disabled={page === 1}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                            </Button>
+                            <div className="text-sm font-medium px-2 flex items-center">
+                                Page {page} / {meta.totalPages}
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                disabled={page === meta.totalPages}
+                                onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                            >
+                                Next <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
 

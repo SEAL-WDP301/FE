@@ -31,9 +31,9 @@ export function RoundTabs({
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "open":
-        return "bg-green-500/20 text-green-500 border-green-500/30";
+        return "bg-blue-500/20 text-blue-500 border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-400/30";
       case "results_published":
-        return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+        return "bg-purple-500/20 text-purple-500 border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-400/30";
       case "closed":
       case "judging":
         return "bg-orange-500/20 text-orange-500 border-orange-500/30";

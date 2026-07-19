@@ -68,7 +68,7 @@ export default function OrganizerEventsPage() {
         switch (status) {
             case 'active': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
             case 'ongoing': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-            case 'closed': return 'bg-green-500/10 text-green-600 border-green-500/20';
+            case 'closed': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
             default: return 'bg-muted text-muted-foreground border-border';
         }
     };
@@ -165,7 +165,6 @@ export default function OrganizerEventsPage() {
                                         No cover image
                                     </div>
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
                             </div>
                             <div className="p-6 flex-1">
                                 <div className="flex justify-between items-start mb-4">
@@ -184,7 +183,7 @@ export default function OrganizerEventsPage() {
                                     {event.description}
                                 </p>
 
-                                <div className="space-y-3">
+                                <div className=" space-y-3">
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4 mr-2" />
                                         <span>Reg: {event.registrationDeadline ? format(new Date(event.registrationDeadline), 'MMM dd, yyyy') : 'TBA'}</span>
@@ -196,10 +195,6 @@ export default function OrganizerEventsPage() {
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Users className="h-4 w-4 mr-2" />
                                         <span>{event.tracks?.length || 0} Tracks</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-muted-foreground">
-                                        <Trophy className="h-4 w-4 mr-2 text-yellow-500" />
-                                        <span>{event.prizes && event.prizes.length > 0 ? event.prizes[0].name : 'TBA'}</span>
                                     </div>
                                 </div>
                             </div>

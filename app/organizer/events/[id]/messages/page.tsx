@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Users, Target, MessageSquare, ExternalLink } from "lucide-react";
 import { FloatingTeamChat } from "@/components/floating-team-chat";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,9 @@ export default function EventMessagesPage() {
   const queryClient = useQueryClient();
   const eventId = params.id as string;
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const teamIdParam = searchParams.get("teamId");
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { socket, isConnected } = useSocket("/chat");
 
@@ -55,12 +58,14 @@ export default function EventMessagesPage() {
 
   const maxRoundNumber = teams ? Math.max(...teams.flatMap((t: any) => t.teamRounds?.map((tr: any) => tr.round?.roundNumber || 0) || [0])) : 0;
 
-  // Default select first team
+  // Default select first team or team from URL
   useEffect(() => {
-    if (sortedTeams.length > 0 && !selectedTeamId) {
+    if (teamIdParam) {
+      setSelectedTeamId(Number(teamIdParam));
+    } else if (sortedTeams.length > 0 && !selectedTeamId) {
       setSelectedTeamId(sortedTeams[0].id);
     }
-  }, [sortedTeams, selectedTeamId]);
+  }, [sortedTeams, selectedTeamId, teamIdParam]);
 
   // Join all team rooms to receive global notifications
   useEffect(() => {
@@ -72,6 +77,8 @@ export default function EventMessagesPage() {
 
   const handleTeamSelect = (team: any) => {
     setSelectedTeamId(team.id);
+    router.replace(`/organizer/events/${eventId}/messages?teamId=${team.id}`);
+    
     // Optimistically clear unread count
     if (team.unreadCount > 0) {
       queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {

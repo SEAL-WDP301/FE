@@ -45,6 +45,7 @@ export function BulkImportRubricsModal({
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [errors, setErrors] = useState<{ row: number; message: string }[]>([]);
   const [validCount, setValidCount] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isTrackSpecific = round.isTrackSpecific;
   const tracks = event.tracks || [];
@@ -116,6 +117,35 @@ export function BulkImportRubricsModal({
 
     setFile(selectedFile);
     processFile(selectedFile);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (!droppedFile) return;
+
+    if (!droppedFile.name.endsWith(".xlsx") && !droppedFile.name.endsWith(".xls")) {
+      enqueueSnackbar("Please upload a valid Excel file (.xlsx or .xls)", { variant: "error" });
+      return;
+    }
+
+    setFile(droppedFile);
+    processFile(droppedFile);
   };
 
   const validateData = (data: ParsedRow[]) => {
@@ -253,9 +283,16 @@ export function BulkImportRubricsModal({
 
               <div className="bg-muted/30 p-4 rounded-xl border border-border text-sm">
                 <p className="font-semibold text-foreground mb-2">Step 2: Upload Filled File</p>
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <UploadCloud className="w-8 h-8 mb-3 text-muted-foreground" />
+                <label 
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    isDragging ? "border-orange-500 bg-orange-500/10" : "border-border hover:bg-muted/50"
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                    <UploadCloud className={`w-8 h-8 mb-3 ${isDragging ? "text-orange-500" : "text-muted-foreground"}`} />
                     <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                     <p className="text-xs text-muted-foreground">.xlsx or .xls</p>
                   </div>

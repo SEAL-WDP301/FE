@@ -14,35 +14,48 @@ const formattedDate = (value: unknown) => { const raw = text(value); if (!raw) r
 
 async function getEvents() { return (await getDashboardFilterOptions()).events; }
 
+let cachedPeoplePromise: Promise<OrganizerPerson[]> | null = null;
+
 async function fetchPeople(): Promise<OrganizerPerson[]> {
-  const events = await getEvents();
-  const [registrationsResponse, profileResponse, assignmentResponses] = await Promise.all([
-    axiosClient.get("/organizer/dashboard/recent-registrations?limit=100"),
-    axiosClient.get("/users/profile"),
-    Promise.all(events.map(async (event) => ({ event, response: await axiosClient.get(`/organizer/assignments/events/${event.value}`) }))),
-  ]);
-  const students = list(registrationsResponse.data, "registrations", "items", "recentRegistrations").map((value, index): OrganizerPerson => {
-    const row = record(value); const user = record(pick(row, "student", "user")); const event = record(row.event); const team = record(row.team);
-    return {
-      id: String(pick(user, "id", "userId") ?? pick(row, "studentId", "id") ?? `student-${index}`),
-      name: text(pick(user, "name", "fullName"), text(pick(row, "studentName", "name"), "Unknown student")),
-      email: text(pick(user, "email"), text(row.email)), code: text(pick(user, "studentId", "code")), role: "Student",
-      event: text(pick(event, "name", "title"), text(row.eventName, "—")), assignment: text(pick(team, "name", "teamName"), "No team"),
-      participationStatus: text(row.status).toLowerCase() === "rejected" ? "Inactive" : "Active", lastActive: formattedDate(pick(row, "updatedAt", "registeredAt", "createdAt")),
-      department: text(pick(user, "department", "major")), skills: list(user.skills, "skills").map(String), bio: text(user.bio),
-    };
-  });
-  const stakeholders = assignmentResponses.flatMap(({ event, response }) => list(response.data, "assignments", "stakeholders", "judges", "items").map((value, index): OrganizerPerson => {
-    const assignment = record(value); const user = record(pick(assignment, "user", "stakeholder", "judge", "mentor"));
-    const roleValue = text(pick(user, "role", "type"), text(pick(assignment, "role", "type"), "Judge")).toLowerCase();
-    const role = roleValue.includes("mentor") ? "Mentor" as const : roleValue.includes("organizer") ? "Organizer" as const : "Judge" as const;
-    return { id: String(pick(user, "id", "userId") ?? pick(assignment, "id") ?? `${event.value}-${index}`), name: text(pick(user, "name", "fullName"), text(assignment.name, "Unknown stakeholder")), email: text(pick(user, "email"), text(assignment.email)), code: text(pick(user, "code", "stakeholderCode")), role, event: event.label, assignment: text(pick(record(assignment.round), "name"), text(pick(assignment, "roundName", "trackName"), "Event assignment")), participationStatus: text(assignment.status).toLowerCase() === "inactive" ? "Inactive" : "Active", lastActive: formattedDate(pick(user, "lastActive", "updatedAt")), department: text(pick(user, "department", "organization")), skills: list(user.skills, "skills").map(String), bio: text(user.bio) };
-  }));
-  const profile = record(unwrap(profileResponse.data)); const profileDetails = record(pick(profile, "stakeholderProfile", "profile"));
-  const organizer: OrganizerPerson = { id: String(profile.id ?? "current-organizer"), name: text(pick(profile, "name", "fullName"), "Current organizer"), email: text(profile.email), code: text(profile.code), role: "Organizer", event: events.map((event) => event.label).join(", "), assignment: "Current organizer", participationStatus: "Active", lastActive: "Current session", department: text(pick(profileDetails, "organization", "department")), skills: list(profileDetails.skills, "skills").map(String), bio: text(profileDetails.bio) };
-  const unique = new Map<string, OrganizerPerson>();
-  [...students, ...stakeholders, organizer].forEach((person) => unique.set(`${person.role}:${person.id}`, person));
-  return [...unique.values()];
+  if (cachedPeoplePromise) return cachedPeoplePromise;
+
+  cachedPeoplePromise = (async () => {
+    try {
+      const events = await getEvents();
+      const [registrationsResponse, profileResponse, assignmentResponses] = await Promise.all([
+        axiosClient.get("/organizer/dashboard/recent-registrations?limit=100"),
+        axiosClient.get("/users/profile"),
+        Promise.all(events.map(async (event) => ({ event, response: await axiosClient.get(`/organizer/assignments/events/${event.value}`) }))),
+      ]);
+      const students = list(registrationsResponse.data, "registrations", "items", "recentRegistrations").map((value, index): OrganizerPerson => {
+        const row = record(value); const user = record(pick(row, "student", "user")); const event = record(row.event); const team = record(row.team);
+        return {
+          id: String(pick(user, "id", "userId") ?? pick(row, "studentId", "id") ?? `student-${index}`),
+          name: text(pick(user, "name", "fullName"), text(pick(row, "studentName", "name"), "Unknown student")),
+          email: text(pick(user, "email"), text(row.email)), code: text(pick(user, "studentId", "code")), role: "Student",
+          event: text(pick(event, "name", "title"), text(row.eventName, "—")), assignment: text(pick(team, "name", "teamName"), "No team"),
+          participationStatus: text(row.status).toLowerCase() === "rejected" ? "Inactive" : "Active", lastActive: formattedDate(pick(row, "updatedAt", "registeredAt", "createdAt")),
+          department: text(pick(user, "department", "major")), skills: list(user.skills, "skills").map(String), bio: text(user.bio),
+        };
+      });
+      const stakeholders = assignmentResponses.flatMap(({ event, response }) => list(response.data, "assignments", "stakeholders", "judges", "items").map((value, index): OrganizerPerson => {
+        const assignment = record(value); const user = record(pick(assignment, "user", "stakeholder", "judge", "mentor"));
+        const roleValue = text(pick(user, "role", "type"), text(pick(assignment, "role", "type"), "Judge")).toLowerCase();
+        const role = roleValue.includes("mentor") ? "Mentor" as const : roleValue.includes("organizer") ? "Organizer" as const : "Judge" as const;
+        return { id: String(pick(user, "id", "userId") ?? pick(assignment, "id") ?? `${event.value}-${index}`), name: text(pick(user, "name", "fullName"), text(assignment.name, "Unknown stakeholder")), email: text(pick(user, "email"), text(assignment.email)), code: text(pick(user, "code", "stakeholderCode")), role, event: event.label, assignment: text(pick(record(assignment.round), "name"), text(pick(assignment, "roundName", "trackName"), "Event assignment")), participationStatus: text(assignment.status).toLowerCase() === "inactive" ? "Inactive" : "Active", lastActive: formattedDate(pick(user, "lastActive", "updatedAt")), department: text(pick(user, "department", "organization")), skills: list(user.skills, "skills").map(String), bio: text(user.bio) };
+      }));
+      const profile = record(unwrap(profileResponse.data)); const profileDetails = record(pick(profile, "stakeholderProfile", "profile"));
+      const organizer: OrganizerPerson = { id: String(profile.id ?? "current-organizer"), name: text(pick(profile, "name", "fullName"), "Current organizer"), email: text(profile.email), code: text(profile.code), role: "Organizer", event: events.map((event) => event.label).join(", "), assignment: "Current organizer", participationStatus: "Active", lastActive: "Current session", department: text(pick(profileDetails, "organization", "department")), skills: list(profileDetails.skills, "skills").map(String), bio: text(profileDetails.bio) };
+      const unique = new Map<string, OrganizerPerson>();
+      [...students, ...stakeholders, organizer].forEach((person) => unique.set(`${person.role}:${person.id}`, person));
+      return [...unique.values()];
+    } finally {
+      // Clear cache after 1 second so next hard-refresh actually fetches data
+      setTimeout(() => { cachedPeoplePromise = null; }, 1000);
+    }
+  })();
+  
+  return cachedPeoplePromise;
 }
 
 function mapSubmission(value: unknown, eventName: string, index: number): OrganizerSubmission {
