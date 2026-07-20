@@ -5,9 +5,10 @@ import { useAuthStore } from "@/lib/stores/auth.store";
 interface UseAdminSocketOptions {
   eventId?: number | string;
   roundId?: number | string;
+  teamId?: number | string;
 }
 
-export function useAdminSocket({ eventId, roundId }: UseAdminSocketOptions = {}) {
+export function useAdminSocket({ eventId, roundId, teamId }: UseAdminSocketOptions = {}) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -35,6 +36,9 @@ export function useAdminSocket({ eventId, roundId }: UseAdminSocketOptions = {})
       if (roundId) {
         socketInstance.emit("joinRound", { roundId: Number(roundId) });
       }
+      if (teamId) {
+        socketInstance.emit("joinTeam", { teamId: Number(teamId) });
+      }
     });
 
     socketInstance.on("disconnect", () => {
@@ -47,7 +51,7 @@ export function useAdminSocket({ eventId, roundId }: UseAdminSocketOptions = {})
     return () => {
       socketInstance.disconnect();
     };
-  }, [accessToken, eventId, roundId]);
+  }, [accessToken, eventId, roundId, teamId]);
 
   return { socket, isConnected };
 }

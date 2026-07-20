@@ -84,7 +84,7 @@ export default function MentorDashboardPage() {
         <GlassCard className="rounded-[24px] bg-card p-6">
           <h2 className="text-lg font-semibold">Recent notifications</h2>
           <div className="mt-5 space-y-3">
-            {notifications.slice(0, 5).map((item) => (
+            {notifications.slice(0, 5).map((item: any) => (
               <div key={item.id} className="rounded-2xl border border-border bg-muted/40 p-4">
                 <p className="font-semibold">{item.title}</p>
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.content}</p>

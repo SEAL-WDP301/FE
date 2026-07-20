@@ -166,7 +166,7 @@ export default function TrackWorkspaceLayout({
                 <React.Fragment key={`breadcrumb-${round.id}`}>
                   <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   <Link
-                    href={`${basePath}?roundId=${round.id}`}
+                    href={`${pathname}?roundId=${round.id}`}
                     className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition-colors ${
                       isSelected
                         ? "bg-orange-500/10 border border-orange-500/20 text-orange-500"

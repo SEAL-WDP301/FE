@@ -6,12 +6,14 @@ import { axiosClient } from "@/lib/axios";
 import { useParams } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2, Clock, Users } from "lucide-react";
 import Link from "next/link";
 import { useAdminSocket } from "@/hooks/use-admin-socket";
 // removed duplicate React imports
 import { enqueueSnackbar } from "notistack";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FaGithub, FaSnowflake } from "react-icons/fa";
 
 export default function EventSubmissionsPage() {
   const params = useParams();
@@ -21,6 +23,9 @@ export default function EventSubmissionsPage() {
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "unsubmitted">("all");
   const [page, setPage] = useState(1);
   const [isBulkReminderOpen, setIsBulkReminderOpen] = useState(false);
+  const [selectedTeamForStatus, setSelectedTeamForStatus] = useState<number | null>(null);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [selectedTeamFilterForLogs, setSelectedTeamFilterForLogs] = useState<string>("all");
   const PAGE_SIZE = 10;
   const queryClient = useQueryClient();
 
@@ -46,6 +51,38 @@ export default function EventSubmissionsPage() {
   });
 
   const currentRound = event?.rounds?.find((r: any) => r.id === Number(roundId));
+  const isGithubRound = currentRound?.submissionType === "github_link";
+
+  const { data: eventCommits } = useQuery({
+    queryKey: ["eventCommits", eventId],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/github/commits/event/${eventId}`);
+      return res.data;
+    },
+    enabled: isGithubRound,
+  });
+
+  const { data: collabStatus, isLoading: isLoadingStatus } = useQuery({
+    queryKey: ["collabStatus", selectedTeamForStatus],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/github/repos/${selectedTeamForStatus}/collaborator-status`);
+      return res.data.data;
+    },
+    enabled: !!selectedTeamForStatus && isStatusOpen,
+  });
+
+  const freezeAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosClient.post(`/github/repos/freeze-event/${eventId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message || "Repositories frozen successfully", { variant: "success" });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to freeze repositories", { variant: "error" });
+    }
+  });
 
   const { socket, isConnected } = useAdminSocket({ eventId, roundId });
 
@@ -59,10 +96,20 @@ export default function EventSubmissionsPage() {
 
     socket.on("submission.created", handleSubmissionCreated);
 
+    const handleNewCommit = (data: any) => {
+      enqueueSnackbar(
+        `🚀 [${data.teamName}] ${data.pusher} vừa commit: "${data.message}"`, 
+        { variant: 'info' }
+      );
+    };
+
+    socket.on('github.commit.new', handleNewCommit);
+
     return () => {
       socket.off("submission.created", handleSubmissionCreated);
+      socket.off('github.commit.new', handleNewCommit);
     };
-  }, [socket, eventId, queryClient]);
+  }, [socket, queryClient, eventId]);
 
   // Bulk Reminder Mutation
   const bulkRemindMutation = useMutation({
@@ -95,6 +142,42 @@ export default function EventSubmissionsPage() {
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
   const paginatedSubmissions = filteredSubmissions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const [timeRemaining, setTimeRemaining] = useState<{text: string, color: string} | null>(null);
+
+  useEffect(() => {
+    if (!currentRound?.submissionDeadline) {
+      setTimeRemaining(null);
+      return;
+    }
+
+    const updateTimer = () => {
+      const diff = new Date(currentRound.submissionDeadline).getTime() - new Date().getTime();
+      if (diff <= 0) {
+        setTimeRemaining({ text: "Time's up", color: "text-red-500 font-bold" });
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      if (days > 3) {
+        setTimeRemaining({ text: `${days}d ${hours}h ${minutes}m ${seconds}s left`, color: "text-green-600 dark:text-green-400 font-medium" });
+      } else if (days > 0) {
+        setTimeRemaining({ text: `${days}d ${hours}h ${minutes}m ${seconds}s left`, color: "text-orange-500 font-medium" });
+      } else if (hours > 0) {
+        setTimeRemaining({ text: `${hours}h ${minutes}m ${seconds}s left`, color: "text-red-500 font-bold" });
+      } else {
+        setTimeRemaining({ text: `${minutes}m ${seconds}s left`, color: "text-red-600 font-bold animate-pulse" });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [currentRound?.submissionDeadline]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -122,13 +205,30 @@ export default function EventSubmissionsPage() {
             )}
           </div>
         </div>
-        <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50">
-          <Download className="h-4 w-4" />
-          Export All
-        </Button>
+        <div className="flex flex-col items-end gap-3 mt-4 md:mt-0">
+          <Button variant="outline" className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50 w-full md:w-auto">
+            <Download className="h-4 w-4" />
+            Export All
+          </Button>
+          {timeRemaining && (
+            <div className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border border-border">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              {/* tăng kích thước text timeRemaining */}
+              <span className={`${timeRemaining.color} text-lg`}>{timeRemaining.text}</span>
+            </div>
+          )}
+        </div>
       </div>
+      <Tabs defaultValue="submissions">
+        {isGithubRound && (
+          <TabsList className="mb-6 bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger value="submissions" className="rounded-lg px-6">Submissions</TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-lg px-6">Global Activity Log</TabsTrigger>
+          </TabsList>
+        )}
 
-      <GlassCard className="p-6 rounded-[24px]">
+        <TabsContent value="submissions" className="mt-0">
+          <GlassCard className="p-6 rounded-[24px]">
         {/* Filters */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
@@ -161,14 +261,31 @@ export default function EventSubmissionsPage() {
             </div>
           </div>
           
-          <Button 
-            variant="orange" 
-            className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)]"
-            onClick={() => setIsBulkReminderOpen(true)}
-          >
-            <BellRing className="h-4 w-4" />
-            Bulk Reminder
-          </Button>
+          <div className="flex items-center gap-3">
+            {isGithubRound && (
+              <Button 
+                variant="outline" 
+                className="gap-2 border-cyan-500/30 text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950"
+                onClick={() => {
+                  if (confirm("Are you sure you want to FREEZE ALL team repositories in this round? They will no longer be able to push code.")) {
+                    freezeAllMutation.mutate();
+                  }
+                }}
+                disabled={freezeAllMutation.isPending}
+              >
+                <FaSnowflake className="h-4 w-4" />
+                Freeze Repositories
+              </Button>
+            )}
+            <Button 
+              variant="orange" 
+              className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)]"
+              onClick={() => setIsBulkReminderOpen(true)}
+            >
+              <BellRing className="h-4 w-4" />
+              Bulk Reminder
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -240,6 +357,21 @@ export default function EventSubmissionsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
+                      {isGithubRound && sub.githubUrl && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon-sm" 
+                          className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 mr-2" 
+                          title="Collaborator Status" 
+                          onClick={() => { 
+                            setSelectedTeamForStatus(sub.team.id); 
+                            setIsStatusOpen(true); 
+                          }}
+                        >
+                          <Users className="h-4 w-4" />
+                          <span className="sr-only">Status</span>
+                        </Button>
+                      )}
                       <Link href={`/organizer/events/${eventId}/messages?teamId=${sub.team?.id}`}>
                         <Button variant="ghost" size="icon-sm" className="text-orange-500 hover:text-orange-600 hover:bg-orange-50" title="Message team">
                           <Send className="h-4 w-4" />
@@ -292,6 +424,68 @@ export default function EventSubmissionsPage() {
           </div>
         )}
       </GlassCard>
+      </TabsContent>
+
+      {isGithubRound && (
+      <TabsContent value="activity" className="mt-0">
+        <GlassCard className="p-6 rounded-[24px]">
+          <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <FaGithub className="h-5 w-5 text-orange-500" />
+              Global Activity Log (All Teams)
+            </h3>
+            {eventCommits?.data && (
+              <select
+                value={selectedTeamFilterForLogs}
+                onChange={(e) => setSelectedTeamFilterForLogs(e.target.value)}
+                className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
+              >
+                <option value="all">All Teams</option>
+                {Array.from(new Map(eventCommits.data.map((commit: any) => [commit.teamId, commit.team?.name])).entries()).map(([teamId, teamName]) => (
+                  <option key={teamId} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mt-4">
+            {eventCommits?.data && eventCommits.data.filter((c: any) => selectedTeamFilterForLogs === "all" || c.teamId.toString() === selectedTeamFilterForLogs).length > 0 ? (
+              <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
+                {eventCommits.data
+                  .filter((c: any) => selectedTeamFilterForLogs === "all" || c.teamId.toString() === selectedTeamFilterForLogs)
+                  .map((commit: any, index: number) => {
+                  const isLatest = index === 0;
+                  return (
+                    <div key={commit.id} className="relative flex gap-4 text-sm">
+                      <div className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-background ${isLatest ? 'bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.15)]' : 'bg-muted-foreground/30'}`} />
+                      <div className="flex-1 opacity-100 transition-opacity duration-300 bg-muted/20 p-4 rounded-xl border border-border/50 hover:bg-muted/40">
+                        <p className="font-semibold text-foreground/90">
+                          <span className="text-blue-500 mr-2">[{commit.team?.name}]</span>
+                          <a href={commit.url} target="_blank" rel="noreferrer" className="hover:text-orange-500 transition-colors">
+                            {commit.message}
+                          </a>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                          <Clock className="h-3 w-3" />
+                          {new Date(commit.timestamp).toLocaleString()} 
+                          <span className="mx-1">•</span>
+                          <span className="font-medium text-orange-500">{commit.pusher}</span>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-muted-foreground justify-center p-8 border border-dashed rounded-xl border-border/50">
+                <Clock className="h-5 w-5" />
+                <p className="text-sm">No commits pushed yet for this round.</p>
+              </div>
+            )}
+          </div>
+        </GlassCard>
+      </TabsContent>
+      )}
+      </Tabs>
 
       {/* Bulk Reminder Modal */}
       <Dialog open={isBulkReminderOpen} onOpenChange={setIsBulkReminderOpen}>
@@ -352,6 +546,49 @@ export default function EventSubmissionsPage() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Team GitHub Status
+            </DialogTitle>
+            <DialogDescription>
+              Check if members have accepted their repository invitation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 my-2">
+            {isLoadingStatus ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : collabStatus && collabStatus.length > 0 ? (
+              <div className="space-y-3">
+                {collabStatus.map((user: any) => (
+                  <div key={user.userId} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm flex items-center gap-2">
+                        {user.name} {user.isLeader && <span className="text-[10px] bg-orange-500/10 text-orange-500 px-1.5 py-0.5 rounded">LEADER</span>}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{user.githubUsername || "No GitHub ID"}</span>
+                    </div>
+                    <div>
+                      {user.status === 'Accepted' && <span className="text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded font-semibold">Accepted</span>}
+                      {user.status === 'Pending' && <span className="text-xs bg-yellow-500/10 text-yellow-600 px-2 py-1 rounded font-semibold">Pending</span>}
+                      {user.status === 'Missing' && <span className="text-xs bg-red-500/10 text-red-500 px-2 py-1 rounded font-semibold">Missing</span>}
+                      {user.status === 'Not Invited' && <span className="text-xs bg-red-500/10 text-red-500 px-2 py-1 rounded font-semibold">Missing</span>}
+                      {user.status === 'No GitHub Account Linked' && <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded font-semibold whitespace-nowrap">No GitHub ID</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-center text-muted-foreground">No data available.</p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

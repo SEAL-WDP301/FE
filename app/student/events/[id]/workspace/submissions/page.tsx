@@ -22,11 +22,16 @@ import {
   Star,
   UserCircle,
   MessageSquare,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useSnackbar } from "notistack";
 import { isAxiosError } from "axios";
 import { useWorkspaceAccess } from "../workspace-access";
+import { useAdminSocket } from "@/hooks/use-admin-socket";
+import { axiosClient } from "@/lib/axios";
 
 interface SubmissionHistoryEntry {
   action: string;
@@ -36,7 +41,7 @@ interface SubmissionHistoryEntry {
 }
 
 function useCountdown(targetDate: string | null) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     if (!targetDate) return;
@@ -48,9 +53,10 @@ function useCountdown(targetDate: string | null) {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
           minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
         });
       } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     }, 1000);
 
@@ -75,6 +81,9 @@ export default function SubmissionsPage() {
   const [description, setDescription] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [commitPage, setCommitPage] = useState(1);
+  const COMMITS_PER_PAGE = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["workspace", eventId],
@@ -109,6 +118,27 @@ export default function SubmissionsPage() {
     ? new Date() > new Date(currentActiveRound.submissionDeadline)
     : false;
 
+  const { data: commitsData } = useQuery({
+    queryKey: ["githubCommits", workspaceData?.team?.id],
+    queryFn: async () => {
+      const res = await axiosClient.get(`/github/commits/${workspaceData?.team?.id}`);
+      return res.data;
+    },
+    enabled: isGithubRound && !!workspaceData?.team?.id,
+  });
+
+  const [liveCommits, setLiveCommits] = useState<any[]>([]);
+
+  const totalCommits = liveCommits.length;
+  const totalCommitPages = Math.ceil(totalCommits / COMMITS_PER_PAGE) || 1;
+  const paginatedCommits = liveCommits.slice((commitPage - 1) * COMMITS_PER_PAGE, commitPage * COMMITS_PER_PAGE);
+
+  useEffect(() => {
+    if (commitsData?.data) {
+      setLiveCommits(commitsData.data);
+    }
+  }, [commitsData]);
+
   // Group judge scores
   const judgeScores = pastSubmission?.scores?.reduce((acc: any, score: any) => {
     const judgeId = score.judge.id;
@@ -122,6 +152,29 @@ export default function SubmissionsPage() {
     return acc;
   }, {}) || {};
   const judgeList = Object.values(judgeScores) as any[];
+
+  // GitHub Realtime Commit Listener
+  const teamId = workspaceData?.team?.id;
+  const { socket } = useAdminSocket({ teamId });
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleNewCommit = (data: any) => {
+      enqueueSnackbar(
+        `🚀 [${data.pusher}] vừa commit: "${data.message}"`, 
+        { 
+          variant: 'info',
+        }
+      );
+    };
+
+    socket.on('github.commit.new', handleNewCommit);
+
+    return () => {
+      socket.off('github.commit.new', handleNewCommit);
+    };
+  }, [socket, enqueueSnackbar]);
 
   // Sync initial state if there's a past submission
   useEffect(() => {
@@ -277,95 +330,29 @@ export default function SubmissionsPage() {
               Viewing results for <span className="font-semibold text-foreground">{displayRound?.name}</span> — Read Only
             </p>
           </div>
-          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border bg-muted/30 border-border text-muted-foreground">
-            <Eye className="h-5 w-5" />
-            <span className="font-semibold">Past Round</span>
-          </div>
-        </header>
-
-        {/* Score Summary */}
-        {pastScore !== null && (
-          <div className="space-y-4">
-            <GlassCard className="p-6 rounded-[24px] border border-orange-500/20 bg-orange-500/5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-500/10 rounded-2xl">
-                  <Star className="h-6 w-6 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Average Total Score (Reference)</p>
-                  <p className="text-4xl font-bold mt-0.5">
+          
+          {pastScore !== null ? (
+            <div className="flex items-center gap-4 px-6 py-3 rounded-2xl border border-orange-500/40 bg-gradient-to-r from-orange-500/10 to-transparent shadow-[0_0_20px_-5px_rgba(249,115,22,0.3)]">
+              <div className="p-2 bg-orange-500/20 rounded-xl shadow-inner">
+                <Star className="h-6 w-6 text-orange-500" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold tracking-wider uppercase text-orange-600/80 dark:text-orange-400/80">Total Score</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-extrabold bg-gradient-to-r from-orange-600 to-yellow-500 bg-clip-text text-transparent leading-none">
                     {Number(pastScore).toFixed(2)}
-                    <span className="text-lg text-muted-foreground font-normal ml-1">/ 10.00</span>
-                  </p>
+                  </span>
+                  <span className="text-xs text-muted-foreground font-semibold">/ 10</span>
                 </div>
               </div>
-            </GlassCard>
-
-            {judgeList.length > 0 && (
-              <GlassCard className="p-6 rounded-[24px]">
-                <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Detailed Scores from Judges</h3>
-                <div className="space-y-6">
-                  {judgeList.map((j: any, idx: number) => {
-                    // Calculate total score from this judge
-                    const totalJudgeScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.scoreValue), 0);
-                    const totalMaxScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.criterion.maxScore), 0);
-                    
-                    return (
-                      <div key={j.judge.id} className={`space-y-4 ${idx !== judgeList.length - 1 ? 'border-b border-border/50 pb-6' : ''}`}>
-                        <div className="flex items-center gap-3">
-                          {j.judge.avatarUrl ? (
-                            <img src={j.judge.avatarUrl} alt={j.judge.name} className="w-10 h-10 rounded-full object-cover" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                              <UserCircle className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-semibold">{j.judge.name}</p>
-                            <p className="text-xs text-muted-foreground">Judge • Total score: {totalJudgeScore} / {totalMaxScore}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="grid gap-3 pl-14 md:pl-12">
-                          {j.scores.map((s: any) => (
-                            <div key={s.id} className="bg-muted/30 p-3 rounded-xl border border-border/50">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <p className="font-medium text-sm">{s.criterion.name}</p>
-                                  {/* s.criterion.weight and maxScore could be displayed if needed */}
-                                </div>
-                                <div className="bg-background border border-border px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap">
-                                  {Number(s.scoreValue)} / {Number(s.criterion.maxScore)}
-                                </div>
-                              </div>
-                              {s.comment && (
-                                <div className="flex gap-2 text-sm text-muted-foreground bg-background/50 p-2 rounded-lg mt-2">
-                                  <MessageSquare className="w-4 h-4 mt-0.5 shrink-0" />
-                                  <p>{s.comment}</p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </GlassCard>
-            )}
-          </div>
-        )}
-
-        {/* Disclaimer */}
-        <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
-          <Info className="h-5 w-5 mt-0.5 shrink-0" />
-          <div>
-            <h4 className="font-semibold text-sm">📌 Note on judge scores</h4>
-            <p className="text-sm mt-1 opacity-90">
-              Scores are for reference only. All decisions on advancing teams are made by the Judges and Organizing Committee based on comprehensive evaluation, not just scores.
-            </p>
-          </div>
-        </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border bg-muted/30 border-border text-muted-foreground">
+              <Eye className="h-5 w-5" />
+              <span className="font-semibold">Past Round</span>
+            </div>
+          )}
+        </header>
 
         {/* Submitted File / Link */}
         <GlassCard className="p-6 rounded-[24px]">
@@ -430,6 +417,80 @@ export default function SubmissionsPage() {
             </div>
           )}
         </GlassCard>
+
+        {/* Score Summary */}
+        {pastScore !== null && (
+          <div className="space-y-4">
+            {judgeList.length > 0 && (
+              <GlassCard className="p-6 rounded-[24px]">
+                <h3 className="font-semibold text-lg mb-4 border-b border-border pb-4">Detailed Scores from Judges</h3>
+                <div className="space-y-4">
+                  {judgeList.map((j: any) => {
+                    const totalJudgeScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.scoreValue), 0);
+                    const totalMaxScore = j.scores.reduce((sum: number, s: any) => sum + Number(s.criterion.maxScore), 0);
+                    
+                    return (
+                      <details key={j.judge.id} className="group rounded-2xl border border-border bg-muted/20 overflow-hidden open:bg-muted/40 transition-colors">
+                        <summary className="flex cursor-pointer list-none items-center justify-between p-4 focus:outline-none hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            {j.judge.avatarUrl ? (
+                              <img src={j.judge.avatarUrl} alt={j.judge.name} className="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-background" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-sm ring-2 ring-background">
+                                <UserCircle className="w-7 h-7 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-bold text-foreground">{j.judge.name}</p>
+                              <p className="text-sm font-semibold text-orange-500">Score: {totalJudgeScore} <span className="text-muted-foreground font-normal">/ {totalMaxScore}</span></p>
+                            </div>
+                          </div>
+                          <div className="p-2 rounded-full bg-background/50 group-open:rotate-180 transition-transform">
+                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        </summary>
+                        
+                        <div className="px-4 pb-4 pt-2 border-t border-border/50">
+                          <div className="grid gap-3 mt-2">
+                            {j.scores.map((s: any) => (
+                              <div key={s.id} className="bg-background/80 p-4 rounded-xl border border-border/50 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <p className="font-bold text-sm text-foreground">{s.criterion.name}</p>
+                                  </div>
+                                  <div className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
+                                    {Number(s.scoreValue)} / {Number(s.criterion.maxScore)}
+                                  </div>
+                                </div>
+                                {s.comment && (
+                                  <div className="flex gap-2.5 text-sm text-foreground bg-muted p-3 rounded-lg mt-3 border border-border/50">
+                                    <MessageSquare className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
+                                    <p className="leading-relaxed">{s.comment}</p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
+              </GlassCard>
+            )}
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
+          <Info className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">📌 Note on judge scores</h4>
+            <p className="text-sm mt-1 opacity-90">
+              Scores are for reference only. All decisions on advancing teams are made by the Judges and Organizing Committee based on comprehensive evaluation, not just scores.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -453,22 +514,24 @@ export default function SubmissionsPage() {
           ) : (
             <div className="font-mono font-bold text-lg tracking-wider">
               {timeLeft.days > 0 && <>{timeLeft.days}d : </>}
-              {String(timeLeft.hours).padStart(2, '0')}h : {String(timeLeft.minutes).padStart(2, '0')}m
+              {String(timeLeft.hours).padStart(2, '0')}h : {String(timeLeft.minutes).padStart(2, '0')}m : {String(timeLeft.seconds).padStart(2, '0')}s
             </div>
           )}
         </div>
       </header>
 
       {/* Disclaimer */}
+      {selectedRoundEntry?.round?.status === "results_published" && (
       <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-4 rounded-2xl flex items-start gap-3">
         <Info className="h-5 w-5 mt-0.5 shrink-0" />
         <div>
           <h4 className="font-semibold text-sm">📌 Note on judge scores</h4>
           <p className="text-sm mt-1 opacity-90">
-            Judge scores are for reference only. Decisions on advancing teams are based on comprehensive evaluation by the Judges and Organizing Committee.
+            Judge scores are for reference only. Decisions on advancing teams are based on comprehensive evaluation by the Organizing Committee.
           </p>
         </div>
       </div>
+      )}
 
       {/* Non-Leader Read-Only Alert */}
       {!isLeader && (
@@ -531,8 +594,8 @@ export default function SubmissionsPage() {
 
       {/* Main Form Area */}
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
+        <div className={`grid gap-6 md:grid-cols-3 items-stretch`}>
+          <div className="md:col-span-2 flex flex-col gap-6">
             
             {/* Dropzone */}
             {isFileRound && (
@@ -598,9 +661,9 @@ export default function SubmissionsPage() {
             </GlassCard>
             )}
 
-            <GlassCard className="p-8 rounded-[24px] space-y-6">
+            <GlassCard className={`p-8 rounded-[24px] ${!isGithubRound ? 'space-y-6' : 'flex-1 flex flex-col justify-center'}`}>
               {isGithubRound && (
-              <div>
+              <div className="flex flex-col gap-6">
                 <label className="text-sm font-semibold mb-2 flex items-center gap-2">
                   <FaGithub className="h-4 w-4" />
                   Team GitHub Repository
@@ -618,6 +681,7 @@ export default function SubmissionsPage() {
               </div>
               )}
 
+              {!isGithubRound && (
               <div>
                 <label className="text-sm font-semibold mb-2 block">
                   Project Description / Notes
@@ -630,12 +694,13 @@ export default function SubmissionsPage() {
                   disabled={isReadOnly || isDeadlinePassed || !isLeader}
                 />
               </div>
+              )}
             </GlassCard>
           </div>
 
           {/* Sidebar Info */}
-          <div className="space-y-6">
-          <GlassCard className="p-6 rounded-[24px]">
+          <div className="md:col-span-1 flex flex-col gap-6">
+          <GlassCard className={`p-6 rounded-[24px] ${isGithubRound ? 'flex-1 flex flex-col justify-center' : ''}`}>
             <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4">Current Submission</h3>
             {latestSubmission ? (
               <div className="space-y-4">
@@ -677,7 +742,8 @@ export default function SubmissionsPage() {
             )}
           </GlassCard>
 
-          {/* Submission History */}
+          {/* Audit History (for File Rounds) */}
+          {!isGithubRound && (
           <GlassCard className="p-6 rounded-[24px]">
             <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4">Audit History</h3>
             {latestSubmission?.history && Array.isArray(latestSubmission.history) && latestSubmission.history.length > 0 ? (
@@ -752,35 +818,115 @@ export default function SubmissionsPage() {
               </div>
             )}
             </GlassCard>
+          )}
           </div>
         </div>
 
-        <Button 
-        type="submit" 
-        variant="orange" 
-        className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(243,112,33,0.3)]"
-        disabled={
-          isReadOnly ||
-          isDeadlinePassed ||
-          submitMutation.isPending ||
-          !isLeader ||
-          !canSubmit ||
-          !canSubmitPayload
-        }
-        title={!isLeader ? "Only the team leader can submit the project" : ""}
-      >
-        {submitMutation.isPending ? (
-          <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        ) : (
-          <CheckCircle2 className="h-5 w-5 mr-2" />
+        {/* Full-width Activity Log (for GitHub Rounds) */}
+        {isGithubRound && (
+          <GlassCard className="p-6 rounded-[24px] mt-6 w-full">
+            <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4 flex items-center gap-2">
+              <FaGithub className="h-5 w-5" />
+              Activity Log (GitHub)
+            </h3>
+            {paginatedCommits.length > 0 ? (
+              <div className="space-y-4 pr-2">
+                <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
+                  {paginatedCommits.map((commit, index) => {
+                    const isLatest = commitPage === 1 && index === 0;
+                    return (
+                      <div key={commit.id || index} className="relative flex gap-4 text-sm">
+                        <div className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-background ${isLatest ? "bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.15)]" : "bg-muted-foreground/30"}`} />
+                        <div className="flex-1 opacity-100 transition-opacity duration-300 bg-muted/20 p-4 rounded-xl border border-border/50 hover:bg-muted/40">
+                          <p className="font-semibold text-foreground/90">
+                            <a href={commit.url} target="_blank" rel="noreferrer" className="hover:text-orange-500 transition-colors">
+                              {commit.message}
+                            </a>
+                            {isLatest && <span className="ml-2 text-[10px] bg-orange-500/10 text-orange-500 px-1.5 py-0.5 rounded font-medium uppercase tracking-wider border border-orange-500/20">Latest</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                            <Clock className="h-3 w-3" />
+                            {new Date(commit.timestamp).toLocaleString()} 
+                            <span className="mx-1">•</span>
+                            <span className="font-medium text-orange-500">{commit.pusher}</span>
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Pagination */}
+                {totalCommitPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-border mt-6 pt-4">
+                    <span className="text-sm text-muted-foreground">
+                      Showing <span className="font-semibold text-foreground">{(commitPage - 1) * COMMITS_PER_PAGE + 1}</span> to <span className="font-semibold text-foreground">{Math.min(commitPage * COMMITS_PER_PAGE, totalCommits)}</span> of <span className="font-semibold text-foreground">{totalCommits}</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCommitPage((p) => Math.max(1, p - 1))}
+                        disabled={commitPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Prev
+                      </Button>
+                      <div className="text-sm font-medium px-2">
+                        Page {commitPage} / {totalCommitPages}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCommitPage((p) => Math.min(totalCommitPages, p + 1))}
+                        disabled={commitPage === totalCommitPages}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-muted-foreground justify-center p-8 border border-dashed rounded-xl border-border/50">
+                <Clock className="h-5 w-5" />
+                <p className="text-sm">No commits pushed yet.</p>
+              </div>
+            )}
+          </GlassCard>
         )}
-        {isReadOnly
-          ? "View Only"
-          : latestSubmission
-            ? (isGithubRound ? "Update Submission Info" : "Resubmit Project")
-            : "Submit Project"}
-      </Button>
-    </form>
+
+        {!isGithubRound && (
+        <Button 
+          type="submit" 
+          variant="orange" 
+          className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(243,112,33,0.3)]"
+          disabled={
+            isReadOnly ||
+            isDeadlinePassed ||
+            submitMutation.isPending ||
+            !isLeader ||
+            !canSubmit ||
+            !canSubmitPayload
+          }
+          title={!isLeader ? "Only the team leader can submit the project" : ""}
+        >
+          {submitMutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 mr-2" />
+          )}
+          {isReadOnly
+            ? "View Only"
+            : latestSubmission
+              ? "Resubmit Project"
+              : "Submit Project"}
+        </Button>
+        )}
+      </form>
   </div>
   );
 }
