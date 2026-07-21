@@ -1,2 +1,0 @@
-import type { RegistrationAnswer } from "@/lib/organizer/registrations/registration-types";
-export function RegistrationAnswersTab({ answers }: { answers: RegistrationAnswer[] }) { return <div className="space-y-3">{answers.map((answer) => <div key={answer.label} className="rounded-xl border border-border p-4"><p className="text-xs font-medium text-muted-foreground">{answer.label}</p><p className="mt-2 text-sm leading-relaxed">{answer.value}</p></div>)}</div>; }

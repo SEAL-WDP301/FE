@@ -1,6 +1,8 @@
-export type RegistrationStatus = "Pending" | "Approved" | "Rejected" | "Waitlisted" | "Cancelled";
+export type RegistrationStatus =
+  "Pending" | "Approved" | "Rejected" | "Cancelled";
 export type EligibilityStatus = "Eligible" | "Needs Review" | "Not Eligible";
-export type RegistrationTeamStatus = "No Team" | "Has Team" | "Team Full" | "Team Disbanded";
+export type RegistrationTeamStatus =
+  "No Team" | "Has Team" | "Team Full" | "Team Disbanded";
 export type SortOrder = "asc" | "desc";
 
 export interface RegistrationFilters {
@@ -25,18 +27,16 @@ export interface RegistrationMetric {
   suffix?: string;
   delta: number;
   detail: string;
-  icon: "total" | "pending" | "approved" | "rejected" | "waitlisted" | "rate";
+  icon: "total" | "pending" | "approved" | "rejected" | "rate";
 }
 
-export interface RegistrationOverview { metrics: RegistrationMetric[]; }
-export interface RegistrationTrendPoint { date: string; Total: number; Approved: number; }
-
-export interface EventCapacityOverview {
-  eventId: string;
-  eventName: string;
-  capacity: number;
-  approved: number;
-  waitlisted: number;
+export interface RegistrationOverview {
+  metrics: RegistrationMetric[];
+}
+export interface RegistrationTrendPoint {
+  date: string;
+  Total: number;
+  Approved: number;
 }
 
 export interface RegistrationStudent {
@@ -83,8 +83,17 @@ export interface RegistrationListItem {
   rejectionReason?: string;
 }
 
-export interface RegistrationAnswer { label: string; value: string; }
-export interface RegistrationHistoryItem { id: string; action: string; actor: string; time: string; note?: string; }
+export interface RegistrationAnswer {
+  label: string;
+  value: string;
+}
+export interface RegistrationHistoryItem {
+  id: string;
+  action: string;
+  actor: string;
+  time: string;
+  note?: string;
+}
 
 export interface RegistrationDetails extends RegistrationListItem {
   agreedToTerms: boolean;
@@ -93,14 +102,22 @@ export interface RegistrationDetails extends RegistrationListItem {
   history: RegistrationHistoryItem[];
 }
 
-export interface ApproveRegistrationInput { sendNotification: boolean; includeTeamInstructions: boolean; }
-export interface RejectRegistrationInput { reason: string; note: string; sendNotification: boolean; allowRegisterAgain: boolean; }
-export interface WaitlistRegistrationInput { reason: string; priority: "Normal" | "High Priority"; sendNotification: boolean; }
-export interface BulkRegistrationActionInput { ids: string[]; action: "approve" | "reject" | "waitlist"; }
-export interface RegistrationExportInput { scope: "filtered" | "selected"; ids?: string[]; filters: RegistrationFilters; }
-export interface RegistrationNotificationInput { audience: string; channels: string[]; subject: string; message: string; schedule: "now" | "later"; }
-
+export interface ApproveRegistrationInput {
+  sendNotification: boolean;
+  includeTeamInstructions: boolean;
+}
+export interface RejectRegistrationInput {
+  reason: string;
+  note: string;
+  sendNotification: boolean;
+  allowRegisterAgain: boolean;
+}
 export interface PaginatedRegistrationResponse {
   data: RegistrationListItem[];
-  pagination: { page: number; limit: number; total: number; totalPages: number; };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }

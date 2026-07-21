@@ -12,9 +12,6 @@ import { TeamStatusBadge } from "./team-status-badge";
 
 export function getRegistrationColumns(actions: {
   view: (row: RegistrationListItem) => void;
-  approve: (row: RegistrationListItem) => void;
-  reject: (row: RegistrationListItem) => void;
-  waitlist: (row: RegistrationListItem) => void;
 }): ColumnDef<RegistrationListItem>[] {
   return [
     {

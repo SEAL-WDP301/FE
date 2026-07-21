@@ -1,9 +1,9 @@
-import { CheckCircle2, Clock3, Gauge, ListChecks, UserMinus, Users } from "lucide-react";
+import { CheckCircle2, Clock3, Gauge, ListChecks, UserMinus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { RegistrationMetric } from "@/lib/organizer/registrations/registration-types";
 import { formatRegistrationNumber } from "@/lib/organizer/registrations/registration-formatters";
 import { cn } from "@/lib/utils";
-const icons = { total: ListChecks, pending: Clock3, approved: CheckCircle2, rejected: UserMinus, waitlisted: Users, rate: Gauge };
+const icons = { total: ListChecks, pending: Clock3, approved: CheckCircle2, rejected: UserMinus, rate: Gauge };
 export function RegistrationMetricCard({ metric }: { metric: RegistrationMetric }) {
   const Icon = icons[metric.icon];
   return <Card className="gap-0 p-4">

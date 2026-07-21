@@ -17,7 +17,13 @@ export interface MetricCardData {
   comparison: string;
   href: string;
   sparkline: number[];
-  icon: "events" | "active" | "registrations" | "participants" | "submissions" | "users";
+  icon:
+    | "events"
+    | "active"
+    | "registrations"
+    | "participants"
+    | "submissions"
+    | "users";
 }
 
 export interface DashboardOverview {
@@ -71,6 +77,14 @@ export interface SubmissionActivityMetric {
   Submissions: number;
 }
 
+export interface SubmissionSummaryMetric {
+  totalSubmittedTeams: number;
+  eligibleTeams: number;
+  submissionRate: number;
+  submittedLast24Hours: number;
+  teamsNotSubmitted: number;
+}
+
 export interface ActiveUsersHourlyMetric {
   hour: string;
   Users: number;
@@ -95,7 +109,8 @@ export interface UpcomingDeadlineItem {
   submissionRate?: number;
 }
 
-export type RegistrationStatus = "Pending" | "Approved" | "Rejected" | "Waitlisted";
+export type RegistrationStatus =
+  "Pending" | "Approved" | "Rejected" | "Waitlisted";
 
 export interface RecentRegistrationItem {
   id: string;
@@ -122,6 +137,7 @@ export interface AdminDashboardData {
   participantsByEvent: ParticipantsByEventMetric[];
   submissionStatus: SubmissionStatusMetric[];
   submissionActivity: SubmissionActivityMetric[];
+  submissionSummary: SubmissionSummaryMetric;
   deadlines: UpcomingDeadlineItem[];
   recentRegistrations: RecentRegistrationItem[];
   quickActions: QuickActionItem[];

@@ -87,7 +87,7 @@ export function DashboardClient() {
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><EventsByMonthChart data={data.eventsByMonth} /></div><EventStatusChart data={data.eventStatus} /></section>
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><RegistrationParticipationChart data={data.registrationTrend} /></div><ParticipationConversion data={data.conversion} /></section>
             <ParticipantsByEventChart data={data.participantsByEvent} />
-            <section className="grid gap-6 xl:grid-cols-2"><SubmissionStatusChart data={data.submissionStatus} /><SubmissionActivityChart data={data.submissionActivity} /></section>
+            <section className="grid gap-6 xl:grid-cols-2"><SubmissionStatusChart data={data.submissionStatus} summary={data.submissionSummary} /><SubmissionActivityChart data={data.submissionActivity} summary={data.submissionSummary} /></section>
             <section className="grid gap-6 xl:grid-cols-3"><div className="xl:col-span-2"><UpcomingDeadlines data={data.deadlines} /></div><QuickActions data={data.quickActions} /></section>
             <RecentRegistrations data={data.recentRegistrations} />
           </>}

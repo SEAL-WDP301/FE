@@ -1,5 +1,5 @@
 export const FILTER_OPTIONS = {
-  status: ["All", "Pending", "Approved", "Rejected", "Waitlisted", "Cancelled"],
+  status: ["All", "Pending", "Approved", "Rejected", "Cancelled"],
   eligibility: ["All", "Eligible", "Needs Review", "Not Eligible"],
   teamStatus: ["All", "No Team", "Has Team", "Team Full", "Team Disbanded"],
   season: ["All Seasons", "Spring", "Summer", "Fall"],

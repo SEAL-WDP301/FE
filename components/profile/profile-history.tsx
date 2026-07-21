@@ -56,10 +56,10 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                 const isSecond = awardName.includes("2nd") || awardName.includes("second") || awardName.includes("runner-up");
                 const isThird = awardName.includes("3rd") || awardName.includes("third");
                 const isFourth = awardName.includes("best") || awardName.includes("outstanding");
-                
+
                 let Icon = Award;
                 let colorClass = "text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]";
-                
+
                 if (isFirst) {
                   Icon = Trophy;
                   colorClass = "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]";
@@ -108,10 +108,10 @@ export function ProfileHistory({ userId }: { userId?: number }) {
               const isSecond = awardName.includes("2nd") || awardName.includes("second") || awardName.includes("runner-up");
               const isThird = awardName.includes("3rd") || awardName.includes("third");
               const isFourth = awardName.includes("best") || awardName.includes("outstanding");
-              
+
               let BadgeIcon = Award;
               let badgeStyle = "border-blue-500/30 bg-blue-500/10 text-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.1)]";
-              
+
               if (isFirst) {
                 BadgeIcon = Trophy;
                 badgeStyle = "border-yellow-500/30 bg-yellow-500/10 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]";
@@ -141,9 +141,9 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                       )}
                       {/* Status Badge */}
                       <div className="absolute top-2 right-2 flex gap-2">
-                          {team.event?.status === 'closed' && <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ended</span>}
-                          {team.event?.status === 'active' && <span className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Active</span>}
-                          {team.event?.status === 'ongoing' && <span className="bg-yellow-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ongoing</span>}
+                        {team.event?.status === 'closed' && <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ended</span>}
+                        {team.event?.status === 'active' && <span className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Active</span>}
+                        {team.event?.status === 'ongoing' && <span className="bg-yellow-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">Ongoing</span>}
                       </div>
                     </div>
 
@@ -158,11 +158,11 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                             </span>
                           )}
                         </div>
-                        
+
                         {team.event?.description && (
-                           <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
-                             {team.event.description}
-                           </p>
+                          <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
+                            {team.event.description}
+                          </p>
                         )}
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
@@ -213,7 +213,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
             return (
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 dark:text-[#f5f2ec]">
-                   <Award className="w-5 h-5 text-emerald-400" /> Judging Roles
+                  <Award className="w-5 h-5 text-emerald-400" /> Judging Roles
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
                   {judgeEvents.map(({ event, assignments }: any) => (
@@ -251,7 +251,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                               ))}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center text-[12px] text-muted-foreground gap-4 pt-4 border-t border-emerald-500/10 mt-auto dark:text-[#6f685c]">
                             <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Assigned {format(new Date(assignments[0]?.createdAt || new Date()), "MMM yyyy")}</span>
                           </div>
@@ -280,7 +280,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
             return (
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 dark:text-[#f5f2ec]">
-                   <MapPin className="w-5 h-5 text-blue-400" /> Mentoring Roles
+                  <MapPin className="w-5 h-5 text-blue-400" /> Mentoring Roles
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
                   {mentorEvents.map(({ event, teams }: any) => (
@@ -318,7 +318,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                               ))}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center text-[12px] text-muted-foreground gap-4 pt-4 border-t border-blue-500/10 mt-auto dark:text-[#6f685c]">
                             <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Assigned {format(new Date(teams[0]?.createdAt || new Date()), "MMM yyyy")}</span>
                           </div>

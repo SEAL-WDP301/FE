@@ -9,6 +9,7 @@ import type {
   ParticipantsByEventMetric,
   RecentRegistrationItem,
   RegistrationStatus,
+  SubmissionSummaryMetric,
   SubmissionStatusMetric,
   UpcomingDeadlineItem,
 } from "@/lib/admin-dashboard/dashboard-types";
@@ -136,8 +137,25 @@ function normalizeSubmissionStatus(payload: unknown): SubmissionStatusMetric[] {
   const source = unwrap(payload);
   const rows = listFrom(source, "statuses", "submissionStatus", "statusBreakdown");
   if (rows.length) return rows.map((item) => {
-    const row = asRecord(item); const status = text(get(row, "status", "label", "name"), "Unknown");
-    return { status, value: number(get(row, "value", "count", "total")), color: text(row.color, status.toLowerCase().includes("late") ? "amber" : "emerald") };
+    const row = asRecord(item);
+    const rawStatus = text(get(row, "status", "label", "name"), "Unknown");
+    const status = rawStatus
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+    const colors: Record<string, string> = {
+      Submitted: "emerald",
+      "Under Review": "blue",
+      Valid: "orange",
+      "Flagged Violation": "amber",
+      Disqualified: "red",
+    };
+    return {
+      status,
+      value: number(get(row, "value", "count", "total")),
+      color: text(row.color, colors[status] ?? "slate"),
+    };
   });
   const summary = asRecord(source);
   return [
@@ -146,6 +164,18 @@ function normalizeSubmissionStatus(payload: unknown): SubmissionStatusMetric[] {
     { status: "Pending evaluation", value: number(get(summary, "pendingEvaluation", "pending")), color: "blue" },
     { status: "Evaluated", value: number(get(summary, "evaluated", "evaluatedSubmissions")), color: "orange" },
   ].filter((item) => item.value > 0);
+}
+
+function normalizeSubmissionSummary(payload: unknown): SubmissionSummaryMetric {
+  const source = asRecord(unwrap(payload));
+  const summary = asRecord(source.summary);
+  return {
+    totalSubmittedTeams: number(summary.totalSubmittedTeams),
+    eligibleTeams: number(summary.eligibleTeams),
+    submissionRate: number(summary.submissionRate),
+    submittedLast24Hours: number(summary.submittedLast24Hours),
+    teamsNotSubmitted: number(summary.teamsNotSubmitted),
+  };
 }
 
 function normalizeDeadlines(payload: unknown): UpcomingDeadlineItem[] {
@@ -208,13 +238,18 @@ export const adminDashboardService = {
     const submissionStatusMap = new Map<string, SubmissionStatusMetric>();
     submissionResponses.flatMap((response) => normalizeSubmissionStatus(response.data)).forEach((item) => submissionStatusMap.set(item.status, { ...item, value: (submissionStatusMap.get(item.status)?.value ?? 0) + item.value }));
     const submissionStatus = [...submissionStatusMap.values()];
+    const submissionSummary = normalizeSubmissionSummary(
+      submissionResponses[0]?.data,
+    );
     const trend = listFrom(trendResponse.data, "trend", "registrationTrend", "items").map((item) => {
       const row = asRecord(item);
       return { date: text(get(row, "date", "day", "label")), Registrations: number(get(row, "Registrations", "registrations", "total")), Participants: number(get(row, "Participants", "participants", "approved")) };
     });
     const submissionActivityMap = new Map<string, number>();
-    submissionResponses.forEach((response) => { const payload = asRecord(unwrap(response.data)); listFrom(payload, "activity", "trend", "submissionActivity").forEach((item) => { const row = asRecord(item); const date = text(get(row, "date", "day", "label")); submissionActivityMap.set(date, (submissionActivityMap.get(date) ?? 0) + number(get(row, "Submissions", "submissions", "count"))); }); });
-    const submissionActivity = [...submissionActivityMap].map(([date, Submissions]) => ({ date, Submissions }));
+    submissionResponses.forEach((response) => { const payload = asRecord(unwrap(response.data)); listFrom(payload, "activity", "trend", "submissionActivity").forEach((item) => { const row = asRecord(item); const date = text(get(row, "period", "date", "day", "label")); if (!date) return; submissionActivityMap.set(date, (submissionActivityMap.get(date) ?? 0) + number(get(row, "submissionCount", "Submissions", "submissions", "count"))); }); });
+    const submissionActivity = [...submissionActivityMap]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([date, Submissions]) => ({ date, Submissions }));
     const totalRegistrations = trend.reduce((sum, item) => sum + item.Registrations, 0) || recentRegistrations.length;
     const participants = trend.reduce((sum, item) => sum + item.Participants, 0) || recentRegistrations.filter((item) => item.status === "Approved").length;
     const totalSubmissions = submissionStatus.reduce((sum, item) => sum + (item.status.toLowerCase().includes("evaluat") ? 0 : item.value), 0);
@@ -241,6 +276,7 @@ export const adminDashboardService = {
       participantsByEvent,
       submissionStatus,
       submissionActivity,
+      submissionSummary,
       deadlines: normalizeDeadlines(deadlinesResponse.data),
       recentRegistrations,
       quickActions: QUICK_ACTIONS,

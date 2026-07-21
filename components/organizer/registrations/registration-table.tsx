@@ -32,7 +32,7 @@ export function RegistrationTable({ response, filters, rowSelection, onRowSelect
   onRowSelectionChange: (selection: RowSelectionState) => void;
   columnVisibility: VisibilityState;
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
-  actions: { view: (row: RegistrationListItem) => void; approve: (row: RegistrationListItem) => void; reject: (row: RegistrationListItem) => void; waitlist: (row: RegistrationListItem) => void; };
+  actions: { view: (row: RegistrationListItem) => void };
   onChange: (patch: Partial<RegistrationFilters>) => void;
 }) {
   const columns = useMemo(() => getRegistrationColumns(actions), [actions]);

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"; import { Textarea } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { RejectRegistrationInput, RegistrationListItem } from "@/lib/organizer/registrations/registration-types";
 import { rejectRegistrationSchema } from "@/lib/organizer/registrations/registration-validation";
-const reasons = ["Not Eligible", "Duplicate Registration", "Missing Information", "Event Capacity Reached", "Policy Violation", "Invalid Student Information", "Other"];
+const reasons = ["Not Eligible", "Duplicate Registration", "Missing Information", "Policy Violation", "Invalid Student Information", "Other"];
 export function RejectRegistrationDialog({ registration, open, onOpenChange, onConfirm, pending }: { registration: RegistrationListItem | null; open: boolean; onOpenChange: (open: boolean) => void; onConfirm: (input: RejectRegistrationInput) => void; pending: boolean }) {
   const form = useForm<RejectRegistrationInput>({ resolver: zodResolver(rejectRegistrationSchema), defaultValues: { reason: "", note: "", sendNotification: true, allowRegisterAgain: false } });
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Reject registration</DialogTitle><DialogDescription>{registration ? `Provide a clear reason for rejecting ${registration.student.fullName}.` : "Reject selected registrations."}</DialogDescription></DialogHeader>
