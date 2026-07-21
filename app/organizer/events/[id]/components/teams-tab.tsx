@@ -58,7 +58,13 @@ export default function TeamsTab({ event }: { event: any }) {
             let url = `/organizer/teams/events/${event.id}?page=${page}&limit=${limit}&`;
             if (selectedTrackId !== "all") url += `trackId=${selectedTrackId}&`;
             if (roundId) url += `roundId=${roundId}&`;
-            if (selectedStatus !== "all") url += `status=${selectedStatus}&`;
+            
+            if (selectedStatus.startsWith("round_")) {
+                url += `roundStatus=${selectedStatus.replace("round_", "")}&`;
+            } else if (selectedStatus !== "all") {
+                url += `status=${selectedStatus}&`;
+            }
+
             if (debouncedSearchTerm) url += `search=${debouncedSearchTerm}&`;
             
             const finalUrl = url.endsWith('&') ? url.slice(0, -1) : url.endsWith('?') ? url.slice(0, -1) : url;
@@ -259,17 +265,26 @@ export default function TeamsTab({ event }: { event: any }) {
                             Total: <span className="font-bold text-foreground">{meta.total}</span>
                         </div>
 
-                    {/* Status Selector */}
+                    {/* Unified Status Selector */}
                     <select 
                         value={selectedStatus} 
                         onChange={(e) => setSelectedStatus(e.target.value)}
                         className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                     >
                         <option value="all">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="disqualified">Disqualified</option>
+                        <optgroup label="Registration">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="disqualified">Disqualified</option>
+                        </optgroup>
+                        {roundId && (
+                            <optgroup label="Round Result">
+                                <option value="round_advanced">Passed</option>
+                                <option value="round_eliminated">Eliminated</option>
+                                <option value="round_pending">Pending/Judging</option>
+                            </optgroup>
+                        )}
                     </select>
 
                     {/* Track Selector */}
