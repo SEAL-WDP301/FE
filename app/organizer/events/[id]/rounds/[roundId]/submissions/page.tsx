@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2, Clock, Users } from "lucide-react";
@@ -17,8 +17,13 @@ import { FaGithub, FaSnowflake } from "react-icons/fa";
 
 export default function EventSubmissionsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const eventId = params.id as string;
   const roundId = params.roundId as string;
+  
+  const defaultTab = searchParams.get("tab") === "activitylog" ? "activity" : "submissions";
   const [selectedTrackId, setSelectedTrackId] = useState<number | "">("");
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "unsubmitted">("all");
   const [page, setPage] = useState(1);
@@ -84,6 +89,20 @@ export default function EventSubmissionsPage() {
     }
   });
 
+  const syncCommitsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosClient.post(`/github/repos/sync-event/${eventId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message || "Commits synced successfully", { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["eventCommits", eventId] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to sync commits", { variant: "error" });
+    }
+  });
+
   const { socket, isConnected } = useAdminSocket({ eventId, roundId });
 
   useEffect(() => {
@@ -101,6 +120,35 @@ export default function EventSubmissionsPage() {
         `🚀 [${data.teamName}] ${data.pusher} vừa commit: "${data.message}"`, 
         { variant: 'info' }
       );
+      
+      // Update cache instantly
+      const updateFn = (oldData: any) => {
+        if (!oldData) return oldData;
+        const newCommit = {
+          id: data.commitHash || Date.now(),
+          teamId: data.teamId,
+          team: { name: data.teamName },
+          commitHash: data.commitHash || data.commitUrl?.split('/').pop(),
+          message: data.message,
+          pusher: data.pusher,
+          url: data.commitUrl,
+          timestamp: data.timestamp || new Date().toISOString(),
+        };
+        
+        if (Array.isArray(oldData)) {
+          return [newCommit, ...oldData];
+        } else if (oldData.data && Array.isArray(oldData.data)) {
+          return { ...oldData, data: [newCommit, ...oldData.data] };
+        }
+        return oldData;
+      };
+
+      // Try both string and number just in case
+      queryClient.setQueryData(["eventCommits", eventId], updateFn);
+      queryClient.setQueryData(["eventCommits", Number(eventId)], updateFn);
+      
+      // Also invalidate fuzzy match (any query starting with eventCommits)
+      queryClient.invalidateQueries({ queryKey: ["eventCommits"] });
     };
 
     socket.on('github.commit.new', handleNewCommit);
@@ -219,7 +267,18 @@ export default function EventSubmissionsPage() {
           )}
         </div>
       </div>
-      <Tabs defaultValue="submissions">
+      <Tabs 
+        value={defaultTab}
+        onValueChange={(val) => {
+          const newParams = new URLSearchParams(searchParams.toString());
+          if (val === "activity") {
+            newParams.set("tab", "activitylog");
+          } else {
+            newParams.delete("tab");
+          }
+          router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
+        }}
+      >
         {isGithubRound && (
           <TabsList className="mb-6 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="submissions" className="rounded-lg px-6">Submissions</TabsTrigger>
@@ -435,16 +494,28 @@ export default function EventSubmissionsPage() {
               Global Activity Log (All Teams)
             </h3>
             {eventCommits?.data && (
-              <select
-                value={selectedTeamFilterForLogs}
-                onChange={(e) => setSelectedTeamFilterForLogs(e.target.value)}
-                className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
-              >
-                <option value="all">All Teams</option>
-                {Array.from(new Map(eventCommits.data.map((commit: any) => [commit.teamId, commit.team?.name])).entries()).map(([teamId, teamName]) => (
-                  <option key={teamId} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
-                ))}
-              </select>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50"
+                  onClick={() => syncCommitsMutation.mutate()}
+                  disabled={syncCommitsMutation.isPending}
+                >
+                  {syncCommitsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                  Sync Missed Commits
+                </Button>
+                <select
+                  value={selectedTeamFilterForLogs}
+                  onChange={(e) => setSelectedTeamFilterForLogs(e.target.value)}
+                  className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
+                >
+                  <option value="all">All Teams</option>
+                  {Array.from(new Map(eventCommits.data.map((commit: any) => [commit.teamId, commit.team?.name])).entries()).map(([teamId, teamName]) => (
+                    <option key={teamId} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mt-4">
