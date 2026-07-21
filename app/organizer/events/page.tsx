@@ -212,7 +212,13 @@ export default function OrganizerEventsPage() {
                                             </Button>
                                         </Link>
                                     ) : (
-                                        <Button size="sm" variant="outline" disabled title="Only draft events can be edited" className="border-gray-500/20 text-gray-500 cursor-not-allowed">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            title="Event must have Draft status before it can be edited"
+                                            className="border-gray-500/20 text-gray-500"
+                                            onClick={() => enqueueSnackbar("Event must have Draft status before it can be edited.", { variant: "warning" })}
+                                        >
                                             <Pencil className="h-3.5 w-3.5" />
                                             Edit
                                         </Button>

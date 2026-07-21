@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   XCircle,
   Trophy,
+  Video,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -25,6 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
+import { getStudentOnlineMeeting } from "@/lib/api/student-events.api";
 import { useEffect, useMemo, useState } from "react";
 
 interface WorkspaceRound {
@@ -33,6 +36,16 @@ interface WorkspaceRound {
   roundNumber: number;
   status: string;
   submissionDeadline?: string | null;
+}
+
+interface WorkspaceRoundSubmission {
+  round: WorkspaceRound;
+  teamRound: {
+    status: string;
+    score?: unknown;
+  } | null;
+  submission?: unknown | null;
+  canSubmit?: boolean;
 }
 
 function useCountdown(targetDate: string | null) {
@@ -72,11 +85,17 @@ export default function WorkspaceOverviewPage() {
     queryFn: () => workspaceApi.getWorkspaceOverview(Number(eventId)),
   });
 
+  const { data: onlineMeeting } = useQuery({
+    queryKey: ["studentOnlineMeeting", eventId],
+    queryFn: () => getStudentOnlineMeeting(eventId),
+    retry: false,
+  });
+
   const workspaceData = data?.data;
   const isLeader = workspaceData?.role === "leader";
   const currentActiveRound = workspaceData?.currentActiveRound;
   const rounds: WorkspaceRound[] = workspaceData?.rounds || [];
-  const roundSubmissions = useMemo(
+  const roundSubmissions: WorkspaceRoundSubmission[] = useMemo(
     () => workspaceData?.roundSubmissions || [],
     [workspaceData?.roundSubmissions]
   );
@@ -168,6 +187,15 @@ export default function WorkspaceOverviewPage() {
             Track your progress, deadlines, and team performance all in one place.
           </p>
         </div>
+        {onlineMeeting?.meetUrl ? (
+          <Button asChild size="lg" className="bg-orange-500 text-white hover:bg-orange-600">
+            <a href={onlineMeeting.meetUrl} target="_blank" rel="noreferrer">
+              <Video className="h-5 w-5" />
+              Join Online Event
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </Button>
+        ) : null}
       </header>
 
       {/* ── Competition Journey ── */}

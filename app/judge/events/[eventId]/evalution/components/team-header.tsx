@@ -16,7 +16,7 @@ export function TeamHeader({ detail, roundName }: TeamHeaderProps) {
   if (!detail) {
     return (
       <GlassCard className="p-6">
-        <p className="text-muted-foreground">Chọn team để xem bài nộp.</p>
+        <p className="text-muted-foreground">Select a submission to review.</p>
       </GlassCard>
     );
   }

@@ -85,7 +85,10 @@ export default function EventSettingsPage() {
           </Link>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <Button className="gap-2 bg-muted text-muted-foreground" disabled>
+            <Button
+              className="gap-2 bg-muted text-muted-foreground"
+              onClick={() => enqueueSnackbar("Event must have Draft status before it can be edited.", { variant: "warning" })}
+            >
               Go to Edit Form
               <ArrowRight className="h-4 w-4" />
             </Button>

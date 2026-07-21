@@ -48,7 +48,7 @@ export default function HomeHeader({ customCenterContent, showLogo = true }: { c
     const handleLogout = () => {
         useAuthStore.getState().clearAccessToken();
         queryClient.setQueryData(['userProfile'], null);
-        enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
+        enqueueSnackbar('Logged out successfully!', { variant: 'info' });
         router.push('/');
     };
     

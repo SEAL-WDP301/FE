@@ -163,7 +163,7 @@ function NotificationsContent() {
         <div className="w-1/3 min-w-[320px] max-w-[400px] border-r border-border bg-card/20 flex flex-col overflow-y-auto">
           <div className="p-4 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur z-10 flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Tất cả thông báo</h2>
+              <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">All notifications</h2>
               <span className="bg-orange-500/10 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold">
                 {notifications.length}
               </span>
@@ -236,7 +236,7 @@ function NotificationsContent() {
                           ) : (
                             <MailOpen className={cn("w-4 h-4 shrink-0", isSelected ? "text-orange-500" : "text-muted-foreground")} />
                           )}
-                          <span className="text-xs font-semibold text-muted-foreground truncate max-w-[120px]" title={notif.event?.name || 'Hệ thống SEAL'}>
+                          <span className="text-xs font-semibold text-muted-foreground truncate max-w-[120px]" title={notif.event?.name || 'SEAL System'}>
                             {notif.event?.name || 'SEAL System'}
                           </span>
                         </div>

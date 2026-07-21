@@ -34,7 +34,7 @@ export function TeamSelectorBar({
     return (
       <GlassCard className="flex items-center gap-3 p-4">
         <Users className="h-5 w-5 text-orange-500" />
-        <span className="text-sm text-muted-foreground">Đang tải danh sách team...</span>
+        <span className="text-sm text-muted-foreground">Loading submissions...</span>
       </GlassCard>
     );
   }
@@ -44,9 +44,9 @@ export function TeamSelectorBar({
       <GlassCard className="flex items-start gap-3 p-4">
         <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
         <div>
-          <p className="font-medium">Chưa có team nào nộp bài</p>
+          <p className="font-medium">No submissions yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Round này chưa có submission. Team phải nộp bài trước khi bạn chấm được.
+            No team has submitted work for this round yet. A submission is required before evaluation can begin.
           </p>
         </div>
       </GlassCard>
@@ -68,12 +68,12 @@ export function TeamSelectorBar({
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
-              Chọn submission để chấm
+              Select a submission to evaluate
             </p>
             <p className="text-sm text-muted-foreground">
               {teams.length === 1
-                ? "Round này có 1 bài nộp"
-                : `${teams.length} bài nộp — chọn mã submission bên dưới hoặc cột trái`}
+                ? "This round has 1 submission"
+                : `${teams.length} submissions — select a submission ID below or from the left panel`}
             </p>
           </div>
         </div>
@@ -84,7 +84,7 @@ export function TeamSelectorBar({
             onValueChange={(value) => onSelectSubmission(Number(value))}
           >
             <SelectTrigger className="h-11 w-full border-orange-500/30 bg-background/60">
-              <SelectValue placeholder="Chọn team...">
+              <SelectValue placeholder="Select a submission...">
                 {selectedTeam ? (
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{formatSubmissionLabel(selectedTeam)}</span>
@@ -102,12 +102,12 @@ export function TeamSelectorBar({
                     {selectedTeam.weightedScore != null && (
                       <>
                         <span className="text-muted-foreground text-xs">·</span>
-                        <span className="font-bold text-green-600 dark:text-green-400 text-sm">{selectedTeam.weightedScore.toFixed(1)} đ</span>
+                        <span className="font-bold text-green-600 dark:text-green-400 text-sm">{selectedTeam.weightedScore.toFixed(1)} pts</span>
                       </>
                     )}
                   </div>
                 ) : (
-                  "Chọn team..."
+                  "Select a submission..."
                 )}
               </SelectValue>
             </SelectTrigger>
@@ -136,7 +136,7 @@ export function TeamSelectorBar({
                       {team.weightedScore != null && (
                         <>
                           <span className="text-muted-foreground text-xs">·</span>
-                          <span className="font-bold text-green-600 dark:text-green-400 text-sm">{team.weightedScore.toFixed(1)} đ</span>
+                          <span className="font-bold text-green-600 dark:text-green-400 text-sm">{team.weightedScore.toFixed(1)} pts</span>
                         </>
                       )}
                     </div>

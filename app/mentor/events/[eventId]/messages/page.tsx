@@ -156,7 +156,7 @@ export default function MentorMessagesPage() {
 
               {team.lastMessage && (
                 <div className="text-[11px] text-muted-foreground mb-2 line-clamp-1 pr-4" title={team.lastMessage.content}>
-                  <span className="font-medium text-foreground/80">{team.lastMessage.sender?.id === user?.id ? 'Bạn' : (team.lastMessage.sender?.name || 'System')}:</span> <span className={team.unreadCount > 0 ? "text-foreground font-bold" : ""}>{team.lastMessage.content}</span>
+                  <span className="font-medium text-foreground/80">{team.lastMessage.sender?.id === user?.id ? 'You' : (team.lastMessage.sender?.name || 'System')}:</span> <span className={team.unreadCount > 0 ? "text-foreground font-bold" : ""}>{team.lastMessage.content}</span>
                 </div>
               )}
               

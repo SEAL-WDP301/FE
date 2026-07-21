@@ -38,6 +38,19 @@ export default function EditEventPage() {
         );
     }
 
+    if (event.status !== "draft") {
+        return (
+            <div className="p-8">
+                <div className="mx-auto mt-20 max-w-lg rounded-xl border border-amber-500/20 bg-amber-500/10 p-6 text-center text-amber-500">
+                    Event must have Draft status before it can be edited.
+                    <Link href={`/organizer/events/${eventId}`} className="mt-4 block text-blue-500 hover:underline">
+                        &larr; Back to Event Control Room
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-8 max-w-5xl mx-auto">
             <div className="mb-8">

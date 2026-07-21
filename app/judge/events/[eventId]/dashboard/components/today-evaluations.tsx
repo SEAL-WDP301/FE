@@ -48,8 +48,8 @@ export function TodayEvaluations() {
         </div>
       ) : displayTeams.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          Chưa có submission nào trong các round bạn được assign.
-          Team cần nộp bài trước khi xuất hiện ở đây.
+          No submissions are available in your assigned rounds.
+          Teams must submit their work before it appears here.
         </p>
       ) : (
         <div className="mt-6 space-y-4">

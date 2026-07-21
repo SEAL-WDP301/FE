@@ -32,7 +32,7 @@ export function QuickSubmission() {
       <GlassCard className="p-5">
         <h2 className="mb-2 text-lg font-semibold">Quick Submission Access</h2>
         <p className="text-sm text-muted-foreground">
-          Chưa có submission nào. Mở Evaluation workspace sau khi team nộp bài.
+          No submissions are available. Open the Evaluation workspace after a team submits its work.
         </p>
       </GlassCard>
     );
@@ -68,8 +68,8 @@ export function QuickSubmission() {
       <h2 className="mb-1 text-lg font-semibold">Quick Submission Access</h2>
       <p className="mb-4 text-xs text-muted-foreground">
         {focus.scoringStatus === "in_review"
-          ? "Tiếp tục bài đang chấm dở"
-          : "Mở bài tiếp theo cần chấm"}
+          ? "Continue current evaluation"
+          : "Open next submission"}
       </p>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

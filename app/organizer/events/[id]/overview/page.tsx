@@ -150,12 +150,23 @@ export default function EventOverviewPage() {
               <option value="ongoing">Ongoing</option>
               <option value="closed">Closed</option>
             </select>
-            <Link href={`/organizer/events/${eventId}/edit`}>
-              <Button className="gap-2 rounded-xl h-10 shadow-sm">
+            {event.status === "draft" ? (
+              <Link href={`/organizer/events/${eventId}/edit`}>
+                <Button className="gap-2 rounded-xl h-10 shadow-sm">
+                  <Settings className="h-4 w-4" />
+                  Edit Event
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                className="gap-2 rounded-xl h-10 shadow-sm"
+                title="Event must have Draft status before it can be edited"
+                onClick={() => enqueueSnackbar("Event must have Draft status before it can be edited.", { variant: "warning" })}
+              >
                 <Settings className="h-4 w-4" />
                 Edit Event
               </Button>
-            </Link>
+            )}
             <Button variant="destructive" className="gap-2 rounded-xl h-10 shadow-sm" onClick={() => setIsDeleteOpen(true)}>
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -43,7 +43,7 @@ export default function Navigation() {
     const handleLogout = () => {
         useAuthStore.getState().clearAccessToken();
         queryClient.setQueryData(['userProfile'], null);
-        enqueueSnackbar('Đăng xuất thành công!', { variant: 'info' });
+        enqueueSnackbar('Logged out successfully!', { variant: 'info' });
         router.push('/');
     };
 

@@ -94,7 +94,7 @@ export function TeamListPanel({
               Submissions
             </p>
             <h3 className="text-sm font-semibold text-foreground">
-              {teams.length} bài nộp được giao
+              {teams.length} assigned submissions
             </h3>
           </div>
 
@@ -115,7 +115,7 @@ export function TeamListPanel({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm Submission #014..."
+              placeholder="Search Submission #014..."
               className="pl-10"
             />
           </div>
@@ -125,7 +125,7 @@ export function TeamListPanel({
               value={trackId}
               onChange={(event) => setTrackId(event.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
-              aria-label="Lọc theo track"
+              aria-label="Filter by track"
             >
               <option value="all">All tracks</option>
               {tracks.map((track) => (
@@ -139,7 +139,7 @@ export function TeamListPanel({
               value={sort}
               onChange={(event) => setSort(event.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
-              aria-label="Sắp xếp submission"
+              aria-label="Sort submissions"
             >
               <option value="priority">In progress first</option>
               <option value="submission">Submission number</option>
@@ -174,7 +174,7 @@ export function TeamListPanel({
             <p className="p-4 text-sm text-muted-foreground">Loading teams...</p>
           ) : filteredTeams.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              Chưa có submission trong round này. BE chỉ liệt kê team đã nộp bài.
+              No submissions are available for this round. Only teams that have submitted work are listed.
             </p>
           ) : (
             filteredTeams.map((team) => {
@@ -203,7 +203,7 @@ export function TeamListPanel({
                         <div className="min-w-0">
                           <h4 
                             className="font-semibold truncate"
-                            title={`Đã chấm ${team.scoredCriteria}/${team.totalCriteria} criteria`}
+                            title={`Scored ${team.scoredCriteria}/${team.totalCriteria} criteria`}
                           >
                             {formatSubmissionLabel(team)}
                           </h4>

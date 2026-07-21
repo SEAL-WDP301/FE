@@ -63,7 +63,7 @@ const TeamAssignedTemplate = ({ notification }: { notification: any }) => (
 
     <div className="pt-6 border-t border-border mt-8">
       <p>Best regards,</p>
-      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name || 'Hệ thống SEAL'}</p>
+      <p className="font-bold text-orange-500 text-lg mt-1">{notification.event?.name || 'SEAL System'}</p>
     </div>
   </div>
 );

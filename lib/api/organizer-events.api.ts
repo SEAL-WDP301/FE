@@ -109,7 +109,10 @@ export interface OrganizerRound extends OrganizerRoundInput {
   };
 }
 
-export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "rounds" | "imageUrl" | "endDate"> {
+export interface OrganizerEvent extends Omit<
+  OrganizerEventPayload,
+  "tracks" | "rounds" | "imageUrl" | "endDate"
+> {
   id: number;
   imageUrl?: string | null;
   image_url?: string | null;
@@ -121,10 +124,30 @@ export interface OrganizerEvent extends Omit<OrganizerEventPayload, "tracks" | "
   tracks?: OrganizerTrack[];
   rounds?: OrganizerRound[];
   prizes?: OrganizerPrize[];
+  calendarMeeting?: EventCalendarMeeting | null;
   _count?: {
     teams?: number;
     submissions?: number;
   };
+}
+
+export interface GoogleCalendarStatus {
+  connected: boolean;
+  connectedAt?: string;
+}
+
+export interface EventCalendarMeeting {
+  id: number;
+  eventId: number;
+  googleEventId: string;
+  calendarId: string;
+  meetUrl?: string | null;
+  htmlLink?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  timeZone?: string;
+  attendeeCount?: number;
+  registeredAttendeeCount?: number;
 }
 
 export interface OrganizerRubric {
@@ -170,7 +193,7 @@ export async function getOrganizerEvents() {
 }
 
 export async function getOrganizerEvent(eventId: string | number) {
-  const res = await axiosClient.get(`/public/events/${eventId}`);
+  const res = await axiosClient.get(`/organizer/events/${eventId}`);
   const event = unwrapData<OrganizerEvent>(res);
   return event ? normalizeOrganizerEvent(event) : undefined;
 }
@@ -180,13 +203,21 @@ export async function createOrganizerEvent(payload: OrganizerEventPayload) {
   return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
-export async function updateOrganizerEvent(eventId: string | number, payload: OrganizerEventPayload) {
+export async function updateOrganizerEvent(
+  eventId: string | number,
+  payload: OrganizerEventPayload,
+) {
   const res = await axiosClient.put(`/organizer/events/${eventId}`, payload);
   return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
-export async function updateOrganizerEventStatus(eventId: string | number, status: EventStatus) {
-  const res = await axiosClient.patch(`/organizer/events/${eventId}/status`, { status });
+export async function updateOrganizerEventStatus(
+  eventId: string | number,
+  status: EventStatus,
+) {
+  const res = await axiosClient.patch(`/organizer/events/${eventId}/status`, {
+    status,
+  });
   return normalizeOrganizerEvent(unwrapData<OrganizerEvent>(res));
 }
 
@@ -194,9 +225,54 @@ export async function deleteOrganizerEvent(eventId: string | number) {
   await axiosClient.delete(`/organizer/events/${eventId}`);
 }
 
+export async function getGoogleCalendarStatus() {
+  const response = await axiosClient.get("/integrations/google/status");
+  return unwrapData<GoogleCalendarStatus>(response);
+}
+
+export async function getGoogleCalendarAuthorizationUrl() {
+  const response = await axiosClient.post("/integrations/google/authorize-url");
+  return unwrapData<{ url: string }>(response).url;
+}
+
+export async function disconnectGoogleCalendar() {
+  await axiosClient.delete("/integrations/google/disconnect");
+}
+
+export interface SyncGoogleCalendarMeetingInput {
+  meetingStartDate?: string;
+  meetingEndDate?: string;
+  attendeeEmails?: string[];
+  sendInvitations?: boolean;
+  notifyParticipants?: boolean;
+  timeZone?: string;
+}
+
+export async function createGoogleCalendarMeeting(
+  eventId: string | number,
+  input: SyncGoogleCalendarMeetingInput,
+) {
+  const response = await axiosClient.post<{ data: EventCalendarMeeting }>(
+    `/organizer/events/${eventId}/calendar-meeting`,
+    input,
+  );
+  return response.data.data;
+}
+
+export async function updateGoogleCalendarMeeting(
+  eventId: string | number,
+  input: SyncGoogleCalendarMeetingInput,
+) {
+  const response = await axiosClient.patch<{ data: EventCalendarMeeting }>(
+    `/organizer/events/${eventId}/calendar-meeting`,
+    input,
+  );
+  return response.data.data;
+}
+
 export async function getOrganizerRubrics(
   eventId: string | number,
-  filters: OrganizerRubricFilters = {}
+  filters: OrganizerRubricFilters = {},
 ) {
   const params = new URLSearchParams();
 
@@ -210,49 +286,55 @@ export async function getOrganizerRubrics(
 
   const query = params.toString();
   const res = await axiosClient.get(
-    `/organizer/events/${eventId}/rubrics${query ? `?${query}` : ""}`
+    `/organizer/events/${eventId}/rubrics${query ? `?${query}` : ""}`,
   );
   return unwrapData<OrganizerRubric[]>(res);
 }
 
 export async function createOrganizerRubric(
   eventId: string | number,
-  payload: OrganizerRubricPayload
+  payload: OrganizerRubricPayload,
 ) {
-  const res = await axiosClient.post(`/organizer/events/${eventId}/rubrics`, payload);
+  const res = await axiosClient.post(
+    `/organizer/events/${eventId}/rubrics`,
+    payload,
+  );
   return unwrapData<OrganizerRubric>(res);
 }
 
 export async function bulkCreateOrganizerRubrics(
   eventId: string | number,
-  payload: { rubrics: OrganizerRubricPayload[] }
+  payload: { rubrics: OrganizerRubricPayload[] },
 ) {
-  const res = await axiosClient.post(`/organizer/events/${eventId}/rubrics/bulk`, payload);
+  const res = await axiosClient.post(
+    `/organizer/events/${eventId}/rubrics/bulk`,
+    payload,
+  );
   return unwrapData<OrganizerRubric[]>(res);
 }
 
 export async function updateOrganizerRubric(
   eventId: string | number,
   rubricId: string | number,
-  payload: OrganizerRubricPayload
+  payload: OrganizerRubricPayload,
 ) {
   const res = await axiosClient.put(
     `/organizer/events/${eventId}/rubrics/${rubricId}`,
-    payload
+    payload,
   );
   return unwrapData<OrganizerRubric>(res);
 }
 
 export async function deleteOrganizerRubric(
   eventId: string | number,
-  rubricId: string | number
+  rubricId: string | number,
 ) {
   await axiosClient.delete(`/organizer/events/${eventId}/rubrics/${rubricId}`);
 }
 
 export async function bulkDeleteOrganizerRubrics(
   eventId: string | number,
-  rubricIds: number[]
+  rubricIds: number[],
 ) {
   await axiosClient.delete(`/organizer/events/${eventId}/rubrics/bulk`, {
     data: { rubricIds },
@@ -311,7 +393,7 @@ export interface DetailedRankingsResponse {
 export async function getDetailedRoundRankings(
   eventId: string | number,
   roundId: string | number,
-  trackId?: string | number
+  trackId?: string | number,
 ) {
   const params = new URLSearchParams();
   if (trackId !== undefined && trackId !== null) {
@@ -319,7 +401,7 @@ export async function getDetailedRoundRankings(
   }
   const query = params.toString();
   const res = await axiosClient.get(
-    `/organizer/events/${eventId}/rounds/${roundId}/rankings/detailed${query ? `?${query}` : ""}`
+    `/organizer/events/${eventId}/rounds/${roundId}/rankings/detailed${query ? `?${query}` : ""}`,
   );
   return unwrapData<DetailedRankingsResponse>(res);
 }
@@ -327,7 +409,7 @@ export async function getDetailedRoundRankings(
 export async function getRoundRankings(
   eventId: string | number,
   roundId: string | number,
-  trackId?: string | number
+  trackId?: string | number,
 ) {
   const params = new URLSearchParams();
   if (trackId !== undefined && trackId !== null) {
@@ -335,11 +417,10 @@ export async function getRoundRankings(
   }
   const query = params.toString();
   const res = await axiosClient.get(
-    `/organizer/events/${eventId}/rounds/${roundId}/rankings${query ? `?${query}` : ""}`
+    `/organizer/events/${eventId}/rounds/${roundId}/rankings${query ? `?${query}` : ""}`,
   );
   return unwrapData<unknown>(res);
 }
-
 
 export interface PublishResultsPayload {
   advancingTeamIds?: number[];
@@ -349,11 +430,11 @@ export interface PublishResultsPayload {
 export async function publishRoundResults(
   eventId: string | number,
   roundId: string | number,
-  payload: PublishResultsPayload
+  payload: PublishResultsPayload,
 ) {
   const res = await axiosClient.post(
     `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
-    payload
+    payload,
   );
   return unwrapData<unknown>(res);
 }

@@ -68,7 +68,7 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
               if (!ev.data) return;
               const data = JSON.parse(ev.data);
               
-              enqueueSnackbar(data.title || "Bạn có thông báo mới!", {
+              enqueueSnackbar(data.title || "You have a new notification!", {
                 variant: "info",
                 autoHideDuration: 5000,
                 key: data.id ? `notification-${data.id}` : undefined,
@@ -90,7 +90,7 @@ export function SseProvider({ children }: { children: React.ReactNode }) {
             // Connection closed by server
           }
         });
-      } catch (err) {
+      } catch {
         // Fatal error outside fetchEventSource
       }
     };

@@ -166,7 +166,7 @@ export default function EvaluationPage() {
       return judgeApi.submitScores(selectedSubmissionId, payload);
     },
     onSuccess: () => {
-      enqueueSnackbar("Đã lưu điểm thành công", { variant: "success" });
+      enqueueSnackbar("Scores saved successfully", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["judge", "submission", selectedSubmissionId] });
       queryClient.invalidateQueries({ queryKey: ["judge", "round-submissions", selectedRoundId] });
     },
@@ -238,7 +238,7 @@ export default function EvaluationPage() {
         <AlertCircle className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
         <h2 className="text-xl font-semibold">No assigned events</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Organizer chưa assign bạn làm giám khảo cho event nào.
+          You have not been assigned as a judge for any event.
         </p>
       </GlassCard>
     );
@@ -251,7 +251,7 @@ export default function EvaluationPage() {
           Evaluation
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {selectedEvent?.name} — chọn round và submission, xem bài rồi chấm theo rubric.
+          {selectedEvent?.name} — select a round and submission, review the work, then score it using the rubric.
         </p>
       </div>
 
@@ -342,17 +342,17 @@ export default function EvaluationPage() {
               <div className="mt-8 space-y-8">
                 <SubmissionContentCard detail={submissionDetail} />
                 <div className="mt-8">
-                  <h2 className="mb-6 text-3xl font-bold">Chấm điểm theo Rubric</h2>
+                  <h2 className="mb-6 text-3xl font-bold">Rubric Evaluation</h2>
                   
                   {scoringLocked && (
                     <div className="mb-6 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                       <div>
-                        <h4 className="font-semibold text-sm">Chức năng chấm điểm đang bị khóa</h4>
+                        <h4 className="font-semibold text-sm">Scoring is currently locked</h4>
                         <p className="text-sm mt-1 opacity-90">
-                          {roundStatus === "not_started" && "Vòng thi chưa bắt đầu."}
-                          {roundStatus === "results_published" && "Kết quả của vòng này đã được công bố, không thể thay đổi điểm."}
-                          {roundStatus === "open" && "Vòng thi đang mở và chưa qua thời hạn nộp bài. Giám khảo chỉ có thể chấm điểm khi đã hết hạn nộp hoặc vòng thi chuyển sang trạng thái Closed/Judging."}
+                          {roundStatus === "not_started" && "This round has not started yet."}
+                          {roundStatus === "results_published" && "Results for this round have been published, so scores can no longer be changed."}
+                          {roundStatus === "open" && "This round is still accepting submissions. Judges can score only after the submission deadline or when the round moves to Closed/Judging."}
                         </p>
                       </div>
                     </div>
