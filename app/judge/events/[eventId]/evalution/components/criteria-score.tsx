@@ -27,7 +27,7 @@ export function CriteriaScoring({
   if (!rubrics.length) {
     return (
       <GlassCard className="p-8 text-sm text-muted-foreground">
-        Chưa có rubric cho vòng/track này. Organizer cần cấu hình tiêu chí chấm trước.
+        No rubric available for this round/track. Organizer needs to configure scoring criteria first.
       </GlassCard>
     );
   }
@@ -92,7 +92,7 @@ export function CriteriaScoring({
             <Textarea
               className="mt-4 min-h-[90px]"
               disabled={disabled}
-              placeholder="Nhận xét theo tiêu chí này..."
+              placeholder="Comment on this criterion..."
               value={comments[item.id] ?? ""}
               onChange={(e) => onCommentChange(item.id, e.target.value)}
             />

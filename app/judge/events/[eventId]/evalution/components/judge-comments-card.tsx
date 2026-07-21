@@ -17,9 +17,9 @@ export function JudgeCommentsCard({
   return (
     <GlassCard className="p-6 space-y-4">
       <div>
-        <h3 className="text-xl font-semibold">Nhận xét chung</h3>
+        <h3 className="text-xl font-semibold">Overall Comments</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Ghi chú tổng quan cho team (đính kèm vào bài chấm khi lưu)
+          General overview notes for the team (attached to the score when saved)
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export function JudgeCommentsCard({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        placeholder="Nhận xét tổng thể về bài làm, điểm mạnh/yếu, gợi ý cải thiện..."
+        placeholder="Overall feedback, strengths/weaknesses, suggestions for improvement..."
         className="min-h-[140px] bg-background/60"
       />
     </GlassCard>

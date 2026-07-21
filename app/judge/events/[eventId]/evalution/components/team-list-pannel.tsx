@@ -70,10 +70,10 @@ export function TeamListPanel({
           <div className="mb-4 flex items-center justify-between">
           <div className="mb-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
-              Chọn team
+              Select Team
             </p>
             <h3 className="text-sm font-semibold text-foreground">
-              {teams.length} bài nộp (ẩn danh)
+              {teams.length} submissions (anonymous)
             </h3>
           </div>
 
@@ -94,7 +94,7 @@ export function TeamListPanel({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm Team 1, Team 2..."
+              placeholder="Search Team 1, Team 2..."
               className="pl-10"
             />
           </div>
@@ -126,7 +126,7 @@ export function TeamListPanel({
             <p className="p-4 text-sm text-muted-foreground">Loading teams...</p>
           ) : filteredTeams.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              Chưa có submission trong round này. BE chỉ liệt kê team đã nộp bài.
+              No submissions in this round yet. Only teams that have submitted are listed.
             </p>
           ) : (
             filteredTeams.map((team) => {
@@ -159,7 +159,7 @@ export function TeamListPanel({
                         <div className="min-w-0">
                           <h4 
                             className="font-semibold truncate"
-                            title={`Đã chấm ${team.scoredCriteria}/${team.totalCriteria} criteria`}
+                            title={`Scored ${team.scoredCriteria}/${team.totalCriteria} criteria`}
                           >
                             {team.teamName}
                           </h4>

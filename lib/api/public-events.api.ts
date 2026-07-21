@@ -8,9 +8,9 @@ export type PublicEvent = OrganizerEvent & {
 type PublicEventsResponse =
   | PublicEvent[]
   | {
-      data?: PublicEvent[] | { events?: PublicEvent[] };
-      events?: PublicEvent[];
-    };
+    data?: PublicEvent[] | { events?: PublicEvent[] };
+    events?: PublicEvent[];
+  };
 
 function normalizePublicEvents(payload: PublicEventsResponse): PublicEvent[] {
   if (Array.isArray(payload)) return payload;

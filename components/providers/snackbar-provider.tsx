@@ -8,12 +8,12 @@ export function SnackbarProvider({ children }: { children: React.ReactNode }) {
       maxSnack={3} 
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       style={{ 
-        backgroundColor: "#161311", 
-        color: "#fff", 
-        border: "1px solid rgba(255,118,41,0.3)",
+        backgroundColor: "var(--foreground)", 
+        color: "var(--background)", 
+        border: "1px solid var(--border)",
         borderRadius: "12px",
         fontFamily: "var(--font-inter)",
-        boxShadow: "0 4px 12px rgba(255,118,41,0.15)"
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
       }}
     >
       {children}

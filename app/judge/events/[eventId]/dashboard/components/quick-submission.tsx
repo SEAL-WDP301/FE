@@ -30,7 +30,7 @@ export function QuickSubmission() {
       <GlassCard className="p-5">
         <h2 className="mb-2 text-lg font-semibold">Quick Submission Access</h2>
         <p className="text-sm text-muted-foreground">
-          Chưa có submission nào. Mở Evaluation workspace sau khi team nộp bài.
+          No submissions yet. Open Evaluation workspace after teams submit.
         </p>
       </GlassCard>
     );
@@ -65,7 +65,7 @@ export function QuickSubmission() {
     <GlassCard className="p-5">
       <h2 className="mb-1 text-lg font-semibold">Quick Submission Access</h2>
       <p className="mb-4 text-xs text-muted-foreground">
-        Link nhanh tới submission tiếp theo cần chấm
+        Quick link to the next submission to evaluate
       </p>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

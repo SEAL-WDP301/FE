@@ -27,9 +27,9 @@ export function SubmissionContentCard({
   return (
     <GlassCard className="p-6 space-y-5">
       <div>
-        <h3 className="text-xl font-semibold">Bài nộp</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Nội dung team đã gửi cho vòng thi này
+        <h3 className="text-xl font-semibold">Submission</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Content submitted by the team for this round
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export function SubmissionContentCard({
             </div>
             <div>
               <h4 className="font-medium">GitHub Repository</h4>
-              <p className="text-xs text-muted-foreground">Source code / repo được cấp</p>
+              <p className="text-xs text-muted-foreground">Provided Source code / repo</p>
             </div>
           </div>
           {resolvedGithub ? (
@@ -52,12 +52,12 @@ export function SubmissionContentCard({
               <Button variant="outline" size="sm" asChild>
                 <a href={resolvedGithub} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Xem mã nguồn
+                  View Source Code
                 </a>
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Chưa có link GitHub</p>
+            <p className="text-sm text-muted-foreground">No GitHub link provided</p>
           )}
         </div>
 
@@ -67,7 +67,7 @@ export function SubmissionContentCard({
               <Paperclip size={18} />
             </div>
             <div>
-              <h4 className="font-medium">Tài liệu / File</h4>
+              <h4 className="font-medium">Document / File</h4>
               <p className="text-xs text-muted-foreground">Slide, PDF, document</p>
             </div>
           </div>
@@ -75,11 +75,11 @@ export function SubmissionContentCard({
             <Button variant="outline" size="sm" asChild>
               <a href={resolvedFile} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" />
-                Mở tài liệu
+                Open Document
               </a>
             </Button>
           ) : (
-            <p className="text-sm text-muted-foreground">Chưa có file đính kèm</p>
+            <p className="text-sm text-muted-foreground">No attachment provided</p>
           )}
         </div>
       </div>
@@ -90,12 +90,12 @@ export function SubmissionContentCard({
             <FileText size={18} />
           </div>
           <div>
-            <h4 className="font-medium">Mô tả dự án</h4>
-            <p className="text-xs text-muted-foreground">Ghi chú từ team</p>
+            <h4 className="font-medium">Project Description</h4>
+            <p className="text-xs text-muted-foreground">Team notes</p>
           </div>
         </div>
         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-          {resolvedDescription || "Team chưa ghi mô tả."}
+          {resolvedDescription || "Team has not provided a description."}
         </p>
       </div>
     </GlassCard>

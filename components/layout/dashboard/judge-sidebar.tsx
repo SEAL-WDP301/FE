@@ -81,10 +81,10 @@ export function JudgeSidebar({
             {/* Logo */}
             <div
                 className={cn(
-                    "flex items-center border-b border-sidebar-border transition-all duration-300",
+                    "flex h-16 lg:h-20 items-center border-b border-sidebar-border transition-all duration-300",
                     collapsed
-                        ? "justify-center p-4"
-                        : "justify-start p-6"
+                        ? "justify-center px-4"
+                        : "justify-start px-6"
                 )}
             >
                 <Logo collapsed={collapsed} />
