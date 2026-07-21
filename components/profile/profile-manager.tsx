@@ -10,7 +10,6 @@ import { enqueueSnackbar } from "notistack";
 import {
   Award,
   BriefcaseBusiness,
-  Camera,
   GraduationCap,
   Loader2,
   Mail,
@@ -452,9 +451,6 @@ function ProfilePreviewCard({
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-[#14100c] bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] text-zinc-900 dark:text-[#1a0e04] shadow-[0_4px_12px_-4px_rgba(255,122,26,0.35)] transition-transform hover:scale-110 hover:-rotate-6">
-            <Camera className="h-3.5 w-3.5" />
-          </div>
         </div>
 
         <h2 className="text-xl font-bold">{user.name || "Unnamed user"}</h2>

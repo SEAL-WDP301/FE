@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -19,10 +19,12 @@ export interface JudgeWorkspaceSubmission extends JudgeRoundSubmission {
 
 export interface JudgeDashboardStats {
   pendingReviews: number;
+  inReviewReviews: number;
   completedReviews: number;
   assignedTeams: number;
   averageScore: string | null;
   openRoundCount: number;
+  nearestSubmissionDeadline: string | null;
 }
 
 async function fetchWorkspaceSubmissions(
@@ -57,6 +59,7 @@ async function fetchWorkspaceSubmissions(
 }
 
 export function useJudgeWorkspace(eventId?: string | number) {
+  const [loadedAt] = useState(() => Date.now());
   const eventsQuery = useQuery({
     queryKey: ["judge", "events"],
     queryFn: judgeApi.getAssignedEvents,
@@ -78,12 +81,17 @@ export function useJudgeWorkspace(eventId?: string | number) {
     enabled: !!filteredEvents.length,
   });
 
-  const submissions = submissionsQuery.data ?? [];
+  const submissions = useMemo(
+    () => submissionsQuery.data ?? [],
+    [submissionsQuery.data],
+  );
 
   const stats = useMemo<JudgeDashboardStats>(() => {
     const pendingReviews = submissions.filter(
-      (item) =>
-        item.scoringStatus === "pending" || item.scoringStatus === "in_review",
+      (item) => item.scoringStatus === "pending",
+    ).length;
+    const inReviewReviews = submissions.filter(
+      (item) => item.scoringStatus === "in_review",
     ).length;
     const completedReviews = submissions.filter(
       (item) => item.scoringStatus === "completed",
@@ -101,20 +109,34 @@ export function useJudgeWorkspace(eventId?: string | number) {
         : null;
 
     const openRoundCount =
-      eventsQuery.data?.reduce(
+      filteredEvents.reduce(
         (count, event) =>
           count + event.rounds.filter((round) => round.roundStatus === "open").length,
         0,
-      ) ?? 0;
+      );
+
+    const nearestSubmissionDeadline =
+      filteredEvents
+        .flatMap((event) => event.rounds)
+        .map((round) => round.submissionDeadline)
+        .filter((deadline): deadline is string => {
+          if (!deadline) return false;
+          const timestamp = new Date(deadline).getTime();
+          return Number.isFinite(timestamp) && timestamp >= loadedAt;
+        })
+        .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0] ??
+      null;
 
     return {
       pendingReviews,
+      inReviewReviews,
       completedReviews,
       assignedTeams: submissions.length,
       averageScore,
       openRoundCount,
+      nearestSubmissionDeadline,
     };
-  }, [eventsQuery.data, submissions]);
+  }, [filteredEvents, loadedAt, submissions]);
 
   const pendingSubmissions = useMemo(
     () =>
@@ -125,6 +147,11 @@ export function useJudgeWorkspace(eventId?: string | number) {
     [submissions],
   );
 
+  const inReviewSubmissions = useMemo(
+    () => submissions.filter((item) => item.scoringStatus === "in_review"),
+    [submissions],
+  );
+
   const isLoading = eventsQuery.isLoading || submissionsQuery.isLoading;
   const isError = eventsQuery.isError || submissionsQuery.isError;
 
@@ -132,6 +159,7 @@ export function useJudgeWorkspace(eventId?: string | number) {
     events: eventsQuery.data ?? [],
     submissions,
     pendingSubmissions,
+    inReviewSubmissions,
     stats,
     isLoading,
     isError,

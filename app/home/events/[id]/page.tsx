@@ -43,6 +43,13 @@ type EventTrack = {
   maxMembersPerTeam?: number | null;
 };
 
+type EventAchievement = {
+  id: number;
+  name: string;
+  track?: { id: number; name: string } | null;
+  award?: { id: number; name: string; description?: string | null } | null;
+};
+
 type EventDetail = {
   id: number | string;
   name: string;
@@ -56,6 +63,7 @@ type EventDetail = {
   startDate?: string | null;
   endDate?: string | null;
   prizes?: { id: number; name: string; description?: string; quantity: number }[];
+  eventAchievements?: EventAchievement[];
   githubOrgUrl?: string | null;
   tracks?: EventTrack[];
   ruleGroups?: ApiRuleGroup[];
@@ -219,15 +227,15 @@ function normalizeRuleGroups(event: EventDetail): RuleGroup[] {
   let groupSource = event.ruleGroups ?? (Array.isArray(event.rules) && typeof event.rules[0] === 'object' ? event.rules as ApiRuleGroup[] : undefined);
 
   if (!groupSource && typeof event.rules === 'string') {
-    const parsed = parseJsonSafe<any>(event.rules, null);
+    const parsed = parseJsonSafe<unknown>(event.rules, null);
     if (Array.isArray(parsed)) {
-      groupSource = parsed;
+      groupSource = parsed as ApiRuleGroup[];
     }
   }
 
   if (groupSource?.length) {
     return groupSource
-      .map((group: any) => {
+      .map((group) => {
         const title = group.title || group.name || group.category || 'Rules';
         const items = [
           ...(group.items ?? []),
@@ -242,7 +250,7 @@ function normalizeRuleGroups(event: EventDetail): RuleGroup[] {
           items,
         };
       })
-      .filter((group: any) => group.items.length > 0);
+      .filter((group) => group.items.length > 0);
   }
 
   if (Array.isArray(event.rules) || typeof event.rules === 'string') {
@@ -277,8 +285,8 @@ function normalizeLocation(event: EventDetail): ApiLocation | null {
   const location = event.location ?? event.venue;
   if (!location) return null;
   if (typeof location === 'string') {
-    const parsed = parseJsonSafe<any>(location, null);
-    if (parsed && typeof parsed === 'object') return parsed;
+    const parsed = parseJsonSafe<unknown>(location, null);
+    if (parsed && typeof parsed === 'object') return parsed as ApiLocation;
     return { name: location };
   }
   return location as ApiLocation;
@@ -317,9 +325,9 @@ function parseContactText(value: string): ApiContact {
 function normalizeContactValue(value?: ApiContact[] | ApiContact | string[] | string | null): ApiContact[] {
   if (!value) return [];
   if (typeof value === 'string') {
-    const parsed = parseJsonSafe<any>(value, null);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && typeof parsed === 'object') return [parsed];
+    const parsed = parseJsonSafe<unknown>(value, null);
+    if (Array.isArray(parsed)) return parsed as ApiContact[];
+    if (parsed && typeof parsed === 'object') return [parsed as ApiContact];
   }
   const items = Array.isArray(value) ? value : [value];
   return items.map((item) => (typeof item === 'string' ? parseContactText(item) : item));
@@ -839,7 +847,7 @@ export default function EventDetailPage() {
                     <Trophy className="h-5 w-5 shrink-0 mt-0.5 text-yellow-500" />
                     <div>
                       <p className="font-semibold text-yellow-600 dark:text-yellow-500">Congratulations! Your team won the {teamInfo.team.award.name}!</p>
-                      <p className="text-xs opacity-90 mt-1">This event has concluded. Click "View Workspace" to review your team's complete activity history, submissions, and feedback from the judges.</p>
+                      <p className="text-xs opacity-90 mt-1">{"This event has concluded. Click \"View Workspace\" to review your team's complete activity history, submissions, and feedback from the judges."}</p>
                     </div>
                   </>
                 ) : (
@@ -847,7 +855,7 @@ export default function EventDetailPage() {
                     <Award className="h-5 w-5 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold">A Memorable Journey!</p>
-                      <p className="text-xs opacity-90 mt-1">This event has concluded. Although you didn't win the top prize, your team's efforts are commendable. Click "View Workspace" to review your activity history.</p>
+                      <p className="text-xs opacity-90 mt-1">{"This event has concluded. Although you didn't win the top prize, your team's efforts are commendable. Click \"View Workspace\" to review your activity history."}</p>
                     </div>
                   </>
                 )}
@@ -1031,6 +1039,62 @@ export default function EventDetailPage() {
             </div>
           </div>
         </div>
+
+        {event.status?.toLowerCase() === 'closed' && (
+          <section className="relative mb-12 overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-background p-6 shadow-xl md:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/15 blur-[80px]" />
+            <div className="relative">
+              <div className="mb-7 flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/15 text-amber-400">
+                  <Trophy className="h-7 w-7" />
+                </div>
+                <div>
+                  <Badge variant="outline" className="mb-3 border-amber-400/30 bg-amber-400/10 text-amber-400">
+                    Event completed
+                  </Badge>
+                  <h2 className="text-2xl font-bold text-foreground">Event Achievements</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Awarded teams at {event.name}.
+                  </p>
+                </div>
+              </div>
+
+              {event.eventAchievements && event.eventAchievements.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {event.eventAchievements.map((achievement) => (
+                    <article key={achievement.id} className="rounded-2xl border border-amber-400/20 bg-background/55 p-5 backdrop-blur-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-400">
+                          <Award className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate text-lg font-bold text-foreground">
+                            {achievement.award?.name || 'Official achievement'}
+                          </h3>
+                          <p className="truncate text-sm font-semibold text-amber-400">
+                            {achievement.name}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        {achievement.award?.description || 'Awarded by the event organizer'}
+                      </p>
+                      {achievement.track?.name ? (
+                        <Badge variant="outline" className="mt-4 border-border text-muted-foreground">
+                          {achievement.track.name}
+                        </Badge>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-border bg-background/40 p-5 text-sm text-muted-foreground">
+                  No team achievements have been announced for this event.
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Pending Invitations Alert */}
         {eventPendingInvitations.length > 0 && (

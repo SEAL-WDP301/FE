@@ -5,7 +5,7 @@ import { usePathname, useParams } from "next/navigation";
 
 import {
     CalendarClock,
-    CalendarRange,
+    Bell,
     ChevronLeft,
     ClipboardCheck,
     LayoutDashboard,
@@ -18,6 +18,16 @@ import Logo from "@/components/ui/logo";
 interface DashboardSidebarProps {
     collapsed: boolean;
     setCollapsed: (value: boolean) => void;
+}
+
+interface JudgeEventRound {
+    status?: string;
+    startDate?: string | null;
+    endDate?: string | null;
+}
+
+interface JudgeEventSummary {
+    rounds?: JudgeEventRound[];
 }
 
 const getMenus = (eventId: string) => {
@@ -39,6 +49,11 @@ const getMenus = (eventId: string) => {
             icon: CalendarClock,
         },
         {
+            label: "Notifications",
+            href: `${base}/notifications`,
+            icon: Bell,
+        },
+        {
             label: "Profile",
             href: "/judge/profile",
             icon: User,
@@ -58,16 +73,16 @@ export function JudgeSidebar({
     const eventId = params.eventId as string || "1";
     const menus = getMenus(eventId);
 
-    const { data: event } = useQuery({
+    const { data: event } = useQuery<JudgeEventSummary | null>({
         queryKey: ["judgeEvent", eventId],
         queryFn: async () => {
             const { data } = await axiosClient.get(`/public/events/${eventId}`);
-            return data.data;
+            return data.data ?? null;
         },
         enabled: !!eventId,
     });
 
-    const currentRound = event?.rounds?.find((r: any) => r.status === 'open' || r.status === 'not_started') || event?.rounds?.[0];
+    const currentRound = event?.rounds?.find((round) => round.status === 'open' || round.status === 'not_started') || event?.rounds?.[0];
     const isRoundHasDates = !!(currentRound?.startDate || currentRound?.endDate);
     const shouldDisable = isRoundHasDates && currentRound?.status === 'not_started';
 

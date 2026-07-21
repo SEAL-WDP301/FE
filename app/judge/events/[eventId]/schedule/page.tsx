@@ -136,17 +136,6 @@ export default function SchedulePage() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="border border-border p-5">
-                        <div className="flex items-start gap-3">
-                            <AlertCircle className="mt-0.5 h-5 w-5 text-orange-400" />
-                            <div>
-                                <p className="font-semibold text-foreground">Mock calendar removed</p>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    Calibration sessions and custom judge calendar events are hidden until the backend exposes real schedule records.
-                                </p>
-                            </div>
-                        </div>
-                    </GlassCard>
                 </>
             )}
         </div>

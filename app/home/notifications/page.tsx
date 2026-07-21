@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, Suspense } from "react";
+import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { Bell, Calendar, MailOpen, Mail, Clock, ExternalLink, Download, AlertCircle, CheckCircle2, XCircle, Trash2, CheckCheck, Info } from "lucide-react";
+import { Bell, MailOpen, Mail, Clock, Trash2, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { enqueueSnackbar } from "notistack";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 import { NotificationDynamicTemplate } from "@/components/home/notification-templates";
 
@@ -17,11 +17,36 @@ import { NotificationDynamicTemplate } from "@/components/home/notification-temp
 // MAIN COMPONENT
 // ==========================================
 
+interface UserNotification {
+  id: number;
+  title: string;
+  content: string;
+  type?: string;
+  actionUrl?: string | null;
+  isRead: boolean;
+  createdAt: string;
+  event?: {
+    id?: number;
+    name?: string;
+  } | null;
+}
+
+interface NotificationPage {
+  data: UserNotification[];
+  meta: {
+    page: number;
+    totalPages: number;
+  };
+}
+
 function NotificationsContent() {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const basePath = pathname;
+  const isRoleNotificationPage =
+    pathname.startsWith('/judge/') || pathname.startsWith('/mentor/');
 
   const idParam = searchParams.get('id');
 
@@ -36,7 +61,7 @@ function NotificationsContent() {
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const res = await axiosClient.get(`/notifications?page=${pageParam}&limit=25`);
-      return res.data;
+      return res.data as NotificationPage;
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.meta.page < lastPage.meta.totalPages) {
@@ -47,26 +72,10 @@ function NotificationsContent() {
   });
 
   const notifications = data?.pages.flatMap((page) => page.data) || [];
-
-  useEffect(() => {
-    if (idParam && notifications.length > 0) {
-      const id = parseInt(idParam, 10);
-      if (!isNaN(id)) {
-        if (selectedId !== id) {
-          setSelectedId(id);
-        }
-        const notif = notifications.find((n: any) => n.id === id);
-        if (notif && !notif.isRead && !markAsReadMutation.isPending) {
-          markAsReadMutation.mutate(id);
-        }
-      }
-    } else if (!selectedId && notifications.length > 0) {
-      setSelectedId(notifications[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idParam, notifications.length]);
-
-  const selectedNotification = notifications.find((n: any) => n.id === selectedId);
+  const requestedId = idParam ? Number.parseInt(idParam, 10) : null;
+  const selectedNotification = requestedId
+    ? notifications.find((notification) => notification.id === requestedId)
+    : notifications[0];
 
   // Mutations
   const markAsReadMutation = useMutation({
@@ -94,9 +103,8 @@ function NotificationsContent() {
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
-      if (selectedId === id) {
-        setSelectedId(null);
-        router.replace('/home/notifications');
+      if (selectedNotification?.id === id) {
+        router.replace(basePath);
       }
       enqueueSnackbar("Notification removed", { variant: 'info' });
     }
@@ -108,15 +116,21 @@ function NotificationsContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
-      setSelectedId(null);
-      router.replace('/home/notifications');
+      router.replace(basePath);
       enqueueSnackbar("All notification have been deleted", { variant: 'info' });
     }
   });
 
-  const handleSelectNotification = (notif: any) => {
-    setSelectedId(notif.id);
-    router.replace(`/home/notifications?id=${notif.id}`);
+  useEffect(() => {
+    if (idParam && selectedNotification && !selectedNotification.isRead) {
+      markAsReadMutation.mutate(selectedNotification.id);
+    }
+    // Marking the selected notification is intentionally keyed to the URL selection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idParam, selectedNotification?.id, selectedNotification?.isRead]);
+
+  const handleSelectNotification = (notif: UserNotification) => {
+    router.replace(`${basePath}?id=${notif.id}`);
     if (!notif.isRead) {
       markAsReadMutation.mutate(notif.id);
     }
@@ -127,7 +141,14 @@ function NotificationsContent() {
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] bg-background">
       {/* Page Header */}
-      <div className="px-6 py-4 border-b border-border bg-card/50">
+      <div
+        className={cn(
+          "px-6 py-4",
+          isRoleNotificationPage
+            ? "bg-transparent pb-6"
+            : "border-b border-border bg-card/50"
+        )}
+      >
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Bell className="w-6 h-6 text-orange-500" />
           Notification Center
@@ -155,7 +176,7 @@ function NotificationsContent() {
                   size="sm" 
                   className="flex-1 text-xs h-8 text-muted-foreground"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isPending || notifications.every((n: any) => n.isRead)}
+                  disabled={markAllAsReadMutation.isPending || notifications.every((notification) => notification.isRead)}
                 >
                   <CheckCheck className="w-3.5 h-3.5 mr-1.5" />
                   Mark all read
@@ -194,7 +215,7 @@ function NotificationsContent() {
                 }
               }}
             >
-              {notifications.map((notif: any) => {
+              {notifications.map((notif) => {
                 const isSelected = selectedNotification?.id === notif.id;
                 return (
                   <div key={notif.id} className="relative group">
@@ -319,4 +340,3 @@ export default function NotificationsPage() {
     </Suspense>
   );
 }
-

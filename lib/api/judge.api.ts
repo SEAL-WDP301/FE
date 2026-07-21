@@ -19,8 +19,6 @@ export interface JudgeAssignedEvent {
   season: string;
   year: number;
   status: string;
-  registrationDeadline?: string | null;
-  endDate?: string | null;
   rounds: JudgeAssignedRound[];
 }
 
@@ -32,7 +30,6 @@ export interface JudgeRoundSubmission {
   track: { id: number; name: string };
   status: string;
   githubUrl?: string | null;
-  assignedRepoUrl?: string | null;
   submittedAt?: string | null;
   scoringStatus: JudgeScoringStatus;
   scoredCriteria: number;
@@ -60,14 +57,12 @@ export interface JudgeSubmissionDetail {
   status: string;
   fileUrl?: string | null;
   githubUrl?: string | null;
-  assignedRepoUrl?: string | null;
   description?: string | null;
   submittedAt?: string | null;
   team: {
     name: string;
     anonymousIndex?: number;
     track: { id: number; name: string };
-    githubRepoUrl?: string | null;
   };
   round: {
     id: number;
@@ -162,4 +157,13 @@ export function mapScoringStatusLabel(status: JudgeScoringStatus) {
     default:
       return "Pending";
   }
+}
+
+export function formatSubmissionLabel(submission: {
+  id: number;
+  submissionId?: number;
+  anonymousIndex?: number;
+}) {
+  const value = submission.anonymousIndex ?? submission.submissionId ?? submission.id;
+  return `Submission #${String(value).padStart(3, "0")}`;
 }
