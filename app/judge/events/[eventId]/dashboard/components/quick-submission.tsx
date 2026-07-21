@@ -7,16 +7,14 @@ import { useParams } from "next/navigation";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
-import { formatSubmissionLabel } from "@/lib/api/judge.api";
 
 export function QuickSubmission() {
   const params = useParams();
-  const { inReviewSubmissions, pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
+  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const focus =
-    inReviewSubmissions[0] ??
     pendingSubmissions[0] ??
-    submissions.find((item) => item.githubUrl) ??
+    submissions.find((item) => item.assignedRepoUrl) ??
     submissions[0];
 
   if (isLoading) {
@@ -38,7 +36,7 @@ export function QuickSubmission() {
     );
   }
 
-  const githubUrl = focus.githubUrl;
+  const githubUrl = focus.githubUrl ?? focus.assignedRepoUrl;
   const shortcuts = [
     githubUrl
       ? {
@@ -50,9 +48,9 @@ export function QuickSubmission() {
       : null,
     {
       icon: FileText,
-      label: formatSubmissionLabel(focus),
+      label: focus.teamName,
       desc: `${focus.eventName} · ${focus.roundName}`,
-      href: `/judge/events/${params.eventId}/evalution?roundId=${focus.roundId}&submissionId=${focus.submissionId ?? focus.id}`,
+      href: `/judge/events/${params.eventId}/evalution?roundId=${focus.roundId}`,
       internal: true,
     },
   ].filter(Boolean) as Array<{

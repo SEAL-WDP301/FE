@@ -1133,9 +1133,9 @@ export default function EventDetailPage() {
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 1024px"
-                className="object-cover opacity-25"
+                className="object-cover opacity-60"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/45" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
             </>
           )}
           <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-orange-500/10 blur-[100px]" />

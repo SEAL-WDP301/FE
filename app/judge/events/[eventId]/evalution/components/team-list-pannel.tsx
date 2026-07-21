@@ -9,11 +9,11 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   type JudgeRoundSubmission,
-  formatSubmissionLabel,
   mapScoringStatusLabel,
 } from "@/lib/api/judge.api";
 
@@ -36,40 +36,19 @@ export function TeamListPanel({
 }: Props) {
   const [status, setStatus] = useState("All");
   const [search, setSearch] = useState("");
-  const [trackId, setTrackId] = useState("all");
-  const [sort, setSort] = useState("priority");
-
-  const tracks = useMemo(
-    () =>
-      Array.from(
-        new Map(teams.map((team) => [team.track.id, team.track])).values(),
-      ),
-    [teams],
-  );
 
   const filteredTeams = useMemo(() => {
-    const statusPriority = { in_review: 0, pending: 1, completed: 2 } as const;
-
     return teams.filter((team) => {
-      const matchSearch = formatSubmissionLabel(team)
+      const matchSearch = team.teamName
         .toLowerCase()
-        .includes(search.toLowerCase().trim());
+        .includes(search.toLowerCase());
 
       const label = mapScoringStatusLabel(team.scoringStatus);
       const matchStatus = status === "All" ? true : label === status;
-      const matchTrack = trackId === "all" || String(team.track.id) === trackId;
 
-      return matchSearch && matchStatus && matchTrack;
-    }).sort((left, right) => {
-      if (sort === "submission") {
-        return (left.anonymousIndex ?? left.id) - (right.anonymousIndex ?? right.id);
-      }
-      if (sort === "score") {
-        return (right.weightedScore ?? -1) - (left.weightedScore ?? -1);
-      }
-      return statusPriority[left.scoringStatus] - statusPriority[right.scoringStatus];
+      return matchSearch && matchStatus;
     });
-  }, [search, sort, status, teams, trackId]);
+  }, [search, status, teams]);
 
   return (
     <motion.aside
@@ -91,10 +70,10 @@ export function TeamListPanel({
           <div className="mb-4 flex items-center justify-between">
           <div className="mb-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
-              Submissions
+              Select Team
             </p>
             <h3 className="text-sm font-semibold text-foreground">
-              {teams.length} assigned submissions
+              {teams.length} submissions (anonymous)
             </h3>
           </div>
 
@@ -115,39 +94,12 @@ export function TeamListPanel({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Submission #014..."
+              placeholder="Search Team 1, Team 2..."
               className="pl-10"
             />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <select
-              value={trackId}
-              onChange={(event) => setTrackId(event.target.value)}
-              className="h-9 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
-              aria-label="Filter by track"
-            >
-              <option value="all">All tracks</option>
-              {tracks.map((track) => (
-                <option key={track.id} value={String(track.id)}>
-                  {track.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value)}
-              className="h-9 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
-              aria-label="Sort submissions"
-            >
-              <option value="priority">In progress first</option>
-              <option value="submission">Submission number</option>
-              <option value="score">Highest score</option>
-            </select>
-          </div>
-
-          <div className="mt-3 flex rounded-xl bg-muted/20 p-1">
+          <div className="flex rounded-xl bg-muted/20 p-1">
             {["All", "Pending", "In Review", "Completed"].map((item) => (
               <button
                 key={item}
@@ -174,7 +126,7 @@ export function TeamListPanel({
             <p className="p-4 text-sm text-muted-foreground">Loading teams...</p>
           ) : filteredTeams.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              No submissions are available for this round. Only teams that have submitted work are listed.
+              No submissions in this round yet. Only teams that have submitted are listed.
             </p>
           ) : (
             filteredTeams.map((team) => {
@@ -195,7 +147,11 @@ export function TeamListPanel({
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 font-bold text-black">
-                      #{String(team.anonymousIndex ?? submissionId).padStart(3, "0")}
+                      {team.anonymousIndex != null
+                        ? `T${team.anonymousIndex}`
+                        : team.teamName.match(/^Team\s+(\d+)$/i)
+                          ? `T${team.teamName.match(/^Team\s+(\d+)$/i)![1]}`
+                          : team.teamName.slice(0, 2).toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -205,7 +161,7 @@ export function TeamListPanel({
                             className="font-semibold truncate"
                             title={`Scored ${team.scoredCriteria}/${team.totalCriteria} criteria`}
                           >
-                            {formatSubmissionLabel(team)}
+                            {team.teamName}
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">
                             {team.track?.name}
@@ -223,7 +179,7 @@ export function TeamListPanel({
                         <span className={cn(
                           "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                           statusLabel === "Pending" ? "bg-amber-500/10 text-amber-500" :
-                          statusLabel === "Completed" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                          statusLabel === "Evaluated" || statusLabel === "Completed" || statusLabel === "Done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                           "bg-blue-500/10 text-blue-500"
                         )}>
                           {statusLabel}

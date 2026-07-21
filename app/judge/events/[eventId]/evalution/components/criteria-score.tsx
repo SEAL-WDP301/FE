@@ -27,7 +27,7 @@ export function CriteriaScoring({
   if (!rubrics.length) {
     return (
       <GlassCard className="p-8 text-sm text-muted-foreground">
-        No rubric is configured for this round or track. The organizer must configure the evaluation criteria first.
+        No rubric available for this round/track. Organizer needs to configure scoring criteria first.
       </GlassCard>
     );
   }
@@ -92,7 +92,7 @@ export function CriteriaScoring({
             <Textarea
               className="mt-4 min-h-[90px]"
               disabled={disabled}
-              placeholder="Add a comment for this criterion..."
+              placeholder="Comment on this criterion..."
               value={comments[item.id] ?? ""}
               onChange={(e) => onCommentChange(item.id, e.target.value)}
             />

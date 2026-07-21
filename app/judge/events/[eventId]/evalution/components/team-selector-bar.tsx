@@ -13,7 +13,6 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import {
   type JudgeRoundSubmission,
-  formatSubmissionLabel,
   mapScoringStatusLabel,
 } from "@/lib/api/judge.api";
 
@@ -34,7 +33,7 @@ export function TeamSelectorBar({
     return (
       <GlassCard className="flex items-center gap-3 p-4">
         <Users className="h-5 w-5 text-orange-500" />
-        <span className="text-sm text-muted-foreground">Loading submissions...</span>
+        <span className="text-sm text-muted-foreground">Loading teams...</span>
       </GlassCard>
     );
   }
@@ -44,9 +43,9 @@ export function TeamSelectorBar({
       <GlassCard className="flex items-start gap-3 p-4">
         <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
         <div>
-          <p className="font-medium">No submissions yet</p>
+          <p className="font-medium">No teams have submitted yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            No team has submitted work for this round yet. A submission is required before evaluation can begin.
+            This round has no submissions yet. Teams must submit before you can score.
           </p>
         </div>
       </GlassCard>
@@ -68,12 +67,12 @@ export function TeamSelectorBar({
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
-              Select a submission to evaluate
+              Select a team to score
             </p>
             <p className="text-sm text-muted-foreground">
               {teams.length === 1
-                ? "This round has 1 submission"
-                : `${teams.length} submissions — select a submission ID below or from the left panel`}
+                ? "This round has 1 submission — Team 1"
+                : `${teams.length} submissions — select Team 1, Team 2... below or on the left`}
             </p>
           </div>
         </div>
@@ -84,17 +83,17 @@ export function TeamSelectorBar({
             onValueChange={(value) => onSelectSubmission(Number(value))}
           >
             <SelectTrigger className="h-11 w-full border-orange-500/30 bg-background/60">
-              <SelectValue placeholder="Select a submission...">
+              <SelectValue placeholder="Select team...">
                 {selectedTeam ? (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{formatSubmissionLabel(selectedTeam)}</span>
+                    <span className="font-medium">{selectedTeam.teamName}</span>
                     <span className="text-muted-foreground text-xs">·</span>
                     <span className="text-muted-foreground text-xs">{selectedTeam.track?.name}</span>
                     <span className="text-muted-foreground text-xs">·</span>
                     <span className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                       selectedTeam.scoringStatus === "pending" ? "bg-amber-500/10 text-amber-500" :
-                      selectedTeam.scoringStatus === "completed" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                      selectedTeam.scoringStatus === "evaluated" || selectedTeam.scoringStatus === "completed" || selectedTeam.scoringStatus === "done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                       "bg-blue-500/10 text-blue-500"
                     )}>
                       {mapScoringStatusLabel(selectedTeam.scoringStatus)}
@@ -107,7 +106,7 @@ export function TeamSelectorBar({
                     )}
                   </div>
                 ) : (
-                  "Select a submission..."
+                  "Select team..."
                 )}
               </SelectValue>
             </SelectTrigger>
@@ -116,19 +115,19 @@ export function TeamSelectorBar({
                 const submissionId = team.submissionId ?? team.id;
                 const statusLabel = mapScoringStatusLabel(team.scoringStatus);
                 const isPending = team.scoringStatus === "pending";
-                const isCompleted = team.scoringStatus === "completed";
+                const isEvaluated = team.scoringStatus === "evaluated";
 
                 return (
                   <SelectItem key={submissionId} value={String(submissionId)}>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{formatSubmissionLabel(team)}</span>
+                      <span className="font-medium">{team.teamName}</span>
                       <span className="text-muted-foreground text-xs">·</span>
                       <span className="text-muted-foreground text-xs">{team.track?.name}</span>
                       <span className="text-muted-foreground text-xs">·</span>
                       <span className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                         isPending ? "bg-amber-500/10 text-amber-500" :
-                        isCompleted ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                        isEvaluated ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                         "bg-blue-500/10 text-blue-500"
                       )}>
                         {statusLabel}

@@ -77,7 +77,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
                 </div>
 
                 {/* Khu vực Search hoặc Custom Content */}
-                <div className="relative ml-auto flex items-center md:flex-1 md:max-w-xl">
+                <div id="topbar-center-content" className="relative mr-auto flex items-center md:flex-1 pr-2 overflow-x-auto no-scrollbar">
                     {customCenterContent ? (
                         customCenterContent
                     ) : null}

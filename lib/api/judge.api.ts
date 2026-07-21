@@ -35,6 +35,7 @@ export interface JudgeRoundSubmission {
   scoredCriteria: number;
   totalCriteria: number;
   weightedScore?: number | null;
+  isVotedByMe?: boolean;
 }
 
 export interface JudgeRubric {
@@ -76,6 +77,7 @@ export interface JudgeSubmissionDetail {
   myScores: JudgeScoreEntry[];
   scoringStatus: JudgeScoringStatus;
   weightedScore?: number | null;
+  isVotedByMe?: boolean;
 }
 
 export interface SubmitJudgeScoresPayload {
@@ -122,6 +124,11 @@ export const judgeApi = {
       scoringStatus: JudgeScoringStatus;
       weightedScore: number | null;
     };
+  },
+
+  toggleVote: async (submissionId: number) => {
+    const response = await axiosClient.post(`/judge/submissions/${submissionId}/vote`);
+    return response.data?.data as { isVotedByMe: boolean };
   },
 };
 
