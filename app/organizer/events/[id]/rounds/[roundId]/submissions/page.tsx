@@ -512,7 +512,7 @@ export default function EventSubmissionsPage() {
                 >
                   <option value="all">All Teams</option>
                   {Array.from(new Map(eventCommits.data.map((commit: any) => [commit.teamId, commit.team?.name])).entries()).map(([teamId, teamName]) => (
-                    <option key={teamId} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
+                    <option key={String(teamId)} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
                   ))}
                 </select>
               </div>

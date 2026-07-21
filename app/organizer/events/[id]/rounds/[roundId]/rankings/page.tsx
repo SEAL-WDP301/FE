@@ -10,10 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Award, Crown, Medal, ChevronDown, ChevronUp, AlertTriangle,
-  CheckCircle2, TrendingUp, TrendingDown, Minus,
+  CheckCircle2, TrendingUp, TrendingDown, Minus, Star, Heart,
   BarChart3, Users, Loader2, Gavel, Send,
   Sparkles, type LucideIcon
 } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   getDetailedRoundRankings,
   getOrganizerEvent,
@@ -358,14 +364,48 @@ function TeamRow({
           </div>
         </div>
 
-        <div className="text-right shrink-0">
-          <div className={`text-2xl font-bold tabular-nums ${scoreClass}`}>
-            {entry.finalScore !== null ? entry.finalScore.toFixed(2) : "—"}
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right">
+            <div className={`text-2xl font-bold tabular-nums ${scoreClass}`}>
+              {entry.finalScore !== null ? entry.finalScore.toFixed(2) : "—"}
+            </div>
+            <div className="text-[10px] text-muted-foreground">/ 10.00</div>
           </div>
-          <div className="text-[10px] text-muted-foreground">/ 10.00</div>
+          <div className="h-10 w-px bg-border hidden sm:block"></div>
+          <div className="text-right">
+            <HoverCard>
+              <HoverCardTrigger className="flex items-center gap-1.5 cursor-help hover:text-orange-500 transition-colors">
+                <Star className="w-5 h-5 fill-current text-orange-400" />
+                <span className="text-2xl font-bold tabular-nums text-orange-600 dark:text-orange-400">{entry.totalVotes ?? 0}</span>
+              </HoverCardTrigger>
+              <HoverCardContent align="end" className="w-64">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-orange-500" /> Voted By
+                  </h4>
+                  {(!entry.votedBy || entry.votedBy.length === 0) ? (
+                    <p className="text-xs text-muted-foreground">No votes yet.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2 mt-2">
+                      {entry.votedBy.map((judge) => (
+                        <div key={judge.id} className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6 border">
+                            <AvatarImage src={judge.avatarUrl} />
+                            <AvatarFallback className="text-[10px]">{judge.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-medium truncate">{judge.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+            <div className="text-[10px] text-muted-foreground">Votes</div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 text-muted-foreground text-sm shrink-0">
+        <div className="flex items-center gap-1 text-muted-foreground text-sm shrink-0 ml-2">
           <Gavel className="w-4 h-4" />
           <span>{entry.judges.length} judge{entry.judges.length !== 1 ? "s" : ""}</span>
         </div>
@@ -468,6 +508,7 @@ export default function RankingsPage() {
   const queryClient = useQueryClient();
 
   const [selectedTrackIdx, setSelectedTrackIdx] = useState(0);
+  const [sortMode, setSortMode] = useState<"score" | "votes">("score");
   const [autoSelectTopN, setAutoSelectTopN] = useState(3);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(new Set());
   const [teamAwards, setTeamAwards] = useState<Record<number, OrganizerPrize | null>>({});
@@ -524,9 +565,28 @@ export default function RankingsPage() {
   const tracks = useMemo<RankingTrackGroup[]>(() => {
     if (!data?.tracks) return [];
     
-    // Create an "All Tracks" object
-    const allEntries = data.tracks.flatMap((trackGroup) => trackGroup.entries);
+    const processedTracks = data.tracks.map(t => {
+      const sortedEntries = [...t.entries].sort((a, b) => {
+        if (sortMode === "votes") {
+          const bVotes = b.totalVotes ?? 0;
+          const aVotes = a.totalVotes ?? 0;
+          if (bVotes !== aVotes) return bVotes - aVotes;
+        }
+        if (a.finalScore === null && b.finalScore === null) return 0;
+        if (a.finalScore === null) return 1;
+        if (b.finalScore === null) return -1;
+        return b.finalScore - a.finalScore;
+      });
+      return { ...t, entries: sortedEntries };
+    });
+
+    const allEntries = processedTracks.flatMap((trackGroup) => trackGroup.entries);
     allEntries.sort((a, b) => {
+      if (sortMode === "votes") {
+        const bVotes = b.totalVotes ?? 0;
+        const aVotes = a.totalVotes ?? 0;
+        if (bVotes !== aVotes) return bVotes - aVotes;
+      }
       if (a.finalScore === null && b.finalScore === null) return 0;
       if (a.finalScore === null) return 1;
       if (b.finalScore === null) return -1;
@@ -538,8 +598,8 @@ export default function RankingsPage() {
       entries: allEntries
     };
 
-    return [allTracksGroup, ...data.tracks];
-  }, [data]);
+    return [allTracksGroup, ...processedTracks];
+  }, [data, sortMode]);
 
   const selectedTrack = tracks[selectedTrackIdx];
   const entries = useMemo<DetailedRankedTeamEntry[]>(() => {
@@ -658,23 +718,48 @@ export default function RankingsPage() {
         )}
       </div>
 
-      {/* Track Tabs */}
+      {/* Track Tabs & Sort Controls */}
       {tracks.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
-          {tracks.map((t, idx) => (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex gap-2 flex-wrap">
+            {tracks.map((t, idx) => (
+              <button
+                key={t.track.id}
+                onClick={() => setSelectedTrackIdx(idx)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${
+                  idx === selectedTrackIdx
+                    ? "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {t.track.name}
+                <span className="ml-2 text-xs opacity-60">({t.entries.length})</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border">
             <button
-              key={t.track.id}
-              onClick={() => setSelectedTrackIdx(idx)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${
-                idx === selectedTrackIdx
-                  ? "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400"
-                  : "border-border text-muted-foreground hover:bg-muted"
+              onClick={() => setSortMode("score")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                sortMode === "score"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.track.name}
-              <span className="ml-2 text-xs opacity-60">({t.entries.length})</span>
+              Sort by Score
             </button>
-          ))}
+            <button
+              onClick={() => setSortMode("votes")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                sortMode === "votes"
+                  ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Star className="w-3.5 h-3.5 fill-current" /> Sort by Votes
+            </button>
+          </div>
         </div>
       )}
 

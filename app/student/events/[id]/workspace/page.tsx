@@ -88,10 +88,10 @@ export default function WorkspaceOverviewPage() {
 
     // Priority: competing → last participated → first round
     const competingEntry = roundSubmissions.find(
-      (rs) => rs.teamRound?.status === "competing"
+      (rs: any) => rs.teamRound?.status === "competing"
     );
     const participatedEntries = roundSubmissions.filter(
-      (rs) => rs.teamRound !== null
+      (rs: any) => rs.teamRound !== null
     );
     const lastParticipated = participatedEntries[participatedEntries.length - 1];
     const firstEntry = roundSubmissions[0];
@@ -104,12 +104,12 @@ export default function WorkspaceOverviewPage() {
 
   // ── Progress Line (team-level, not event-level) ───────────────────────────
   const eliminatedRoundIdx = roundSubmissions.findIndex(
-    (rs) => rs.teamRound?.status === "eliminated"
+    (rs: any) => rs.teamRound?.status === "eliminated"
   );
   const isEliminated = eliminatedRoundIdx >= 0;
 
   const lastParticipatedIdx = roundSubmissions.reduce(
-    (lastIdx: number, rs, idx: number) =>
+    (lastIdx: number, rs: any, idx: number) =>
       rs.teamRound !== null ? idx : lastIdx,
     -1
   );
@@ -126,7 +126,7 @@ export default function WorkspaceOverviewPage() {
   let nextRound = null;
   if (selectedIdx < rounds.length - 1) {
     const nextCandidate = rounds[selectedIdx + 1];
-    const hasAccess = roundSubmissions.some((rs) => rs.round.id === nextCandidate.id && rs.teamRound !== null);
+    const hasAccess = roundSubmissions.some((rs: any) => rs.round.id === nextCandidate.id && rs.teamRound !== null);
     if (hasAccess) {
       nextRound = nextCandidate;
     }
@@ -134,7 +134,7 @@ export default function WorkspaceOverviewPage() {
 
   // ── Show the active round card based on selected round context ─────────────
   const selectedRoundEntry = selectedRoundId
-    ? roundSubmissions.find((rs) => rs.round.id === selectedRoundId)
+    ? roundSubmissions.find((rs: any) => rs.round.id === selectedRoundId)
     : null;
   const displayRound = selectedRoundEntry?.round ?? currentActiveRound;
   const canSubmitSelected = selectedRoundEntry?.canSubmit ?? false;
@@ -193,7 +193,7 @@ export default function WorkspaceOverviewPage() {
 
             <div className={`grid grid-cols-1 md:grid-cols-${Math.max(1, rounds.length)} gap-6 relative z-10`}>
               {rounds.map((round, index) => {
-                const rs = roundSubmissions.find((e) => e.round.id === round.id);
+                const rs = roundSubmissions.find((e: any) => e.round.id === round.id);
                 const teamRoundStatus = rs?.teamRound?.status ?? null;
                 const isEliminatedHere = teamRoundStatus === "eliminated";
                 const isAdvanced = teamRoundStatus === "advanced";

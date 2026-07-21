@@ -10,6 +10,7 @@ import {
     ClipboardCheck,
     LayoutDashboard,
     User,
+    Trophy,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -42,6 +43,11 @@ const getMenus = (eventId: string) => {
             label: "Evalution",
             href: `${base}/evalution`,
             icon: ClipboardCheck,
+        },
+        {
+            label: "Leaderboard",
+            href: `${base}/leaderboard`,
+            icon: Trophy,
         },
         {
             label: "Schedule",

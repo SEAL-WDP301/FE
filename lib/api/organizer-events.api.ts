@@ -292,6 +292,12 @@ export interface DetailedRankedTeamEntry {
   status: string;
   award?: OrganizerPrize | null;
   submittedAt: string;
+  totalVotes?: number;
+  votedBy?: {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+  }[];
 }
 
 export interface DetailedRankingsResponse {
