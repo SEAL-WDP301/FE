@@ -1,10 +1,9 @@
 "use client";
 
 import { AlarmClock, Loader2 } from "lucide-react";
+import { useParams } from "next/navigation";
 
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
-
-import { useParams } from "next/navigation";
 
 export default function UpcomingDeadlines() {
   const params = useParams();
@@ -38,8 +37,8 @@ export default function UpcomingDeadlines() {
             <div key={item.key} className="rounded-lg border p-3">
               <div className="flex justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-medium truncate">{item.roundName}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="truncate font-medium">{item.roundName}</p>
+                  <p className="truncate text-xs text-muted-foreground">
                     {item.eventName}
                   </p>
                 </div>

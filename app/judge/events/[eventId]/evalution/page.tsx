@@ -1,10 +1,17 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { PanelLeftOpen, Loader2, AlertCircle } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  PanelLeftOpen,
+} from "lucide-react";
 import { useSnackbar } from "notistack";
 
 import { TeamListPanel } from "./components/team-list-pannel";
@@ -15,22 +22,14 @@ import { SubmissionContentCard } from "./components/submission-content-card";
 import { CriteriaScoring } from "./components/criteria-score";
 import { ScoreSummary } from "./components/score-summary";
 import { GlassCard } from "@/components/ui/glass-card";
-import {
-  judgeApi,
-  type JudgeRubric,
-} from "@/lib/api/judge.api";
+import { Button } from "@/components/ui/button";
+import { judgeApi } from "@/lib/api/judge.api";
 
 function buildScoreState(
-  rubrics: JudgeRubric[],
   myScores: Array<{ criterionId: number; scoreValue: number | string; comment?: string | null }>,
 ) {
   const scores: Record<number, number> = {};
   const comments: Record<number, string> = {};
-
-  rubrics.forEach((rubric) => {
-    scores[rubric.id] = 0;
-    comments[rubric.id] = "";
-  });
 
   myScores.forEach((entry) => {
     scores[entry.criterionId] = Number(entry.scoreValue);
@@ -54,6 +53,7 @@ export default function EvaluationPage() {
 
   const eventIdParam = params.eventId as string;
   const roundIdParam = searchParams.get("roundId");
+  const submissionIdParam = searchParams.get("submissionId");
 
   const { data: assignedEvents = [], isLoading: eventsLoading } = useQuery({
     queryKey: ["judge", "events"],
@@ -68,7 +68,7 @@ export default function EvaluationPage() {
     return assignedEvents[0];
   }, [assignedEvents, eventIdParam]);
 
-  const eventRounds = selectedEvent?.rounds ?? [];
+  const eventRounds = useMemo(() => selectedEvent?.rounds ?? [], [selectedEvent]);
 
   const selectedRoundId = useMemo(() => {
     if (roundIdParam) {
@@ -111,9 +111,19 @@ export default function EvaluationPage() {
       (s) => (s.submissionId ?? s.id) === selectedSubmissionId,
     );
     if (!selectedSubmissionId || !exists) {
-      setSelectedSubmissionId(roundSubmissions[0].submissionId ?? roundSubmissions[0].id);
+      const requestedId = Number(submissionIdParam);
+      const requested = roundSubmissions.find(
+        (submission) =>
+          Number.isFinite(requestedId) &&
+          (submission.submissionId ?? submission.id) === requestedId,
+      );
+      setSelectedSubmissionId(
+        requested
+          ? requested.submissionId ?? requested.id
+          : roundSubmissions[0].submissionId ?? roundSubmissions[0].id,
+      );
     }
-  }, [roundSubmissions, selectedSubmissionId]);
+  }, [roundSubmissions, selectedSubmissionId, submissionIdParam]);
 
   const {
     data: submissionDetail,
@@ -126,37 +136,10 @@ export default function EvaluationPage() {
 
   useEffect(() => {
     if (!submissionDetail) return;
-    const next = buildScoreState(submissionDetail.rubrics, submissionDetail.myScores);
-    
-    if (selectedSubmissionId) {
-      try {
-        const draftKey = `judge_draft_${selectedSubmissionId}`;
-        const savedDraft = localStorage.getItem(draftKey);
-        if (savedDraft) {
-          const parsed = JSON.parse(savedDraft);
-          setScores(parsed.scores || next.scores);
-          setComments(parsed.comments || next.comments);
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to load draft", e);
-      }
-    }
-
+    const next = buildScoreState(submissionDetail.myScores);
     setScores(next.scores);
     setComments(next.comments);
-  }, [submissionDetail, selectedSubmissionId]);
-
-  const handleSaveDraft = useCallback(() => {
-    if (!selectedSubmissionId) return;
-    const draftKey = `judge_draft_${selectedSubmissionId}`;
-    try {
-      localStorage.setItem(draftKey, JSON.stringify({ scores, comments }));
-      enqueueSnackbar("Bản nháp đã được lưu tạm trên trình duyệt", { variant: "info" });
-    } catch (e) {
-      enqueueSnackbar("Không thể lưu bản nháp", { variant: "error" });
-    }
-  }, [selectedSubmissionId, scores, comments, enqueueSnackbar]);
+  }, [submissionDetail]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -165,29 +148,32 @@ export default function EvaluationPage() {
       }
 
       const payload = {
-        scores: submissionDetail.rubrics.map((rubric) => {
-          return {
-            criterionId: rubric.id,
-            scoreValue: scores[rubric.id] ?? 0,
-            comment: comments[rubric.id]?.trim() || undefined,
-          };
-        }),
+        scores: submissionDetail.rubrics
+          .filter((rubric) => scores[rubric.id] !== undefined)
+          .map((rubric) => {
+            return {
+              criterionId: rubric.id,
+              scoreValue: scores[rubric.id],
+              comment: comments[rubric.id]?.trim() || undefined,
+            };
+          }),
       };
+
+      if (!payload.scores.length) {
+        throw new Error("Enter at least one criterion score before saving");
+      }
 
       return judgeApi.submitScores(selectedSubmissionId, payload);
     },
-    onSuccess: (data) => {
-      if (selectedSubmissionId) {
-        localStorage.removeItem(`judge_draft_${selectedSubmissionId}`);
-      }
-      enqueueSnackbar("Đã nộp điểm thành công", { variant: "success" });
+    onSuccess: () => {
+      enqueueSnackbar("Đã lưu điểm thành công", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["judge", "submission", selectedSubmissionId] });
       queryClient.invalidateQueries({ queryKey: ["judge", "round-submissions", selectedRoundId] });
     },
     onError: (error: unknown) => {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Failed to save scores";
+        (error instanceof Error ? error.message : "Failed to save scores");
       enqueueSnackbar(message, { variant: "error" });
     },
   });
@@ -202,6 +188,32 @@ export default function EvaluationPage() {
     },
     [router, selectedEvent],
   );
+
+  const handleSelectSubmission = useCallback(
+    (submissionId: number) => {
+      setSelectedSubmissionId(submissionId);
+      if (!selectedEvent || !selectedRoundId) return;
+      const urlParams = new URLSearchParams();
+      urlParams.set("roundId", String(selectedRoundId));
+      urlParams.set("submissionId", String(submissionId));
+      router.replace(
+        `/judge/events/${selectedEvent.id}/evalution?${urlParams.toString()}`,
+        { scroll: false },
+      );
+    },
+    [router, selectedEvent, selectedRoundId],
+  );
+
+  const selectedSubmissionIndex = roundSubmissions.findIndex(
+    (submission) =>
+      (submission.submissionId ?? submission.id) === selectedSubmissionId,
+  );
+  const previousSubmission =
+    selectedSubmissionIndex > 0 ? roundSubmissions[selectedSubmissionIndex - 1] : null;
+  const nextSubmission =
+    selectedSubmissionIndex >= 0 && selectedSubmissionIndex < roundSubmissions.length - 1
+      ? roundSubmissions[selectedSubmissionIndex + 1]
+      : null;
 
   const roundStatus = submissionDetail?.round.status;
   const submissionDeadline = submissionDetail?.round.submissionDeadline;
@@ -239,7 +251,7 @@ export default function EvaluationPage() {
           Evaluation
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {selectedEvent?.name} — chọn round, chọn team ở cột trái (hoặc dropdown trên mobile), xem bài và chấm theo rubric.
+          {selectedEvent?.name} — chọn round và submission, xem bài rồi chấm theo rubric.
         </p>
       </div>
 
@@ -252,7 +264,7 @@ export default function EvaluationPage() {
       <TeamSelectorBar
         teams={roundSubmissions}
         selectedSubmissionId={selectedSubmissionId}
-        onSelectSubmission={setSelectedSubmissionId}
+        onSelectSubmission={handleSelectSubmission}
         isLoading={submissionsLoading}
       />
 
@@ -260,7 +272,7 @@ export default function EvaluationPage() {
         <TeamListPanel
           teams={roundSubmissions}
           selectedSubmissionId={selectedSubmissionId}
-          onSelectSubmission={setSelectedSubmissionId}
+          onSelectSubmission={handleSelectSubmission}
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           isLoading={submissionsLoading}
@@ -286,6 +298,42 @@ export default function EvaluationPage() {
             </div>
           ) : (
             <>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!previousSubmission}
+                  onClick={() =>
+                    previousSubmission &&
+                    handleSelectSubmission(
+                      previousSubmission.submissionId ?? previousSubmission.id,
+                    )
+                  }
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+
+                <span className="text-sm text-muted-foreground">
+                  {selectedSubmissionIndex >= 0
+                    ? `${selectedSubmissionIndex + 1}/${roundSubmissions.length}`
+                    : `0/${roundSubmissions.length}`}
+                </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!nextSubmission}
+                  onClick={() =>
+                    nextSubmission &&
+                    handleSelectSubmission(nextSubmission.submissionId ?? nextSubmission.id)
+                  }
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
               <TeamHeader
                 detail={submissionDetail}
                 roundName={selectedRound?.roundName}
@@ -331,10 +379,8 @@ export default function EvaluationPage() {
                         rubrics={submissionDetail?.rubrics ?? []}
                         scores={scores}
                         scoringStatus={submissionDetail?.scoringStatus}
-                        weightedScore={submissionDetail?.weightedScore}
                         isSaving={saveMutation.isPending}
                         disabled={scoringLocked}
-                        onSaveDraft={handleSaveDraft}
                         onSubmit={() => saveMutation.mutate()}
                       />
                     </div>

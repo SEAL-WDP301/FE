@@ -25,7 +25,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface WorkspaceRound {
   id: number;
@@ -76,8 +76,10 @@ export default function WorkspaceOverviewPage() {
   const isLeader = workspaceData?.role === "leader";
   const currentActiveRound = workspaceData?.currentActiveRound;
   const rounds: WorkspaceRound[] = workspaceData?.rounds || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roundSubmissions: any[] = workspaceData?.roundSubmissions || [];
+  const roundSubmissions = useMemo(
+    () => workspaceData?.roundSubmissions || [],
+    [workspaceData?.roundSubmissions]
+  );
   const timeLeft = useCountdown(currentActiveRound?.submissionDeadline || null);
 
   // ── Auto-redirect to correct roundId ──────────────────────────────────────
@@ -107,7 +109,7 @@ export default function WorkspaceOverviewPage() {
   const isEliminated = eliminatedRoundIdx >= 0;
 
   const lastParticipatedIdx = roundSubmissions.reduce(
-    (lastIdx: number, rs: any, idx: number) =>
+    (lastIdx: number, rs, idx: number) =>
       rs.teamRound !== null ? idx : lastIdx,
     -1
   );
@@ -416,7 +418,7 @@ export default function WorkspaceOverviewPage() {
                       </div>
                       <h2 className="mb-2 text-3xl font-bold">Congratulations! You passed this round</h2>
                       <p className="max-w-md text-muted-foreground">
-                        This is the result of the previous round. Your team has successfully advanced. You can review your submission and judge's feedback.
+                        This is the result of the previous round. Your team has successfully advanced. You can review your submission and judge feedback.
                       </p>
                     </>
                   ) : (

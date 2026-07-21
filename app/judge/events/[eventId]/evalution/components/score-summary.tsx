@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Save, Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +13,7 @@ interface Props {
   rubrics: JudgeRubric[];
   scores: Record<number, number>;
   scoringStatus?: JudgeScoringStatus;
-  weightedScore?: number | null;
   isSaving?: boolean;
-  onSaveDraft?: () => void;
   onSubmit?: () => void;
   disabled?: boolean;
 }
@@ -24,13 +22,17 @@ export function ScoreSummary({
   rubrics,
   scores,
   scoringStatus,
-  weightedScore,
   isSaving,
-  onSaveDraft,
   onSubmit,
   disabled,
 }: Props) {
   const previewScore = computeLocalWeightedScore(rubrics, scores) ?? 0;
+  const completedCriteria = rubrics.filter(
+    (rubric) => scores[rubric.id] !== undefined,
+  ).length;
+  const progress = rubrics.length
+    ? Math.round((completedCriteria / rubrics.length) * 100)
+    : 0;
 
   return (
     <GlassCard className="h-fit w-full p-8 sticky top-4">
@@ -47,6 +49,21 @@ export function ScoreSummary({
 
       <div className="mt-2 text-sm text-muted-foreground capitalize">
         Status: {scoringStatus?.replace("_", " ") ?? "pending"}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-background/40 p-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">Criteria completed</span>
+          <span className="text-orange-400">
+            {completedCriteria}/{rubrics.length}
+          </span>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+          <div
+            className="h-full rounded-full bg-orange-500 transition-[width]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       <div className="mt-6 space-y-4">
@@ -80,24 +97,10 @@ export function ScoreSummary({
         })}
       </div>
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6">
         <Button
-          variant="outline"
-          className="flex-1"
-          disabled={disabled || isSaving}
-          onClick={onSaveDraft}
-        >
-          {isSaving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save size={16} />
-          )}
-          Save Draft
-        </Button>
-
-        <Button
-          className="flex-1"
-          disabled={disabled || isSaving}
+          className="w-full"
+          disabled={disabled || isSaving || completedCriteria === 0}
           onClick={onSubmit}
         >
           {isSaving ? (
@@ -105,7 +108,7 @@ export function ScoreSummary({
           ) : (
             <Send size={16} />
           )}
-          Submit
+          Save scores
         </Button>
       </div>
     </GlassCard>

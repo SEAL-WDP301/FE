@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from '@tanstack/react-query';
 import { axiosClient } from '@/lib/axios';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,18 +13,46 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+
+interface UserNotification {
+  id: number;
+  title: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+interface NotificationPage {
+  data: UserNotification[];
+  meta: {
+    page: number;
+    totalPages: number;
+  };
+}
 
 export function NotificationsMenu() {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
+  const judgeEventMatch = pathname.match(/^\/judge\/events\/([^/]+)/);
+  const mentorEventMatch = pathname.match(/^\/mentor\/events\/([^/]+)/);
+  const notificationsHref = judgeEventMatch
+    ? `/judge/events/${judgeEventMatch[1]}/notifications`
+    : pathname.startsWith('/judge')
+      ? '/judge/notifications'
+    : mentorEventMatch
+      ? `/mentor/events/${mentorEventMatch[1]}/notifications`
+      : pathname.startsWith('/mentor')
+        ? '/mentor/notifications'
+        : '/home/notifications';
   const { data, isLoading } = useInfiniteQuery({
     queryKey: ['userNotifications'],
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const res = await axiosClient.get(`/notifications?page=${pageParam}&limit=25`);
-      return res.data;
+      return res.data as NotificationPage;
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.meta.page < lastPage.meta.totalPages) {
@@ -35,7 +62,7 @@ export function NotificationsMenu() {
     }
   });
 
-  const handleNotificationClick = async (notif: any) => {
+  const handleNotificationClick = async (notif: UserNotification) => {
     if (!notif.isRead) {
       try {
         await axiosClient.patch(`/notifications/${notif.id}/read`);
@@ -44,12 +71,11 @@ export function NotificationsMenu() {
         console.error("Failed to mark notification as read", err);
       }
     }
-    router.push(`/home/notifications?id=${notif.id}`);
+    router.push(`${notificationsHref}?id=${notif.id}`);
   };
 
-  const notifications = data?.pages.flatMap((page: any) => page.data) || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+  const notifications = data?.pages.flatMap((page) => page.data) || [];
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
   return (
     <DropdownMenu>
@@ -84,8 +110,7 @@ export function NotificationsMenu() {
           </div>
         ) : (
           <div className="max-h-[350px] overflow-y-auto space-y-1 pr-1">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {notifications.map((notif: any) => (
+            {notifications.map((notif) => (
               <DropdownMenuItem 
                 key={notif.id} 
                 onClick={() => handleNotificationClick(notif)}
@@ -110,7 +135,7 @@ export function NotificationsMenu() {
         {notifications.length > 0 && (
           <>
             <div className="border-t border-border bg-muted/30">
-            <Link href="/home/notifications" className="block w-full text-center text-xs font-medium text-blue-500 hover:text-blue-600 hover:underline p-1">
+            <Link href={notificationsHref} className="block w-full text-center text-xs font-medium text-blue-500 hover:text-blue-600 hover:underline p-1">
               Xem tất cả thông báo
             </Link>
             </div>

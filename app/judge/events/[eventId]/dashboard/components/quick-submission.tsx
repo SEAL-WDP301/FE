@@ -7,14 +7,16 @@ import { useParams } from "next/navigation";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
+import { formatSubmissionLabel } from "@/lib/api/judge.api";
 
 export function QuickSubmission() {
   const params = useParams();
-  const { pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
+  const { inReviewSubmissions, pendingSubmissions, submissions, isLoading } = useJudgeWorkspace(params.eventId as string);
 
   const focus =
+    inReviewSubmissions[0] ??
     pendingSubmissions[0] ??
-    submissions.find((item) => item.assignedRepoUrl) ??
+    submissions.find((item) => item.githubUrl) ??
     submissions[0];
 
   if (isLoading) {
@@ -36,7 +38,7 @@ export function QuickSubmission() {
     );
   }
 
-  const githubUrl = focus.githubUrl ?? focus.assignedRepoUrl;
+  const githubUrl = focus.githubUrl;
   const shortcuts = [
     githubUrl
       ? {
@@ -48,9 +50,9 @@ export function QuickSubmission() {
       : null,
     {
       icon: FileText,
-      label: focus.teamName,
+      label: formatSubmissionLabel(focus),
       desc: `${focus.eventName} · ${focus.roundName}`,
-      href: `/judge/events/${params.eventId}/evalution?roundId=${focus.roundId}`,
+      href: `/judge/events/${params.eventId}/evalution?roundId=${focus.roundId}&submissionId=${focus.submissionId ?? focus.id}`,
       internal: true,
     },
   ].filter(Boolean) as Array<{
@@ -65,7 +67,9 @@ export function QuickSubmission() {
     <GlassCard className="p-5">
       <h2 className="mb-1 text-lg font-semibold">Quick Submission Access</h2>
       <p className="mb-4 text-xs text-muted-foreground">
-        Link nhanh tới submission tiếp theo cần chấm
+        {focus.scoringStatus === "in_review"
+          ? "Tiếp tục bài đang chấm dở"
+          : "Mở bài tiếp theo cần chấm"}
       </p>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

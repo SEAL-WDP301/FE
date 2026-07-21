@@ -13,6 +13,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import {
   type JudgeRoundSubmission,
+  formatSubmissionLabel,
   mapScoringStatusLabel,
 } from "@/lib/api/judge.api";
 
@@ -67,12 +68,12 @@ export function TeamSelectorBar({
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-orange-400">
-              Chọn team để chấm
+              Chọn submission để chấm
             </p>
             <p className="text-sm text-muted-foreground">
               {teams.length === 1
-                ? "Round này có 1 bài nộp — mã Team 1"
-                : `${teams.length} bài nộp — chọn Team 1, Team 2... bên dưới hoặc cột trái`}
+                ? "Round này có 1 bài nộp"
+                : `${teams.length} bài nộp — chọn mã submission bên dưới hoặc cột trái`}
             </p>
           </div>
         </div>
@@ -86,14 +87,14 @@ export function TeamSelectorBar({
               <SelectValue placeholder="Chọn team...">
                 {selectedTeam ? (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{selectedTeam.teamName}</span>
+                    <span className="font-medium">{formatSubmissionLabel(selectedTeam)}</span>
                     <span className="text-muted-foreground text-xs">·</span>
                     <span className="text-muted-foreground text-xs">{selectedTeam.track?.name}</span>
                     <span className="text-muted-foreground text-xs">·</span>
                     <span className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                       selectedTeam.scoringStatus === "pending" ? "bg-amber-500/10 text-amber-500" :
-                      selectedTeam.scoringStatus === "evaluated" || selectedTeam.scoringStatus === "completed" || selectedTeam.scoringStatus === "done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                      selectedTeam.scoringStatus === "completed" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                       "bg-blue-500/10 text-blue-500"
                     )}>
                       {mapScoringStatusLabel(selectedTeam.scoringStatus)}
@@ -115,19 +116,19 @@ export function TeamSelectorBar({
                 const submissionId = team.submissionId ?? team.id;
                 const statusLabel = mapScoringStatusLabel(team.scoringStatus);
                 const isPending = team.scoringStatus === "pending";
-                const isEvaluated = team.scoringStatus === "evaluated";
+                const isCompleted = team.scoringStatus === "completed";
 
                 return (
                   <SelectItem key={submissionId} value={String(submissionId)}>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{team.teamName}</span>
+                      <span className="font-medium">{formatSubmissionLabel(team)}</span>
                       <span className="text-muted-foreground text-xs">·</span>
                       <span className="text-muted-foreground text-xs">{team.track?.name}</span>
                       <span className="text-muted-foreground text-xs">·</span>
                       <span className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                         isPending ? "bg-amber-500/10 text-amber-500" :
-                        isEvaluated ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                        isCompleted ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                         "bg-blue-500/10 text-blue-500"
                       )}>
                         {statusLabel}

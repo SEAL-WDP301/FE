@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useJudgeWorkspace } from "@/lib/hooks/use-judge-workspace";
-import { mapScoringStatusLabel } from "@/lib/api/judge.api";
+import { formatSubmissionLabel, mapScoringStatusLabel } from "@/lib/api/judge.api";
 
 export function TodayEvaluations() {
   const params = useParams();
@@ -55,7 +55,7 @@ export function TodayEvaluations() {
         <div className="mt-6 space-y-4">
           {displayTeams.map((team, index) => {
             const submissionId = team.submissionId ?? team.id;
-            const href = `/judge/events/${params.eventId}/evalution?roundId=${team.roundId}`;
+            const href = `/judge/events/${params.eventId}/evalution?roundId=${team.roundId}&submissionId=${submissionId}`;
             const statusLabel = mapScoringStatusLabel(team.scoringStatus);
 
             return (
@@ -67,16 +67,14 @@ export function TodayEvaluations() {
                 className="group flex flex-col gap-3 rounded-xl border border-border bg-background/40 p-4 transition hover:border-primary/40 hover:bg-card/70 sm:flex-row sm:items-center"
               >
                 <div className="flex gradient-orange grid h-11 w-11 shrink-0 place-items-center rounded-xl text-sm font-bold text-white">
-                  {team.anonymousIndex != null
-                    ? `T${team.anonymousIndex}`
-                    : team.teamName.match(/^Team\s+(\d+)$/i)
-                      ? `T${team.teamName.match(/^Team\s+(\d+)$/i)![1]}`
-                      : "T?"}
+                  #{String(team.anonymousIndex ?? submissionId).padStart(3, "0")}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold">{team.teamName}</span>
+                    <span className="text-sm font-semibold">
+                      {formatSubmissionLabel(team)}
+                    </span>
 
                     <Badge
                       variant="outline"

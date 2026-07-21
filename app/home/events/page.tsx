@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Banner from "./components/Banner";
 import TabsContent from "./components/TabsContent";
@@ -8,7 +9,15 @@ import Sidebar from "./components/Sidebar";
 import Header from "@/components/layout/public/header";
 
 export default function EventPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "prizes" | "criteria" | "submit">("overview");
+
+  useEffect(() => {
+    const eventId = new URLSearchParams(window.location.search).get("id");
+    if (eventId && /^\d+$/.test(eventId)) {
+      router.replace(`/home/events/${eventId}`);
+    }
+  }, [router]);
 
   const tabs = [
     { id: "overview", label: "Overview" },

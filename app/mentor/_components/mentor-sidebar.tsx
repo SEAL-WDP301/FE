@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import {
+  Bell,
   ChartNoAxesCombined,
   ChevronLeft,
   ClipboardCheck,
   FileCheck2,
   LayoutDashboard,
-  Megaphone,
   MessageSquareText,
-  Settings,
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
@@ -66,6 +65,7 @@ const getNavItems = (eventId: string): NavItem[] => {
     { label: "Team Progress", href: `${base}/progress`, icon: ChartNoAxesCombined },
     { label: "Feedback", href: `${base}/feedback`, icon: ClipboardCheck, id: "feedback" },
     { label: "Submissions Review", href: `${base}/submissions`, icon: FileCheck2, id: "submissions" },
+    { label: "Notifications", href: `${base}/notifications`, icon: Bell },
 
 
   ];
