@@ -9,8 +9,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
+import {
+  isOnlineMeetingPublished,
+  OnlineMeetingCard,
+} from "@/components/events/online-meeting-card";
 
 import {
+  createGoogleCalendarMeeting,
   deleteOrganizerEvent,
   getOrganizerEvent,
   updateOrganizerEventStatus,
@@ -38,11 +43,64 @@ export default function EventOverviewPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: (newStatus: EventStatus) => updateOrganizerEventStatus(eventId, newStatus),
-    onSuccess: () => {
+    mutationFn: async (newStatus: EventStatus) => {
+      const updatedEvent = await updateOrganizerEventStatus(eventId, newStatus);
+      let meetingCreated = false;
+      let meetingCreationFailed = false;
+
+      if (newStatus === "ongoing" && !event?.calendarMeeting) {
+        const storedLocation = (() => {
+          if (typeof event?.location !== "string") return null;
+          try {
+            return JSON.parse(event.location) as {
+              createGoogleMeetOnOngoing?: boolean;
+              meetingStartDate?: string;
+              meetingEndDate?: string;
+              timeZone?: string;
+            };
+          } catch {
+            return null;
+          }
+        })();
+
+        if (storedLocation?.createGoogleMeetOnOngoing) {
+          try {
+            await createGoogleCalendarMeeting(eventId, {
+              meetingStartDate:
+                storedLocation.meetingStartDate || event?.startDate || undefined,
+              meetingEndDate:
+                storedLocation.meetingEndDate || event?.endDate || undefined,
+              attendeeEmails: [],
+              sendInvitations: true,
+              notifyParticipants: true,
+              timeZone: storedLocation.timeZone || "Asia/Ho_Chi_Minh",
+            });
+            meetingCreated = true;
+          } catch {
+            meetingCreationFailed = true;
+          }
+        }
+      }
+
+      return { updatedEvent, meetingCreated, meetingCreationFailed };
+    },
+    onSuccess: ({ meetingCreated, meetingCreationFailed }) => {
       enqueueSnackbar('Event status updated successfully', { variant: 'success' });
+      if (meetingCreated) {
+        enqueueSnackbar("Google Meet created for the ongoing event", {
+          variant: "success",
+        });
+      }
+      if (meetingCreationFailed) {
+        enqueueSnackbar(
+          "Event is ongoing, but Google Meet creation failed. Check the Google Calendar connection and try again.",
+          { variant: "warning" },
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
       queryClient.invalidateQueries({ queryKey: ["organizerEvents"] });
+      queryClient.invalidateQueries({ queryKey: ["publicEvent", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["studentOnlineMeeting", eventId] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) => {
       enqueueSnackbar(error.response?.data?.message || 'Failed to update status', { variant: 'error' });
@@ -86,6 +144,16 @@ export default function EventOverviewPage() {
   const contacts = parseJSON(event.contact) || [];
   const rules = parseJSON(event.rules) || [];
   const imageUrl = event.imageUrl || event.image_url || null;
+  const meetingIsPublished = isOnlineMeetingPublished(event.status);
+  const publishedMeeting = meetingIsPublished
+    ? event.calendarMeeting ||
+      (loc?.meetingUrl
+        ? {
+            platform: loc.meetingPlatform,
+            meetUrl: loc.meetingUrl,
+          }
+        : null)
+    : null;
 
   return (
     <div className="space-y-8 pb-12">
@@ -174,6 +242,39 @@ export default function EventOverviewPage() {
         </div>
       </div>
 
+      {event.status === "ongoing" &&
+      loc?.createGoogleMeetOnOngoing &&
+      !event.calendarMeeting ? (
+        <GlassCard className="flex flex-col gap-4 rounded-[20px] border border-amber-500/25 bg-amber-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+            <div>
+              <p className="font-semibold text-foreground">
+                Google Meet has not been created
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Check the Google Calendar connection, then retry.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            disabled={updateStatusMutation.isPending}
+            onClick={() => updateStatusMutation.mutate("ongoing")}
+          >
+            {updateStatusMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : null}
+            Retry Google Meet
+          </Button>
+        </GlassCard>
+      ) : null}
+
+      <OnlineMeetingCard
+        meeting={publishedMeeting}
+        eventStatus={event.status}
+      />
+
       {/* Quick Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
@@ -240,7 +341,7 @@ export default function EventOverviewPage() {
                     )}
                   </div>
                 )}
-                {loc.meetingPlatform && (
+                {meetingIsPublished && loc.meetingPlatform && (
                   <div className="bg-muted/30 p-4 rounded-xl border border-border/30 md:col-span-2">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Phone className="h-3 w-3" /> Virtual Meeting</p>
                     <p className="font-semibold">{loc.meetingPlatform}</p>

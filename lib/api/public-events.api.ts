@@ -31,3 +31,10 @@ export async function getPublicEvents() {
   const res = await axiosClient.get<PublicEventsResponse>("/public/events");
   return normalizePublicEvents(res.data);
 }
+
+export async function getPublicEvent(eventId: string | number) {
+  const res = await axiosClient.get<{ data: PublicEvent }>(
+    `/public/events/${eventId}`,
+  );
+  return res.data.data;
+}

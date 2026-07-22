@@ -17,8 +17,6 @@ import {
   ShieldCheck,
   XCircle,
   Trophy,
-  Video,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -28,6 +26,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceApi } from "@/lib/api/workspace.api";
 import { getStudentOnlineMeeting } from "@/lib/api/student-events.api";
+import { getPublicEvent } from "@/lib/api/public-events.api";
+import { OnlineMeetingCard } from "@/components/events/online-meeting-card";
 import { useEffect, useMemo, useState } from "react";
 
 interface WorkspaceRound {
@@ -88,6 +88,12 @@ export default function WorkspaceOverviewPage() {
   const { data: onlineMeeting } = useQuery({
     queryKey: ["studentOnlineMeeting", eventId],
     queryFn: () => getStudentOnlineMeeting(eventId),
+    retry: false,
+  });
+
+  const { data: publicEvent } = useQuery({
+    queryKey: ["publicEvent", eventId],
+    queryFn: () => getPublicEvent(eventId),
     retry: false,
   });
 
@@ -187,16 +193,12 @@ export default function WorkspaceOverviewPage() {
             Track your progress, deadlines, and team performance all in one place.
           </p>
         </div>
-        {onlineMeeting?.meetUrl ? (
-          <Button asChild size="lg" className="bg-orange-500 text-white hover:bg-orange-600">
-            <a href={onlineMeeting.meetUrl} target="_blank" rel="noreferrer">
-              <Video className="h-5 w-5" />
-              Join Online Event
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-        ) : null}
       </header>
+
+      <OnlineMeetingCard
+        meeting={onlineMeeting || publicEvent?.calendarMeeting}
+        eventStatus={publicEvent?.status}
+      />
 
       {/* ── Competition Journey ── */}
       <section>

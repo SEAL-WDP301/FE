@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/mentor.api";
 import { MentorPageHeader } from "@/app/mentor/_components/mentor-page-header";
 import { MentorEmptyState, MentorErrorState, MentorLoadingState } from "@/app/mentor/_components/mentor-query-state";
+import { PublicEventOnlineMeetingCard } from "@/components/events/public-event-online-meeting-card";
 
 export default function MentorDashboardPage() {
   const params = useParams();
@@ -58,6 +59,7 @@ export default function MentorDashboardPage() {
         subtitle="Monitor teams assigned to you by the organizer."
         actions={<Button asChild variant="outline"><Link href={`/mentor/events/${params.eventId}/teams`}>View teams</Link></Button>}
       />
+      <PublicEventOnlineMeetingCard eventId={params.eventId as string} />
       <section className="grid gap-4 md:grid-cols-3">
         {stats.map(({ label, value, icon: Icon }) => (
           <GlassCard key={label} className="rounded-[22px] bg-card p-5">

@@ -36,6 +36,11 @@ import {
 import { getStudentAssignedMentor, getMentorTeams } from "@/lib/api/mentor.api";
 import { getStudentOnlineMeeting } from "@/lib/api/student-events.api";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import {
+  isOnlineMeetingPublished,
+  OnlineMeetingCard,
+  type OnlineMeetingDetails,
+} from "@/components/events/online-meeting-card";
 
 type EventTrack = {
   id: number | string;
@@ -82,6 +87,7 @@ type EventDetail = {
   support?: ApiSupport | null;
   location?: ApiLocation | string | null;
   venue?: ApiLocation | string | null;
+  calendarMeeting?: OnlineMeetingDetails | null;
 };
 
 function isRegistrationOpen(event: EventDetail) {
@@ -752,10 +758,13 @@ export default function EventDetailPage() {
   const isStudentParticipant = Boolean(
     studentInfo?.individualRegistration || studentInfo?.teamInfo,
   );
-  const { data: onlineMeeting } = useQuery({
+  const { data: studentOnlineMeeting } = useQuery({
     queryKey: ["studentOnlineMeeting", eventId],
     queryFn: () => getStudentOnlineMeeting(eventId),
-    enabled: userRole === "student" && isStudentParticipant,
+    enabled:
+      userRole === "student" &&
+      isStudentParticipant &&
+      isOnlineMeetingPublished(event?.status),
     retry: false,
   });
 
@@ -862,6 +871,36 @@ export default function EventDetailPage() {
   const eventContacts = normalizeContacts(event);
   const mentorSupportNote = event.support?.mentorNote;
   const eventImageUrl = event.imageUrl || event.image_url;
+  const onlineMeeting: OnlineMeetingDetails | null = isOnlineMeetingPublished(
+    event.status,
+  )
+    ? event.calendarMeeting ||
+      studentOnlineMeeting ||
+      (eventLocation?.meetingUrl
+        ? {
+            platform:
+              eventLocation.meetingPlatform || eventLocation.platform,
+            meetUrl: eventLocation.meetingUrl,
+          }
+        : null)
+    : null;
+  const publicEventLocation = (() => {
+    if (onlineMeeting) {
+      return {
+        ...(eventLocation || {}),
+        meetingPlatform: onlineMeeting.platform || "Google Meet",
+        meetingUrl: onlineMeeting.meetUrl || onlineMeeting.htmlLink || undefined,
+      };
+    }
+
+    if (!eventLocation) return null;
+    return {
+      ...eventLocation,
+      meetingPlatform: undefined,
+      platform: undefined,
+      meetingUrl: undefined,
+    };
+  })();
 
   // Render Action Button based on Role
   const renderActionButton = () => {
@@ -969,24 +1008,6 @@ export default function EventDetailPage() {
                 </Link>
               )}
             </div>
-
-            {onlineMeeting?.meetUrl && (
-              <Button
-                asChild
-                size="sm"
-                className="h-10 w-full rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white shadow-md shadow-orange-500/15 transition-all hover:bg-orange-600 sm:w-auto"
-              >
-                <a
-                  href={onlineMeeting.meetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Video className="h-4 w-4" />
-                  Join Online
-                  <ExternalLink className="h-3.5 w-3.5 opacity-80" />
-                </a>
-              </Button>
-            )}
 
             {displayStatus === "approved" && (
               <Link
@@ -1262,6 +1283,12 @@ export default function EventDetailPage() {
           </div>
         </div>
 
+        <OnlineMeetingCard
+          meeting={onlineMeeting}
+          eventStatus={event.status}
+          className="mb-12"
+        />
+
         {event.status?.toLowerCase() === "closed" && (
           <section className="relative mb-12 overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-background p-6 shadow-xl md:p-8">
             <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-400/15 blur-[80px]" />
@@ -1480,15 +1507,7 @@ export default function EventDetailPage() {
 
         <RulesSection groups={eventRuleGroups} />
         <SupportLocationSection
-          location={
-            onlineMeeting?.meetUrl
-              ? {
-                  ...(eventLocation || {}),
-                  meetingPlatform: onlineMeeting.platform,
-                  meetingUrl: onlineMeeting.meetUrl,
-                }
-              : eventLocation
-          }
+          location={publicEventLocation}
           contacts={eventContacts}
           mentorNote={mentorSupportNote}
         />
