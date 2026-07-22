@@ -35,23 +35,27 @@ export default function EventMessagesPage() {
   });
 
   const { data: teams, isLoading } = useQuery({
-    queryKey: ["organizerTeams", eventId],
+    queryKey: ["organizerTeamsMessages", eventId],
     queryFn: async () => {
-      const res = await axiosClient.get(`/organizer/teams/events/${eventId}`);
+      const res = await axiosClient.get(`/organizer/teams/events/${eventId}`, {
+        params: { status: "approved", limit: 100 }
+      });
       return res.data.data;
     },
     enabled: !!eventId,
   });
 
-  const sortedTeams = teams ? [...teams].sort((a, b) => {
+  const approvedTeams = teams ? teams.filter((t: any) => t.status === "approved") : [];
+
+  const sortedTeams = approvedTeams.sort((a: any, b: any) => {
     if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
     const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
     const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
     return bDate - aDate;
-  }) : [];
+  });
 
-  const filteredTeams = sortedTeams.filter(t => 
+  const filteredTeams = sortedTeams.filter((t: any) => 
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (t.track?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
   );

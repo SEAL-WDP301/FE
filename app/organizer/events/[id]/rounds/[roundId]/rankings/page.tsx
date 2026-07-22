@@ -121,10 +121,33 @@ const RANK_PRESENTATION: Record<1 | 2 | 3, {
   },
 };
 
-function getAwardPresentation(award?: OrganizerPrize | null) {
+function getAwardPresentation(award?: OrganizerPrize | null, allPrizes?: OrganizerPrize[]) {
   if (!award) return null;
-  const index = award.id ? (award.id % 4) : 3;
-  return AWARD_PRESENTATION_STYLES[index];
+
+  // 1. Match by name keywords for precise icon & style mapping
+  const name = (award.name || "").toLowerCase();
+  if (name.includes("champion") || name.includes("first") || name.includes("gold") || name.includes("nhất")) {
+    return AWARD_PRESENTATION_STYLES[0]; // Gold Crown 👑
+  }
+  if (name.includes("second") || name.includes("runner") || name.includes("silver") || name.includes("nhì")) {
+    return AWARD_PRESENTATION_STYLES[1]; // Silver Medal 🥈
+  }
+  if (name.includes("third") || name.includes("bronze") || name.includes("ba")) {
+    return AWARD_PRESENTATION_STYLES[2]; // Bronze Ribbon 🥉
+  }
+  if (name.includes("honorable") || name.includes("mention") || name.includes("khuyến khích")) {
+    return AWARD_PRESENTATION_STYLES[3]; // Sky Blue Sparkles ✨
+  }
+
+  // 2. Fallback to index position in event's configured prizes array
+  if (allPrizes && allPrizes.length > 0) {
+    const idx = allPrizes.findIndex(p => p.id === award.id || p.name === award.name);
+    if (idx >= 0) {
+      return AWARD_PRESENTATION_STYLES[Math.min(idx, AWARD_PRESENTATION_STYLES.length - 1)];
+    }
+  }
+
+  return AWARD_PRESENTATION_STYLES[3];
 }
 
 function getRankPresentation(rank: number) {
@@ -264,7 +287,7 @@ function TeamRow({
   const [expanded, setExpanded] = useState(false);
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
   const activeAward = isFinalRound ? ((isPublished ? entry.award : awardValue) ?? null) : null;
-  const awardPresentation = getAwardPresentation(activeAward);
+  const awardPresentation = getAwardPresentation(activeAward, prizes);
   const rankPresentation = getRankPresentation(rank);
 
   const isPassed = !isFinalRound && isPublished && entry.status === "advanced";
