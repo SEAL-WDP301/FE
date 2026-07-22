@@ -77,6 +77,13 @@ const defaultLocation = {
   note: "Teams will receive detailed room allocation before the event day.",
 };
 
+type StoredGoogleMeetConfig = {
+  createGoogleMeetOnOngoing?: boolean;
+  meetingStartDate?: string;
+  meetingEndDate?: string;
+  timeZone?: string;
+};
+
 const defaultContacts = [
   {
     label: "Organizer Support",
@@ -797,13 +804,16 @@ export default function EventForm({ initialData }: EventFormProps) {
 
   const initialLocation = useMemo(
     () =>
-      parseJsonSafe<Partial<typeof defaultLocation>>(initialData?.location, {}),
+      parseJsonSafe<
+        Partial<typeof defaultLocation> & StoredGoogleMeetConfig
+      >(initialData?.location, {}),
     [initialData?.location],
   );
   const hasExistingCalendarMeeting = Boolean(
     initialData?.calendarMeeting?.id ||
+    initialData?.calendarMeeting?.meetUrl ||
     (initialLocation.meetingPlatform?.toLowerCase() === "google meet" &&
-      initialLocation.meetingUrl?.includes("meet.google.com")),
+      initialLocation.meetingUrl),
   );
 
   // Cropper states
@@ -883,13 +893,22 @@ export default function EventForm({ initialData }: EventFormProps) {
       ...defaultLocation,
       ...initialLocation,
     },
-    createGoogleMeet: false,
+    createGoogleMeet:
+      initialLocation.createGoogleMeetOnOngoing || hasExistingCalendarMeeting,
     calendarMeetingStart: initialData?.calendarMeeting?.startDate
       ? toDateTimeLocalValue(initialData.calendarMeeting.startDate)
-      : "",
+      : initialLocation.meetingStartDate
+        ? toDateTimeLocalValue(initialLocation.meetingStartDate)
+        : hasExistingCalendarMeeting && initialData?.startDate
+          ? toDateTimeLocalValue(initialData.startDate)
+          : "",
     calendarMeetingEnd: initialData?.calendarMeeting?.endDate
       ? toDateTimeLocalValue(initialData.calendarMeeting.endDate)
-      : "",
+      : initialLocation.meetingEndDate
+        ? toDateTimeLocalValue(initialLocation.meetingEndDate)
+        : hasExistingCalendarMeeting && initialData?.endDate
+          ? toDateTimeLocalValue(initialData.endDate)
+          : "",
     calendarAttendeeEmails: "",
     sendCalendarInvitations: true,
     notifyParticipants: true,
@@ -1253,6 +1272,18 @@ export default function EventForm({ initialData }: EventFormProps) {
           meetingUrl: location.meetingUrl || undefined,
           mapUrl: location.mapUrl || undefined,
           note: location.note || undefined,
+          createGoogleMeetOnOngoing: createGoogleMeet || undefined,
+          meetingStartDate:
+            createGoogleMeet && (calendarMeetingStart || data.startDate)
+              ? new Date(
+                  calendarMeetingStart || data.startDate || "",
+                ).toISOString()
+              : undefined,
+          meetingEndDate:
+            createGoogleMeet && (calendarMeetingEnd || data.endDate)
+              ? new Date(calendarMeetingEnd || data.endDate || "").toISOString()
+              : undefined,
+          timeZone: createGoogleMeet ? "Asia/Ho_Chi_Minh" : undefined,
         }),
         contact: JSON.stringify(
           contacts
@@ -1294,7 +1325,7 @@ export default function EventForm({ initialData }: EventFormProps) {
           ? await updateOrganizerEvent(initialData.id, payload)
           : await createOrganizerEvent(payload);
 
-      if (createGoogleMeet) {
+      if (createGoogleMeet && watchedStatus === "ongoing") {
         try {
           const attendeeEmails = Array.from(
             new Set(
@@ -1313,7 +1344,7 @@ export default function EventForm({ initialData }: EventFormProps) {
               : undefined,
             attendeeEmails,
             sendInvitations: sendCalendarInvitations,
-            notifyParticipants: watchedStatus !== "draft" && notifyParticipants,
+            notifyParticipants,
             timeZone: "Asia/Ho_Chi_Minh",
           };
           let meeting;
@@ -1359,6 +1390,11 @@ export default function EventForm({ initialData }: EventFormProps) {
             { variant: "warning" },
           );
         }
+      } else if (createGoogleMeet) {
+        enqueueSnackbar(
+          "Google Meet configuration saved. The meeting will be created when the event moves to Ongoing.",
+          { variant: "info" },
+        );
       }
 
       if (isEdit && initialData?.id) {
@@ -2505,8 +2541,9 @@ export default function EventForm({ initialData }: EventFormProps) {
                                       Create Google Meet automatically
                                     </FormLabel>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                      Draft events are saved without participant
-                                      notifications.
+                                      The configuration is saved now. Google Meet
+                                      is created only when the event moves to
+                                      Ongoing.
                                     </p>
                                   </div>
                                 </FormItem>
@@ -2566,13 +2603,16 @@ export default function EventForm({ initialData }: EventFormProps) {
                                         <Textarea
                                           className="min-h-20 bg-background/50"
                                           placeholder="email1@example.com, email2@example.com"
+                                          disabled={watchedStatus !== "ongoing"}
                                           {...field}
                                           value={field.value ?? ""}
                                         />
                                       </FormControl>
                                       <p className="text-xs text-muted-foreground">
-                                        All active students registered for this
-                                        event are included automatically.
+                                        Registered students are included
+                                        automatically. Add extra guests in
+                                        Google Calendar after the meeting is
+                                        created.
                                       </p>
                                       <FormMessage />
                                     </FormItem>
@@ -2589,6 +2629,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                             type="checkbox"
                                             className="size-4 accent-orange-500"
                                             checked={field.value}
+                                            disabled={watchedStatus !== "ongoing"}
                                             onChange={field.onChange}
                                           />
                                         </FormControl>
@@ -2608,6 +2649,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                                             type="checkbox"
                                             className="size-4 accent-orange-500"
                                             checked={field.value}
+                                            disabled={watchedStatus !== "ongoing"}
                                             onChange={field.onChange}
                                           />
                                         </FormControl>
