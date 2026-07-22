@@ -257,12 +257,12 @@ const createEventSchema = (isEdit: boolean) =>
         .optional()
         .default([
           {
-            name: "First Prize",
+            name: "Champion (First Prize)",
             description: "$10,000 + Gold Trophy",
             quantity: 1,
           },
           {
-            name: "Second Prize",
+            name: "Second Prize (Runner-up)",
             description: "$5,000 + Silver Trophy",
             quantity: 1,
           },
@@ -845,12 +845,12 @@ export default function EventForm({ initialData }: EventFormProps) {
       quantity: prize.quantity ?? 1,
     })) || [
       {
-        name: "First Prize",
+        name: "Champion (First Prize)",
         description: "$10,000 + Gold Trophy",
         quantity: 1,
       },
       {
-        name: "Second Prize",
+        name: "Second Prize (Runner-up)",
         description: "$5,000 + Silver Trophy",
         quantity: 1,
       },
