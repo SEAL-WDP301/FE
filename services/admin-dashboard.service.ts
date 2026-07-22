@@ -253,6 +253,9 @@ export const adminDashboardService = {
     const totalRegistrations = trend.reduce((sum, item) => sum + item.Registrations, 0) || recentRegistrations.length;
     const participants = trend.reduce((sum, item) => sum + item.Participants, 0) || recentRegistrations.filter((item) => item.status === "Approved").length;
     const totalSubmissions = submissionStatus.reduce((sum, item) => sum + (item.status.toLowerCase().includes("evaluat") ? 0 : item.value), 0);
+    const submittedTeams = submissionSummary.totalSubmittedTeams;
+    const percentage = (value: number, total: number) =>
+      total > 0 ? (value / total) * 100 : 0;
     const activeEvents = eventStatus.filter((item) => ["active", "ongoing", "registration open"].includes(item.status.toLowerCase())).reduce((sum, item) => sum + item.value, 0);
     const totalEvents = eventStatus.reduce((sum, item) => sum + item.value, 0) || filterOptions.events.length;
     const metric = (id: string, label: string, value: number, icon: "events" | "active" | "registrations" | "participants" | "submissions" | "users", href: string, detail: string) => ({ id, label, value, delta: 0, detail, comparison: "Live API data", href, sparkline: [], icon });
@@ -270,8 +273,18 @@ export const adminDashboardService = {
       registrationTrend: trend,
       conversion: [
         { stage: "Registrations", value: totalRegistrations, rate: 100, previousRate: 100 },
-        { stage: "Approved", value: participants, rate: totalRegistrations ? participants / totalRegistrations * 100 : 0, previousRate: 0 },
-        { stage: "Submitted", value: totalSubmissions, rate: totalRegistrations ? totalSubmissions / totalRegistrations * 100 : 0, previousRate: 0 },
+        {
+          stage: "Approved",
+          value: participants,
+          rate: percentage(participants, totalRegistrations),
+          previousRate: percentage(participants, totalRegistrations),
+        },
+        {
+          stage: "Submitted",
+          value: submittedTeams,
+          rate: percentage(submittedTeams, totalRegistrations),
+          previousRate: percentage(submittedTeams, participants),
+        },
       ],
       participantsByEvent,
       submissionStatus,

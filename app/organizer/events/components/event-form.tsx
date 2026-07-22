@@ -66,6 +66,10 @@ import {
 import { uploadFile } from "@/lib/api/upload.api";
 import { cn } from "@/lib/utils";
 import { ImageCropper } from "@/components/ui/image-cropper";
+import {
+  buildGoogleMapsSearchUrl,
+  getEventMapUrl,
+} from "@/lib/events/location";
 
 const defaultLocation = {
   venueName: "FPT University Ho Chi Minh City",
@@ -73,7 +77,9 @@ const defaultLocation = {
   address: "Lô E2a-7, Đường D1, Khu Công nghệ cao, TP. Thủ Đức, TP.HCM",
   meetingPlatform: "Google Meet",
   meetingUrl: "",
-  mapUrl: "https://maps.app.goo.gl/fpthcm",
+  mapUrl: buildGoogleMapsSearchUrl(
+    "FPT University Ho Chi Minh City, Lô E2a-7, Đường D1, Khu Công nghệ cao, TP. Thủ Đức, TP.HCM",
+  ),
   note: "Teams will receive detailed room allocation before the event day.",
 };
 
@@ -892,6 +898,7 @@ export default function EventForm({ initialData }: EventFormProps) {
     location: {
       ...defaultLocation,
       ...initialLocation,
+      mapUrl: getEventMapUrl(initialLocation) || defaultLocation.mapUrl,
     },
     createGoogleMeet:
       initialLocation.createGoogleMeetOnOngoing || hasExistingCalendarMeeting,

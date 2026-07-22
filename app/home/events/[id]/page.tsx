@@ -36,6 +36,7 @@ import {
 import { getStudentAssignedMentor, getMentorTeams } from "@/lib/api/mentor.api";
 import { getStudentOnlineMeeting } from "@/lib/api/student-events.api";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import { getEventMapUrl } from "@/lib/events/location";
 import {
   isOnlineMeetingPublished,
   OnlineMeetingCard,
@@ -496,7 +497,7 @@ function SupportLocationSection({
   const venueName = location?.venueName || location?.name;
   const room = location?.room || location?.hall;
   const platform = location?.meetingPlatform || location?.platform;
-  const mapUrl = location?.mapUrl;
+  const mapUrl = getEventMapUrl(location);
   const hasVenueInfo = Boolean(
     venueName || room || location?.address || location?.note,
   );

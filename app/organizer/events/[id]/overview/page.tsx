@@ -9,6 +9,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
+import { getEventMapUrl } from "@/lib/events/location";
 import {
   isOnlineMeetingPublished,
   OnlineMeetingCard,
@@ -144,6 +145,7 @@ export default function EventOverviewPage() {
   const contacts = parseJSON(event.contact) || [];
   const rules = parseJSON(event.rules) || [];
   const imageUrl = event.imageUrl || event.image_url || null;
+  const eventMapUrl = getEventMapUrl(loc);
   const meetingIsPublished = isOnlineMeetingPublished(event.status);
   const publishedMeeting = meetingIsPublished
     ? event.calendarMeeting ||
@@ -334,8 +336,8 @@ export default function EventOverviewPage() {
                   <div className="bg-muted/30 p-4 rounded-xl border border-border/30">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2"><Map className="h-3 w-3" /> Address</p>
                     <p className="font-semibold text-sm">{loc.address}</p>
-                    {loc.mapUrl && (
-                      <a href={loc.mapUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline mt-2 inline-flex items-center gap-1">
+                    {eventMapUrl && (
+                      <a href={eventMapUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline mt-2 inline-flex items-center gap-1">
                         View on Map <LinkIcon className="h-3 w-3" />
                       </a>
                     )}
