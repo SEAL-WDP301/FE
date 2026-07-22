@@ -389,6 +389,7 @@ export interface DetailedRankingsResponse {
     roundNumber: number;
     status: string;
     isFinalRound: boolean;
+    isTrackSpecific?: boolean;
   };
   tracks: {
     track: { id: number; name: string };

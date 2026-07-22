@@ -868,28 +868,66 @@ export default function EventDetailPage() {
     // 1. Unauthenticated
     if (!user) {
       return (
-        <Link href="/login">
-          <Button
-            size="lg"
-            className="w-full sm:w-auto px-8 bg-orange-500 hover:bg-orange-600"
-          >
-            Login to Register
-          </Button>
-        </Link>
+        <>
+          <Link href="/login">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto px-8 bg-orange-500 hover:bg-orange-600"
+            >
+              Login to Register
+            </Button>
+          </Link>
+          {event.githubOrgUrl && (
+            <a
+              href={event.githubOrgUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 w-full rounded-xl border-border/80 bg-card/80 px-4 text-sm font-semibold text-foreground shadow-sm backdrop-blur-sm transition-all hover:bg-accent hover:text-accent-foreground sm:w-auto"
+              >
+                <ExternalLink className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                GitHub
+              </Button>
+            </a>
+          )}
+        </>
       );
     }
 
     // 2. Organizer or Admin
     if (userRole === "organizer" || userRole === "admin") {
       return (
-        <Link href={`/organizer/events/${eventId}`}>
-          <Button
-            size="lg"
-            className="w-full sm:w-auto px-8 bg-blue-600 hover:bg-blue-700"
-          >
-            Manage Event (Admin)
-          </Button>
-        </Link>
+        <>
+          <Link href={`/organizer/events/${eventId}`}>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto px-8 bg-blue-600 hover:bg-blue-700"
+            >
+              Manage Event (Admin)
+            </Button>
+          </Link>
+          {event.githubOrgUrl && (
+            <a
+              href={event.githubOrgUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 w-full rounded-xl border-border/80 bg-card/80 px-4 text-sm font-semibold text-foreground shadow-sm backdrop-blur-sm transition-all hover:bg-accent hover:text-accent-foreground sm:w-auto"
+              >
+                <ExternalLink className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                GitHub
+              </Button>
+            </a>
+          )}
+        </>
       );
     }
 
@@ -988,18 +1026,35 @@ export default function EventDetailPage() {
               </Button>
             )}
 
+            {event.githubOrgUrl && (
+              <a
+                href={event.githubOrgUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 w-full rounded-xl border-border/80 bg-card/80 px-4 text-sm font-semibold text-foreground shadow-sm backdrop-blur-sm transition-all hover:bg-accent hover:text-accent-foreground sm:w-auto"
+                >
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                  GitHub
+                </Button>
+              </a>
+            )}
+
             {displayStatus === "approved" && (
               <Link
                 href={`/student/events/${eventId}/workspace`}
                 className="w-full sm:w-auto"
               >
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="h-10 w-full rounded-lg border-orange-500/40 bg-orange-500/5 px-4 text-sm font-semibold text-orange-500 transition-all hover:border-orange-500/70 hover:bg-orange-500/10 hover:text-orange-500 sm:w-auto"
+                  className="group relative inline-flex h-10 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 text-sm font-bold text-white shadow-md shadow-orange-500/25 transition-all duration-300 hover:from-orange-600 hover:to-amber-600 hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98] sm:w-auto"
                 >
-                  {canEnterWorkspace ? "Workspace" : "View Workspace"}
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <span>{canEnterWorkspace ? "Workspace" : "View Workspace"}</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Button>
               </Link>
             )}
@@ -1241,23 +1296,6 @@ export default function EventDetailPage() {
 
             <div className="flex w-full flex-wrap items-center gap-2">
               {renderActionButton()}
-
-              {event.githubOrgUrl && (
-                <a
-                  href={event.githubOrgUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 rounded-lg px-4 text-sm font-semibold"
-                  >
-                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                    GitHub
-                  </Button>
-                </a>
-              )}
             </div>
           </div>
         </div>

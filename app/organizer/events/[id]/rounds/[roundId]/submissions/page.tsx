@@ -28,6 +28,7 @@ export default function EventSubmissionsPage() {
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "unsubmitted">("all");
   const [page, setPage] = useState(1);
   const [isBulkReminderOpen, setIsBulkReminderOpen] = useState(false);
+  const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
   const [selectedTeamForStatus, setSelectedTeamForStatus] = useState<number | null>(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedTeamFilterForLogs, setSelectedTeamFilterForLogs] = useState<string>("all");
@@ -83,9 +84,25 @@ export default function EventSubmissionsPage() {
     },
     onSuccess: (data) => {
       enqueueSnackbar(data.message || "Repositories frozen successfully", { variant: "success" });
+      setIsFreezeModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
     },
     onError: (error: any) => {
       enqueueSnackbar(error.response?.data?.message || "Failed to freeze repositories", { variant: "error" });
+    }
+  });
+
+  const unfreezeAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosClient.post(`/github/repos/unfreeze-event/${eventId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message || "Repositories unfrozen successfully", { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error.response?.data?.message || "Failed to unfreeze repositories", { variant: "error" });
     }
   });
 
@@ -123,7 +140,7 @@ export default function EventSubmissionsPage() {
       
       // Update cache instantly
       const updateFn = (oldData: any) => {
-        if (!oldData) return oldData;
+        const currentList = oldData ? (Array.isArray(oldData) ? oldData : (oldData.data || [])) : [];
         const newCommit = {
           id: data.commitHash || Date.now(),
           teamId: data.teamId,
@@ -134,13 +151,7 @@ export default function EventSubmissionsPage() {
           url: data.commitUrl,
           timestamp: data.timestamp || new Date().toISOString(),
         };
-        
-        if (Array.isArray(oldData)) {
-          return [newCommit, ...oldData];
-        } else if (oldData.data && Array.isArray(oldData.data)) {
-          return { ...oldData, data: [newCommit, ...oldData.data] };
-        }
-        return oldData;
+        return [newCommit, ...currentList];
       };
 
       // Try both string and number just in case
@@ -322,19 +333,27 @@ export default function EventSubmissionsPage() {
           
           <div className="flex items-center gap-3">
             {isGithubRound && (
-              <Button 
-                variant="outline" 
-                className="gap-2 border-cyan-500/30 text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950"
-                onClick={() => {
-                  if (confirm("Are you sure you want to FREEZE ALL team repositories in this round? They will no longer be able to push code.")) {
-                    freezeAllMutation.mutate();
-                  }
-                }}
-                disabled={freezeAllMutation.isPending}
-              >
-                <FaSnowflake className="h-4 w-4" />
-                Freeze Repositories
-              </Button>
+              submissions?.some((sub: any) => sub.team?.isFrozen) ? (
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                  onClick={() => unfreezeAllMutation.mutate()}
+                  disabled={unfreezeAllMutation.isPending}
+                >
+                  {unfreezeAllMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  Unfreeze Repositories
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-cyan-500/30 text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950"
+                  onClick={() => setIsFreezeModalOpen(true)}
+                  disabled={freezeAllMutation.isPending}
+                >
+                  <FaSnowflake className="h-4 w-4" />
+                  Freeze Repositories
+                </Button>
+              )
             )}
             <Button 
               variant="orange" 
@@ -356,7 +375,7 @@ export default function EventSubmissionsPage() {
                 <th className="px-6 py-4 font-semibold">Team Name</th>
                 <th className="px-6 py-4 font-semibold">Track & Round</th>
                 <th className="px-6 py-4 font-semibold">Submitted By</th>
-                <th className="px-6 py-4 font-semibold">Links</th>
+                <th className="px-6 py-4 font-semibold">Links & Status</th>
                 <th className="px-6 py-4 font-semibold">Time</th>
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
@@ -375,7 +394,24 @@ export default function EventSubmissionsPage() {
                     <td className="px-6 py-4 font-medium text-muted-foreground">
                       {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-6 py-4 font-medium">{sub.team?.name}</td>
+                    <td className="px-6 py-4 font-medium">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-foreground">{sub.team?.name}</span>
+                        {isGithubRound && (sub.team?.githubRepoUrl || sub.githubUrl) && (
+                          <div className="pt-0.5">
+                            {sub.team?.isFrozen ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 border border-cyan-500/30 dark:text-cyan-400">
+                                <FaSnowflake className="h-2.5 w-2.5" /> Frozen (Read-Only)
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 dark:text-emerald-400">
+                                <CheckCircle2 className="h-2.5 w-2.5" /> Active (Write Access)
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="text-xs">
                         <div className="font-semibold">{sub.team?.track?.name}</div>
@@ -393,17 +429,17 @@ export default function EventSubmissionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        {sub.githubUrl && (
-                          <a href={sub.githubUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1 text-xs">
+                        {(sub.githubUrl || sub.team?.githubRepoUrl) && (
+                          <a href={sub.githubUrl || sub.team?.githubRepoUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1 text-xs font-medium">
                             GitHub <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                         {sub.fileUrl && (
-                          <a href={sub.fileUrl} target="_blank" rel="noreferrer" className="text-green-500 hover:underline flex items-center gap-1 text-xs">
+                          <a href={sub.fileUrl} target="_blank" rel="noreferrer" className="text-green-500 hover:underline flex items-center gap-1 text-xs font-medium">
                             File/Doc <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
-                        {!sub.githubUrl && !sub.fileUrl && (
+                        {!sub.githubUrl && !sub.team?.githubRepoUrl && !sub.fileUrl && (
                            <span className="text-xs text-muted-foreground italic">No links provided</span>
                         )}
                       </div>
@@ -485,77 +521,81 @@ export default function EventSubmissionsPage() {
       </GlassCard>
       </TabsContent>
 
-      {isGithubRound && (
-      <TabsContent value="activity" className="mt-0">
-        <GlassCard className="p-6 rounded-[24px]">
-          <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <FaGithub className="h-5 w-5 text-orange-500" />
-              Global Activity Log (All Teams)
-            </h3>
-            {eventCommits?.data && (
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50"
-                  onClick={() => syncCommitsMutation.mutate()}
-                  disabled={syncCommitsMutation.isPending}
-                >
-                  {syncCommitsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
-                  Sync Missed Commits
-                </Button>
-                <select
-                  value={selectedTeamFilterForLogs}
-                  onChange={(e) => setSelectedTeamFilterForLogs(e.target.value)}
-                  className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
-                >
-                  <option value="all">All Teams</option>
-                  {Array.from(new Map(eventCommits.data.map((commit: any) => [commit.teamId, commit.team?.name])).entries()).map(([teamId, teamName]) => (
-                    <option key={String(teamId)} value={teamId as number}>{(teamName as string) || `Team ${teamId}`}</option>
-                  ))}
-                </select>
+      {isGithubRound && (() => {
+        const commitsList = eventCommits ? (Array.isArray(eventCommits) ? eventCommits : (eventCommits.data || [])) : [];
+        const filteredCommits = commitsList.filter((c: any) => selectedTeamFilterForLogs === "all" || c.teamId?.toString() === selectedTeamFilterForLogs || String(c.teamId) === String(selectedTeamFilterForLogs));
+        const teamsMap = Array.from(new Map(commitsList.map((commit: any) => [commit.teamId, commit.team?.name])).entries());
+
+        return (
+          <TabsContent value="activity" className="mt-0">
+            <GlassCard className="p-6 rounded-[24px]">
+              <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <FaGithub className="h-5 w-5 text-orange-500" />
+                  Global Activity Log (All Teams)
+                </h3>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50"
+                    onClick={() => syncCommitsMutation.mutate()}
+                    disabled={syncCommitsMutation.isPending}
+                  >
+                    {syncCommitsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                    Sync Missed Commits
+                  </Button>
+                  {teamsMap.length > 0 && (
+                    <select
+                      value={selectedTeamFilterForLogs}
+                      onChange={(e) => setSelectedTeamFilterForLogs(e.target.value)}
+                      className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 min-w-[150px]"
+                    >
+                      <option value="all">All Teams</option>
+                      {teamsMap.map(([teamId, teamName]) => (
+                        <option key={String(teamId)} value={String(teamId)}>{(teamName as string) || `Team ${teamId}`}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mt-4">
-            {eventCommits?.data && eventCommits.data.filter((c: any) => selectedTeamFilterForLogs === "all" || c.teamId.toString() === selectedTeamFilterForLogs).length > 0 ? (
-              <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
-                {eventCommits.data
-                  .filter((c: any) => selectedTeamFilterForLogs === "all" || c.teamId.toString() === selectedTeamFilterForLogs)
-                  .map((commit: any, index: number) => {
-                  const isLatest = index === 0;
-                  return (
-                    <div key={commit.id} className="relative flex gap-4 text-sm">
-                      <div className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-background ${isLatest ? 'bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.15)]' : 'bg-muted-foreground/30'}`} />
-                      <div className="flex-1 opacity-100 transition-opacity duration-300 bg-muted/20 p-4 rounded-xl border border-border/50 hover:bg-muted/40">
-                        <p className="font-semibold text-foreground/90">
-                          <span className="text-blue-500 mr-2">[{commit.team?.name}]</span>
-                          <a href={commit.url} target="_blank" rel="noreferrer" className="hover:text-orange-500 transition-colors">
-                            {commit.message}
-                          </a>
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
-                          <Clock className="h-3 w-3" />
-                          {new Date(commit.timestamp).toLocaleString()} 
-                          <span className="mx-1">•</span>
-                          <span className="font-medium text-orange-500">{commit.pusher}</span>
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mt-4">
+                {filteredCommits.length > 0 ? (
+                  <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
+                    {filteredCommits.map((commit: any, index: number) => {
+                      const isLatest = index === 0;
+                      return (
+                        <div key={commit.id || commit.commitHash || index} className="relative flex gap-4 text-sm">
+                          <div className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-background ${isLatest ? 'bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.15)]' : 'bg-muted-foreground/30'}`} />
+                          <div className="flex-1 opacity-100 transition-opacity duration-300 bg-muted/20 p-4 rounded-xl border border-border/50 hover:bg-muted/40">
+                            <p className="font-semibold text-foreground/90">
+                              <span className="text-blue-500 mr-2">[{commit.team?.name || 'Team'}]</span>
+                              <a href={commit.url} target="_blank" rel="noreferrer" className="hover:text-orange-500 transition-colors">
+                                {commit.message}
+                              </a>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                              <Clock className="h-3 w-3" />
+                              {new Date(commit.timestamp).toLocaleString()} 
+                              <span className="mx-1">•</span>
+                              <span className="font-medium text-orange-500">{commit.pusher}</span>
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 text-muted-foreground justify-center p-8 border border-dashed rounded-xl border-border/50">
+                    <Clock className="h-5 w-5" />
+                    <p className="text-sm">No commits pushed yet for this round.</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-3 text-muted-foreground justify-center p-8 border border-dashed rounded-xl border-border/50">
-                <Clock className="h-5 w-5" />
-                <p className="text-sm">No commits pushed yet for this round.</p>
-              </div>
-            )}
-          </div>
-        </GlassCard>
-      </TabsContent>
-      )}
+            </GlassCard>
+          </TabsContent>
+        );
+      })()}
       </Tabs>
 
       {/* Bulk Reminder Modal */}
@@ -660,6 +700,63 @@ export default function EventSubmissionsPage() {
               <p className="text-sm text-center text-muted-foreground">No data available.</p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Freeze Repositories Confirmation Modal */}
+      <Dialog open={isFreezeModalOpen} onOpenChange={setIsFreezeModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+              <FaSnowflake className="h-5 w-5" />
+              Freeze All Team Repositories
+            </DialogTitle>
+            <DialogDescription>
+              This action will revoke push access for all student team members across this round/event.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            <div className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-xl space-y-2 text-sm">
+              <div className="flex items-start gap-3">
+                <FaSnowflake className="h-5 w-5 text-cyan-500 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-foreground">What happens when frozen:</h4>
+                  <ul className="list-disc list-inside text-xs text-muted-foreground mt-1 space-y-1">
+                    <li>Collaborator permissions for all members are set to <strong>Read-Only (Pull)</strong>.</li>
+                    <li>Students will no longer be able to push new commits or code to GitHub.</li>
+                    <li>Repository commit history remains completely safe and accessible.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-foreground text-center">
+              Are you sure you want to FREEZE all team repositories now?
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsFreezeModalOpen(false)} disabled={freezeAllMutation.isPending}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-cyan-600 hover:bg-cyan-700 text-white gap-2" 
+              onClick={() => freezeAllMutation.mutate()}
+              disabled={freezeAllMutation.isPending}
+            >
+              {freezeAllMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Freezing Repositories...
+                </>
+              ) : (
+                <>
+                  <FaSnowflake className="h-4 w-4" />
+                  Confirm & Freeze All
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

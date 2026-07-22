@@ -118,24 +118,26 @@ export default function SubmissionsPage() {
     ? new Date() > new Date(currentActiveRound.submissionDeadline)
     : false;
 
-  const { data: commitsData } = useQuery({
+  const { data: commitsData, isLoading: isLoadingCommits, refetch: refetchCommits } = useQuery({
     queryKey: ["githubCommits", workspaceData?.team?.id],
     queryFn: async () => {
       const res = await axiosClient.get(`/github/commits/${workspaceData?.team?.id}`);
       return res.data;
     },
-    enabled: isGithubRound && !!workspaceData?.team?.id,
+    enabled: (isGithubRound || !!assignedRepoUrl) && !!workspaceData?.team?.id,
   });
 
   const [liveCommits, setLiveCommits] = useState<any[]>([]);
+  const [isSyncingCommits, setIsSyncingCommits] = useState(false);
 
   const totalCommits = liveCommits.length;
   const totalCommitPages = Math.ceil(totalCommits / COMMITS_PER_PAGE) || 1;
   const paginatedCommits = liveCommits.slice((commitPage - 1) * COMMITS_PER_PAGE, commitPage * COMMITS_PER_PAGE);
 
   useEffect(() => {
-    if (commitsData?.data) {
-      setLiveCommits(commitsData.data);
+    if (commitsData) {
+      const normalized = Array.isArray(commitsData) ? commitsData : (commitsData.data || []);
+      setLiveCommits(normalized);
     }
   }, [commitsData]);
 
@@ -162,11 +164,25 @@ export default function SubmissionsPage() {
     
     const handleNewCommit = (data: any) => {
       enqueueSnackbar(
-        `🚀 [${data.pusher}] vừa commit: "${data.message}"`, 
+        `🚀 [${data.pusher || 'GitHub'}] vừa commit: "${data.message}"`, 
         { 
           variant: 'info',
         }
       );
+
+      setLiveCommits((prev) => {
+        const newCommit = {
+          id: data.commitHash || Date.now(),
+          commitHash: data.commitHash || data.commitUrl?.split('/').pop(),
+          message: data.message,
+          pusher: data.pusher,
+          url: data.commitUrl,
+          timestamp: data.timestamp || new Date().toISOString(),
+        };
+        return [newCommit, ...prev];
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["githubCommits", teamId] });
     };
 
     socket.on('github.commit.new', handleNewCommit);
@@ -174,7 +190,21 @@ export default function SubmissionsPage() {
     return () => {
       socket.off('github.commit.new', handleNewCommit);
     };
-  }, [socket, enqueueSnackbar]);
+  }, [socket, enqueueSnackbar, queryClient, teamId]);
+
+  const handleSyncCommits = async () => {
+    if (!teamId) return;
+    try {
+      setIsSyncingCommits(true);
+      await axiosClient.post(`/github/repos/sync-event/${eventId}`);
+      await refetchCommits();
+      enqueueSnackbar("Synced team commits successfully", { variant: "success" });
+    } catch (err: any) {
+      enqueueSnackbar(err.response?.data?.message || "Failed to sync commits", { variant: "error" });
+    } finally {
+      setIsSyncingCommits(false);
+    }
+  };
 
   // Sync initial state if there's a past submission
   useEffect(() => {
@@ -822,13 +852,26 @@ export default function SubmissionsPage() {
           </div>
         </div>
 
-        {/* Full-width Activity Log (for GitHub Rounds) */}
-        {isGithubRound && (
+        {/* Full-width Realtime Activity Log (for Teams with GitHub Repo) */}
+        {(isGithubRound || !!assignedRepoUrl) && (
           <GlassCard className="p-6 rounded-[24px] mt-6 w-full">
-            <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4 flex items-center gap-2">
-              <FaGithub className="h-5 w-5" />
-              Activity Log (GitHub)
-            </h3>
+            <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <FaGithub className="h-5 w-5 text-orange-500" />
+                Team Realtime Activity Log (GitHub)
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-blue-500/20 text-blue-600 hover:bg-blue-50"
+                onClick={handleSyncCommits}
+                disabled={isSyncingCommits || isLoadingCommits}
+              >
+                {isSyncingCommits ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                Sync Missed Commits
+              </Button>
+            </div>
             {paginatedCommits.length > 0 ? (
               <div className="space-y-4 pr-2">
                 <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Award, Crown, Medal, ChevronDown, ChevronUp, AlertTriangle,
   CheckCircle2, TrendingUp, TrendingDown, Minus, Star, Heart,
-  BarChart3, Users, Loader2, Gavel, Send,
+  BarChart3, Users, Loader2, Gavel, Send, Globe,
   Sparkles, type LucideIcon
 } from "lucide-react";
 import {
@@ -594,7 +594,7 @@ export default function RankingsPage() {
     });
 
     const allTracksGroup = {
-      track: { id: -1, name: "Tất cả Tracks" },
+      track: { id: -1, name: "All Tracks" },
       entries: allEntries
     };
 
@@ -685,14 +685,23 @@ export default function RankingsPage() {
             Rankings & Analytics
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Chi tiết điểm chấm, độ lệch giám khảo, và xếp hạng đội thi.
+            Detailed team rankings, scoring breakdown, and judge variance analytics.
           </p>
           {round && (
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-medium">{round.name}</span>
-              <Badge variant="outline" className={`text-xs ${roundStatusColor[round.status] ?? ""}`}>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-base font-bold text-foreground">{round.name}</span>
+              <Badge variant="outline" className={`text-xs capitalize font-semibold ${roundStatusColor[round.status] ?? ""}`}>
                 {round.status?.replace(/_/g, " ")}
               </Badge>
+              {round.isTrackSpecific !== false ? (
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30 dark:text-purple-300 font-semibold gap-1.5 px-2.5 py-1 text-xs">
+                  <Users className="w-3.5 h-3.5" /> Track-Specific Evaluation
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-300 font-semibold gap-1.5 px-2.5 py-1 text-xs">
+                  <Globe className="w-3.5 h-3.5" /> Global Evaluation (All Tracks)
+                </Badge>
+              )}
             </div>
           )}
         </div>
@@ -859,18 +868,18 @@ export default function RankingsPage() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
                 <AlertTriangle className="w-6 h-6 text-emerald-500" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Xác nhận Publish Kết Quả</h3>
+              <h3 className="text-xl font-bold mb-2">Confirm Publish Results</h3>
               <p className="text-sm text-muted-foreground mb-6">
                 {round?.isFinalRound ? (
                   <>
-                    Bạn đã trao giải thưởng cho <strong>{awardedCount} đội</strong>.<br/><br/>
-                    Hành động này sẽ chốt kết quả chung cuộc của cuộc thi. Bạn có chắc chắn?
+                    You have assigned awards to <strong>{awardedCount} team(s)</strong>.<br/><br/>
+                    This action will finalize the official competition results. Are you sure you want to proceed?
                   </>
                 ) : (
                   <>
-                    Bạn đã chọn <strong>{selectedTeamIds.size} đội</strong> lọt vào vòng trong.
-                    Các đội còn lại sẽ được đánh dấu là <strong>Bị loại (Eliminated)</strong>.<br/><br/>
-                    Hành động này không thể hoàn tác và sẽ gửi email thông báo tới tất cả thí sinh. Bạn có chắc chắn?
+                    You have selected <strong>{selectedTeamIds.size} team(s)</strong> to advance to the next round.
+                    Remaining teams will be marked as <strong>Eliminated</strong>.<br/><br/>
+                    This action cannot be undone and will send notification emails to all participants. Are you sure you want to proceed?
                   </>
                 )}
               </p>
@@ -881,7 +890,7 @@ export default function RankingsPage() {
                   onClick={() => setShowConfirmModal(false)}
                   disabled={isPublishing}
                 >
-                  Hủy
+                  Cancel
                 </Button>
                 <Button 
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" 
@@ -889,7 +898,7 @@ export default function RankingsPage() {
                   disabled={isPublishing}
                 >
                   {isPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Xác nhận Publish
+                  Confirm & Publish
                 </Button>
               </div>
             </div>
