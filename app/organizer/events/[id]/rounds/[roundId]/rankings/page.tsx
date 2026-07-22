@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Award, Crown, Medal, ChevronDown, ChevronUp, AlertTriangle,
   CheckCircle2, TrendingUp, TrendingDown, Minus, Star, Heart,
-  BarChart3, Users, Loader2, Gavel, Send, Globe,
+  BarChart3, Users, Loader2, Gavel, Send, Globe, Trophy,
   Sparkles, type LucideIcon
 } from "lucide-react";
 import {
@@ -247,7 +247,8 @@ function TeamRow({
   isFinalRound,
   awardValue,
   onAwardChange,
-  prizes
+  prizes,
+  teamAwards
 }: { 
   entry: DetailedRankedTeamEntry; 
   rank: number;
@@ -258,6 +259,7 @@ function TeamRow({
   awardValue?: OrganizerPrize | null;
   onAwardChange?: (val: OrganizerPrize | null) => void;
   prizes: OrganizerPrize[];
+  teamAwards?: Record<number, OrganizerPrize | null>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasAnomalous = entry.judges.some(j => Math.abs(j.deviationFromAverage) >= ANOMALY_THRESHOLD);
@@ -316,7 +318,7 @@ function TeamRow({
         {!isPublished && isFinalRound && (
           <div className="shrink-0">
              <select 
-               className="bg-background border border-border text-sm rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500"
+               className="bg-background border border-border text-sm font-medium rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-emerald-500 shadow-sm"
                value={awardValue?.id || ""}
                onChange={(e) => {
                  const prizeId = Number(e.target.value);
@@ -325,9 +327,17 @@ function TeamRow({
                }}
              >
                <option value="">No Award</option>
-               {prizes.map((prize) => (
-                 <option key={prize.id} value={prize.id}>{prize.name}</option>
-               ))}
+               {prizes.map((prize) => {
+                 const assignedCount = Object.values(teamAwards || {}).filter(a => a?.id === prize.id).length;
+                 const isCurrentSelection = awardValue?.id === prize.id;
+                 const maxQty = prize.quantity ?? 1;
+                 const isFull = !isCurrentSelection && assignedCount >= maxQty;
+                 return (
+                   <option key={prize.id} value={prize.id} disabled={isFull}>
+                     {prize.name} ({assignedCount}/{maxQty}){isFull ? " — FULL" : ""}
+                   </option>
+                 );
+               })}
              </select>
           </div>
         )}
@@ -790,6 +800,42 @@ export default function RankingsPage() {
         </div>
       )}
 
+      {/* Prize Allocation Summary Bar (Final Round) */}
+      {round?.isFinalRound && !isResultsPublished && (eventData?.prizes?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap items-center gap-3 bg-card/80 p-4 rounded-2xl border border-border shadow-sm">
+          <span className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-yellow-500" />
+            Prize Allocation Status:
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {eventData?.prizes?.map((prize) => {
+              const assignedCount = Object.values(teamAwards).filter(a => a?.id === prize.id).length;
+              const maxQty = prize.quantity ?? 1;
+              const isFull = assignedCount >= maxQty;
+              return (
+                <Badge
+                  key={prize.id}
+                  variant="outline"
+                  className={`gap-1.5 px-3 py-1 text-xs font-semibold ${
+                    isFull
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400"
+                      : "bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-300"
+                  }`}
+                >
+                  <span>{prize.name}:</span>
+                  <span className="font-bold tabular-nums">{assignedCount} / {maxQty}</span>
+                  {isFull ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <span className="text-[10px] opacity-75">({maxQty - assignedCount} left)</span>
+                  )}
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Rankings List */}
       <GlassCard className="p-6 rounded-[24px]">
         {isLoading ? (
@@ -850,6 +896,7 @@ export default function RankingsPage() {
                 awardValue={teamAwards[entry.teamId]}
                 onAwardChange={(val) => handleAwardChange(entry.teamId, val)}
                 prizes={eventData?.prizes || []}
+                teamAwards={teamAwards}
               />
             ))}
           </div>
