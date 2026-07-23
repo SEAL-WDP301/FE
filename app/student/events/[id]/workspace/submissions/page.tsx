@@ -105,6 +105,7 @@ export default function SubmissionsPage() {
   const pastScore = selectedRoundEntry?.teamRound?.score ?? null;
 
   const latestSubmission = workspaceData?.latestSubmission;
+  const activeSubmission = isPastRound ? pastSubmission : (selectedRoundEntry?.submission ?? latestSubmission);
   const isLeader = workspaceData?.role === "leader";
   const teamStatus = workspaceData?.team?.status as string | undefined;
   const canSubmit = !isReadOnly && workspaceData?.canSubmit !== false && teamStatus === "approved";
@@ -206,23 +207,20 @@ export default function SubmissionsPage() {
     }
   };
 
-  // Sync initial state if there's a past submission
+  // Sync initial state if there's a past or current submission
   useEffect(() => {
-    if (latestSubmission) {
-      // Initialize the editable form after the workspace query resolves.
+    if (activeSubmission) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setGithubUrl(latestSubmission.githubUrl || assignedRepoUrl || "");
-      setDescription(latestSubmission.description || "");
+      setGithubUrl(activeSubmission.githubUrl || assignedRepoUrl || "");
+      setDescription(activeSubmission.description || "");
     } else if (assignedRepoUrl) {
       setGithubUrl(assignedRepoUrl);
+      setDescription("");
+    } else {
+      setDescription("");
     }
-  }, [latestSubmission, assignedRepoUrl]);
+  }, [activeSubmission, assignedRepoUrl]);
 
-  useEffect(() => {
-    if (!isLoading && workspaceData && !isLeader) {
-      router.replace(`/student/events/${eventId}/workspace/rules`);
-    }
-  }, [eventId, isLeader, isLoading, router, workspaceData]);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -329,13 +327,7 @@ export default function SubmissionsPage() {
     );
   }
 
-  if (!isLeader) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-      </div>
-    );
-  }
+
 
   if (!currentActiveRound && !isPastRound) {
     return (
@@ -732,7 +724,7 @@ export default function SubmissionsPage() {
           <div className="md:col-span-1 flex flex-col gap-6">
           <GlassCard className={`p-6 rounded-[24px] ${isGithubRound ? 'flex-1 flex flex-col justify-center' : ''}`}>
             <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4">Current Submission</h3>
-            {latestSubmission ? (
+            {activeSubmission ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
@@ -741,23 +733,23 @@ export default function SubmissionsPage() {
                   <div className="pb-4">
                     <p className="font-medium">Submitted</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(latestSubmission.updatedAt).toLocaleString()}
+                      {new Date(activeSubmission.updatedAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
                 
-                {latestSubmission.fileUrl && (
+                {activeSubmission.fileUrl && (
                   <Button variant="outline" className="w-full justify-start h-12 text-[15px] font-medium" asChild>
-                    <a href={latestSubmission.fileUrl} target="_blank" rel="noreferrer">
+                    <a href={activeSubmission.fileUrl} target="_blank" rel="noreferrer">
                       <File className="h-5 w-5 mr-2 text-orange-500" />
                       View Uploaded File
                     </a>
                   </Button>
                 )}
 
-                {latestSubmission.githubUrl && (
+                {activeSubmission.githubUrl && (
                   <Button variant="outline" className="w-full justify-start h-12 text-[15px] font-medium" asChild>
-                    <a href={latestSubmission.githubUrl} target="_blank" rel="noreferrer">
+                    <a href={activeSubmission.githubUrl} target="_blank" rel="noreferrer">
                       <FaGithub className="h-5 w-5 mr-2" />
                       View Repository
                     </a>
@@ -776,10 +768,10 @@ export default function SubmissionsPage() {
           {!isGithubRound && (
           <GlassCard className="p-6 rounded-[24px]">
             <h3 className="font-semibold mb-4 text-lg border-b border-border pb-4">Audit History</h3>
-            {latestSubmission?.history && Array.isArray(latestSubmission.history) && latestSubmission.history.length > 0 ? (
+            {activeSubmission?.history && Array.isArray(activeSubmission.history) && activeSubmission.history.length > 0 ? (
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 <div className="relative border-l-2 border-border/60 ml-2 pl-5 space-y-6 py-2">
-                  {(latestSubmission.history as SubmissionHistoryEntry[]).slice().reverse().slice(0, 5).map((log, index) => {
+                  {(activeSubmission.history as SubmissionHistoryEntry[]).slice().reverse().slice(0, 5).map((log, index) => {
                     const isLatest = index === 0;
                     return (
                       <div key={index} className="relative flex gap-4 text-sm">
@@ -806,17 +798,17 @@ export default function SubmissionsPage() {
                   })}
                 </div>
                 
-                {latestSubmission.history.length > 5 && (
+                {activeSubmission.history.length > 5 && (
                   <Dialog>
                     <DialogTrigger render={<Button variant="outline" className="w-full mt-4" size="sm" />}>
-                      View all {latestSubmission.history.length} records
+                      View all {activeSubmission.history.length} records
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
                         <DialogTitle>Full Audit History</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-4 mt-4">
-                        {(latestSubmission.history as SubmissionHistoryEntry[]).slice().reverse().map((log, index) => (
+                        {(activeSubmission.history as SubmissionHistoryEntry[]).slice().reverse().map((log, index) => (
                           <div key={index} className="flex gap-3 text-sm border-b border-border/50 pb-4 last:border-0 last:pb-0">
                             <div className="mt-1">
                               <div className={`h-2 w-2 rounded-full ${log.action === "created" ? "bg-green-500" : "bg-orange-500"}`} />
@@ -942,7 +934,7 @@ export default function SubmissionsPage() {
           </GlassCard>
         )}
 
-        {!isGithubRound && (
+        {!isGithubRound && isLeader && (
         <Button 
           type="submit" 
           variant="orange" 
@@ -951,11 +943,9 @@ export default function SubmissionsPage() {
             isReadOnly ||
             isDeadlinePassed ||
             submitMutation.isPending ||
-            !isLeader ||
             !canSubmit ||
             !canSubmitPayload
           }
-          title={!isLeader ? "Only the team leader can submit the project" : ""}
         >
           {submitMutation.isPending ? (
             <Loader2 className="h-5 w-5 animate-spin mr-2" />

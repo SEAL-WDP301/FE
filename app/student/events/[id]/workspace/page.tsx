@@ -14,6 +14,7 @@ import {
   Loader2,
   Crown,
   ScrollText,
+  FileText,
   ShieldCheck,
   XCircle,
   Trophy,
@@ -468,9 +469,9 @@ export default function WorkspaceOverviewPage() {
                   <p className="text-sm font-medium text-muted-foreground">Current phase</p>
                   <p className="mt-2 font-semibold">{displayRound.name}</p>
                   <Button asChild variant="outline" className="mt-5 w-full rounded-xl">
-                    <Link href={`${basePath}/rules?roundId=${displayRound.id}`}>
-                      <ScrollText className="mr-2 h-4 w-4" />
-                      View Rules
+                    <Link href={`${basePath}/submissions?roundId=${displayRound.id}`}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      View Submissions
                     </Link>
                   </Button>
                 </div>

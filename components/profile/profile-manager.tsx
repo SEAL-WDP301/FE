@@ -339,8 +339,8 @@ function ProfileManagerContent({
 
         <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-10">
           <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-card dark:bg-[#14100c] border border-border dark:border-[rgba(255,154,60,0.16)]">
-            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-900 dark:text-[#1a0e04] data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-900 dark:text-[#1a0e04] data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
+            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info">
