@@ -14,35 +14,45 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '../dashboard/theme-toggle';
 import { getRoleHomePath } from '@/components/auth/role-guard';
 import { useAuthStore } from '@/lib/stores/auth.store';
+import { queryKeys } from '@/lib/query-keys';
 
 export default function Navigation() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const storeUser = useAuthStore((state) => state.user);
+    const setUser = useAuthStore((state) => state.setUser);
 
     const { data: user, isLoading, isError } = useQuery({
-        queryKey: ['userProfile'],
+        queryKey: queryKeys.user,
         queryFn: async () => {
             const token = useAuthStore.getState().accessToken;
-            if (!token) return null;
+            if (!token) {
+                setUser(null);
+                return null;
+            }
             const res = await axiosClient.get('/users/profile');
             const profile = res.data?.data;
-            return profile
+            const normalized = profile
                 ? { ...profile, avatarUrl: profile.avatarUrl ?? profile.avatar_url }
                 : null;
+            setUser(normalized);
+            return normalized;
         },
+        initialData: storeUser ? { ...storeUser, avatarUrl: storeUser.avatarUrl ?? storeUser.avatar_url } : undefined,
     });
 
     useEffect(() => {
         const handleUnauthorized = () => {
-            queryClient.setQueryData(['userProfile'], null);
+            setUser(null);
+            queryClient.setQueryData(queryKeys.user, null);
         };
         window.addEventListener('auth-unauthorized', handleUnauthorized);
         return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
-    }, [queryClient]);
+    }, [queryClient, setUser]);
 
     const handleLogout = () => {
         useAuthStore.getState().clearAccessToken();
-        queryClient.setQueryData(['userProfile'], null);
+        queryClient.setQueryData(queryKeys.user, null);
         enqueueSnackbar('Logged out successfully!', { variant: 'info' });
         router.push('/');
     };

@@ -6,18 +6,14 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { axiosClient } from "@/lib/axios";
-import { useAuthStore } from "@/lib/stores/auth.store";
+import { useAuthStore, type UserProfile } from "@/lib/stores/auth.store";
+import { queryKeys } from "@/lib/query-keys";
 
 export type AppRole = "admin" | "organizer" | "student" | "stakeholder" | "judge";
 
 interface RoleGuardProps {
   allowedRoles: AppRole[];
   children: ReactNode;
-}
-
-interface UserProfile {
-  role?: string;
-  [key: string]: unknown;
 }
 
 const roleHomePath: Record<AppRole, string> = {
@@ -49,22 +45,31 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     return () => cancelAnimationFrame(frame);
   }, []);
 
+  const storeUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
   const {
     data: user,
     isLoading,
     isFetching,
     isError,
   } = useQuery<UserProfile | null>({
-    queryKey: ["userProfile"],
+    queryKey: queryKeys.user,
     queryFn: async () => {
       const token = useAuthStore.getState().accessToken;
-      if (!token) return null;
+      if (!token) {
+        setUser(null);
+        return null;
+      }
 
       const res = await axiosClient.get("/users/profile");
-      return res.data?.data ?? null;
+      const profile = res.data?.data ?? null;
+      if (profile) setUser(profile);
+      return profile;
     },
-    enabled: hasToken === true,
-    retry: false,
+    initialData: storeUser || undefined,
+    enabled: hasToken && mounted,
+    staleTime: 60 * 1000,
   });
 
   useEffect(() => {

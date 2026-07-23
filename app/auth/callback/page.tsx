@@ -8,6 +8,7 @@ import { axiosClient } from "@/lib/axios";
 import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import { queryKeys } from "@/lib/query-keys";
 
 function CallbackContent() {
   const router = useRouter();
@@ -52,7 +53,11 @@ function CallbackContent() {
           { variant: "default", preventDuplicate: true }
         );
 
-        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+        // Set user in Zustand store
+        useAuthStore.getState().setUser(user);
+
+        queryClient.setQueryData(queryKeys.user, user);
+        queryClient.invalidateQueries({ queryKey: queryKeys.user });
 
         setTimeout(() => {
           router.push(getRoleHomePath(user.role));

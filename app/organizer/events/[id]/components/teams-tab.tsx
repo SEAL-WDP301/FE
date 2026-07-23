@@ -76,6 +76,8 @@ export default function TeamsTab({ event }: { event: any }) {
 
     const teams = queryData?.data || [];
     const meta = queryData?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+    const currentRound = event.rounds?.find((r: any) => r.id === Number(roundId));
+    const isRoundEnded = currentRound ? (currentRound.status === 'results_published' || currentRound.status === 'closed') : false;
 
     const { socket, isConnected } = useAdminSocket({ eventId: event.id, roundId });
 
@@ -235,6 +237,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                 size="sm"
                                 className="border-green-500/30 text-green-500 hover:bg-green-500/10 flex items-center gap-2"
                                 onClick={() => { setBulkActionType('approved'); setIsBulkStatusOpen(true); }}
+                                disabled={isRoundEnded}
                             >
                                 <CheckCircle className="h-4 w-4" />
                                 Approve ({selectedTeamIds.length})
@@ -414,7 +417,7 @@ export default function TeamsTab({ event }: { event: any }) {
                                         >
                                             <Eye className="h-4 w-4" />
                                         </Button>
-                                        {team.status === 'pending' && (
+                                        {team.status === 'pending' && !isRoundEnded && (
                                             <>
                                                 <Button 
                                                     size="sm" 

@@ -80,17 +80,11 @@ export default function TrackWorkspaceLayout({
         ? [currentActiveRound] 
         : [];
 
-  const roleTab = workspaceData
-    ? isLeader
-      ? { name: "Submissions", href: `${basePath}/submissions`, icon: FileText }
-      : { name: "Competition Rules", href: `${basePath}/rules`, icon: ScrollText }
-    : null;
-
   const tabs = [
     { name: "Overview", href: basePath, icon: LayoutDashboard },
     { name: "My Team", href: `${basePath}/my-team`, icon: Users },
     { name: "Mentor", href: `${basePath}/mentor`, icon: UserCheck },
-    ...(roleTab ? [roleTab] : []),
+    { name: "Submissions", href: `${basePath}/submissions`, icon: FileText },
   ];
 
   const customTabsContent = (

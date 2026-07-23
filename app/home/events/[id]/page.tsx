@@ -1048,23 +1048,6 @@ export default function EventDetailPage() {
               )}
             </div>
 
-            {onlineMeeting?.meetUrl && (
-              <Button
-                asChild
-                size="sm"
-                className="h-10 w-full rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white shadow-md shadow-orange-500/15 transition-all hover:bg-orange-600 sm:w-auto"
-              >
-                <a
-                  href={onlineMeeting.meetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Video className="h-4 w-4" />
-                  Join Online
-                  <ExternalLink className="h-3.5 w-3.5 opacity-80" />
-                </a>
-              </Button>
-            )}
 
             {event.githubOrgUrl && (
               <a

@@ -21,6 +21,8 @@ import {
 import { FaGithub } from "react-icons/fa";
 
 import { axiosClient } from "@/lib/axios";
+import { queryKeys } from "@/lib/query-keys";
+import { useAuthStore } from "@/lib/stores/auth.store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,9 +155,17 @@ function ProfileManagerContent({
   const [professionalForm, setProfessionalForm] =
     useState<ProfessionalFormState>(emptyProfessionalForm);
 
+  const storeUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
   const { data: user, isLoading, isError, refetch } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: fetchUserProfile,
+    queryKey: queryKeys.user,
+    queryFn: async () => {
+      const data = await fetchUserProfile();
+      if (data) setUser(data);
+      return data;
+    },
+    initialData: storeUser ? ({ ...storeUser, avatarUrl: storeUser.avatarUrl ?? storeUser.avatar_url } as any) : undefined,
   });
 
   const resolvedMode = useMemo(() => {
@@ -200,7 +210,7 @@ function ProfileManagerContent({
       return res.data?.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
       enqueueSnackbar("Student profile saved.", { variant: "success" });
     },
     onError: (error) => {
@@ -216,7 +226,7 @@ function ProfileManagerContent({
       return res.data?.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
       queryClient.invalidateQueries({ queryKey: ["mentorProfile"] });
       enqueueSnackbar("Professional profile saved.", { variant: "success" });
     },
@@ -329,8 +339,8 @@ function ProfileManagerContent({
 
         <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-10">
           <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-card dark:bg-[#14100c] border border-border dark:border-[rgba(255,154,60,0.16)]">
-            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-900 dark:text-[#1a0e04] data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-900 dark:text-[#1a0e04] data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
+            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info">
