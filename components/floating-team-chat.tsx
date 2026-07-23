@@ -155,22 +155,36 @@ export function FloatingTeamChat({ teamId, inline = false, defaultOpen = false, 
       const updateTeamListCache = (queryKeyPrefix: string) => {
         queryClient.setQueriesData({ queryKey: [queryKeyPrefix] }, (oldData: any) => {
           if (!oldData) return oldData;
-          return oldData.map((t: any) => {
+
+          const updateTeam = (t: any) => {
             if (t.id === newMessage.teamId) {
-              const shouldIncrementUnread = newMessage.senderId !== user?.id && (!isOpenRef.current || newMessage.teamId !== teamId);
+              const isOwnMessage = user?.id && String(newMessage.senderId) === String(user.id);
+              const shouldIncrementUnread = !isOwnMessage && (!isOpenRef.current || newMessage.teamId !== teamId);
               return {
                 ...t,
                 lastMessage: newMessage,
-                lastMessageAt: newMessage.createdAt,
-                unreadCount: shouldIncrementUnread ? (t.unreadCount || 0) + 1 : (t.unreadCount || 0)
+                lastMessageAt: newMessage.createdAt || new Date().toISOString(),
+                unreadCount: shouldIncrementUnread ? (t.unreadCount || 0) + 1 : (isOwnMessage ? 0 : (t.unreadCount || 0))
               };
             }
             return t;
-          });
+          };
+
+          if (Array.isArray(oldData)) {
+            return oldData.map(updateTeam);
+          }
+          if (Array.isArray(oldData?.data)) {
+            return {
+              ...oldData,
+              data: oldData.data.map(updateTeam),
+            };
+          }
+          return oldData;
         });
       };
       updateTeamListCache("mentorTeams");
       updateTeamListCache("organizerTeams");
+      updateTeamListCache("organizerTeamsMessages");
     };
 
     const handleMessagesReadUpdated = (updatedMessages: TeamMessage[]) => {

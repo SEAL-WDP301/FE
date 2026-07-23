@@ -341,7 +341,7 @@ function TeamRow({
         {!isPublished && isFinalRound && (
           <div className="shrink-0">
              <select 
-               className="bg-background border border-border text-sm font-medium rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-emerald-500 shadow-sm"
+               className="w-[260px] shrink-0 bg-background border border-border text-sm font-medium rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-emerald-500 shadow-sm truncate"
                value={awardValue?.id || ""}
                onChange={(e) => {
                  const prizeId = Number(e.target.value);

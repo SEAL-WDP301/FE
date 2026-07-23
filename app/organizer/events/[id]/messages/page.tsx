@@ -47,11 +47,11 @@ export default function EventMessagesPage() {
 
   const approvedTeams = teams ? teams.filter((t: any) => t.status === "approved") : [];
 
-  const sortedTeams = approvedTeams.sort((a: any, b: any) => {
+  const sortedTeams = [...approvedTeams].sort((a: any, b: any) => {
     if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-    const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-    const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : (a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0);
+    const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : (b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0);
     return bDate - aDate;
   });
 
@@ -85,9 +85,11 @@ export default function EventMessagesPage() {
     
     // Optimistically clear unread count
     if (team.unreadCount > 0) {
-      queryClient.setQueryData(["organizerTeams", eventId], (oldData: any) => {
+      queryClient.setQueryData(["organizerTeamsMessages", eventId], (oldData: any) => {
         if (!oldData) return oldData;
-        return oldData.map((t: any) => t.id === team.id ? { ...t, unreadCount: 0 } : t);
+        if (Array.isArray(oldData)) return oldData.map((t: any) => t.id === team.id ? { ...t, unreadCount: 0 } : t);
+        if (Array.isArray(oldData?.data)) return { ...oldData, data: oldData.data.map((t: any) => t.id === team.id ? { ...t, unreadCount: 0 } : t) };
+        return oldData;
       });
     }
   };

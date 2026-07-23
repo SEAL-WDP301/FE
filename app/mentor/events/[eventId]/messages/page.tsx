@@ -40,11 +40,11 @@ export default function MentorMessagesPage() {
     enabled: !!eventId,
   });
 
-  const sortedTeams = teams ? [...teams].sort((a, b) => {
+  const sortedTeams = teams ? [...teams].sort((a: any, b: any) => {
     if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-    const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-    const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    const aDate = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : (a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0);
+    const bDate = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : (b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0);
     return bDate - aDate;
   }) : [];
 
