@@ -11,6 +11,7 @@ import { getRoleHomePath } from "@/components/auth/role-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { FaGithub } from "react-icons/fa";
+import { queryKeys } from "@/lib/query-keys";
 
 import {
   AuthCard,
@@ -43,19 +44,22 @@ export default function LoginPage() {
     try {
       const res = await axiosClient.post("/auth/signin", formData);
 
-      // Save token (if any frontend handling is needed, though axios handles bearer auto now)
+      // Save token & user profile
       if (res.data?.data?.accessToken) {
         console.log("[DEV] Logged in successfully. Access Token:", res.data.data.accessToken);
         setAccessToken(res.data.data.accessToken);
         if (res.data.data.refreshToken) {
           useAuthStore.getState().setRefreshToken(res.data.data.refreshToken);
         }
+        if (res.data.data.user) {
+          useAuthStore.getState().setUser(res.data.data.user);
+        }
       }
 
       enqueueSnackbar("Đăng nhập thành công!", { variant: "success" });
 
-      // Update global user state
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      // Update global user state cache
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
 
       const role = res.data?.data?.user?.role;
       const redirectTo = getSafeRedirectPath(

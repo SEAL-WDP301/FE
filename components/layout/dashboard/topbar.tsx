@@ -11,17 +11,27 @@ import Logo from "@/components/ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
 import { useAuthStore } from "@/lib/stores/auth.store";
+import { queryKeys } from "@/lib/query-keys";
 
 export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterContent?: React.ReactNode, showDesktopLogo?: boolean }) {
-    // Fetch Current User
+    const storeUser = useAuthStore((state) => state.user);
+    const setUser = useAuthStore((state) => state.setUser);
+
+    // Fetch Current User with Zustand initialData
     const { data: user } = useQuery({
-        queryKey: ['userProfile'],
+        queryKey: queryKeys.user,
         queryFn: async () => {
             const token = useAuthStore.getState().accessToken;
-            if (!token) return null;
+            if (!token) {
+                setUser(null);
+                return null;
+            }
             const res = await axiosClient.get('/users/profile');
-            return res.data?.data;
+            const profile = res.data?.data;
+            if (profile) setUser(profile);
+            return profile;
         },
+        initialData: storeUser || undefined,
     });
 
     // Helper function to get initials

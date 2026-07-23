@@ -21,6 +21,8 @@ import {
 import { FaGithub } from "react-icons/fa";
 
 import { axiosClient } from "@/lib/axios";
+import { queryKeys } from "@/lib/query-keys";
+import { useAuthStore } from "@/lib/stores/auth.store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,9 +155,17 @@ function ProfileManagerContent({
   const [professionalForm, setProfessionalForm] =
     useState<ProfessionalFormState>(emptyProfessionalForm);
 
+  const storeUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
   const { data: user, isLoading, isError, refetch } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: fetchUserProfile,
+    queryKey: queryKeys.user,
+    queryFn: async () => {
+      const data = await fetchUserProfile();
+      if (data) setUser(data);
+      return data;
+    },
+    initialData: storeUser ? ({ ...storeUser, avatarUrl: storeUser.avatarUrl ?? storeUser.avatar_url } as any) : undefined,
   });
 
   const resolvedMode = useMemo(() => {
@@ -200,7 +210,7 @@ function ProfileManagerContent({
       return res.data?.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
       enqueueSnackbar("Student profile saved.", { variant: "success" });
     },
     onError: (error) => {
@@ -216,7 +226,7 @@ function ProfileManagerContent({
       return res.data?.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
       queryClient.invalidateQueries({ queryKey: ["mentorProfile"] });
       enqueueSnackbar("Professional profile saved.", { variant: "success" });
     },

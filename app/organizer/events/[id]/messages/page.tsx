@@ -92,7 +92,7 @@ export default function EventMessagesPage() {
     }
   };
 
-  const selectedTeamData = sortedTeams.find(t => t.id === selectedTeamId);
+  const selectedTeamData = sortedTeams.find((t: any) => t.id === selectedTeamId);
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
