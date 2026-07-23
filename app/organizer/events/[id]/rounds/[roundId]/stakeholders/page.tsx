@@ -344,7 +344,7 @@ export default function EventStakeholdersPage() {
 
       {/* Drawer for Details */}
       <Sheet open={!!drawerUser} onOpenChange={(open) => !open && setDrawerUser(null)}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto bg-card border-l border-border">
+        <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto bg-card border-l border-border p-6">
           <SheetHeader className="mb-6 flex flex-row items-center gap-4">
             {drawerUser?.avatarUrl ? (
               <img src={drawerUser.avatarUrl} alt={drawerUser.name} className="w-16 h-16 rounded-full border-2 border-border object-cover" />
@@ -456,28 +456,51 @@ export default function EventStakeholdersPage() {
                     <input 
                       type="checkbox" 
                       className="rounded border-border bg-background"
-                      checked={selectedUsers.length === filteredModalUsers?.length && filteredModalUsers?.length > 0}
+                      checked={
+                        filteredModalUsers?.filter((u: any) => !(u.mentorAssignments && u.mentorAssignments.length > 0)).length > 0 &&
+                        selectedUsers.length === filteredModalUsers?.filter((u: any) => !(u.mentorAssignments && u.mentorAssignments.length > 0)).length
+                      }
                       onChange={(e) => {
-                        if (e.target.checked) setSelectedUsers(filteredModalUsers?.map((u: any) => u.id) || []);
+                        const selectable = filteredModalUsers?.filter((u: any) => !(u.mentorAssignments && u.mentorAssignments.length > 0)).map((u: any) => u.id) || [];
+                        if (e.target.checked) setSelectedUsers(selectable);
                         else setSelectedUsers([]);
                       }}
                     />
-                    <span className="text-sm font-semibold">Select All</span>
+                    <span className="text-sm font-semibold">Select All (Active Stakeholders)</span>
                   </label>
-                  {filteredModalUsers?.map((u: any) => (
-                    <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-muted/50 rounded cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="rounded border-border bg-background"
-                        checked={selectedUsers.includes(u.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) setSelectedUsers([...selectedUsers, u.id]);
-                          else setSelectedUsers(selectedUsers.filter(id => id !== u.id));
-                        }}
-                      />
-                      <span className="text-sm">{u.name} <span className="text-muted-foreground text-xs">({u.email})</span></span>
-                    </label>
-                  ))}
+                  {filteredModalUsers?.map((u: any) => {
+                    const isMentor = u.mentorAssignments && u.mentorAssignments.length > 0;
+                    return (
+                      <label 
+                        key={u.id} 
+                        className={`flex items-center space-x-2 p-1 rounded transition-colors ${
+                          isMentor 
+                            ? "opacity-50 cursor-not-allowed bg-muted/20" 
+                            : "hover:bg-muted/50 cursor-pointer"
+                        }`}
+                      >
+                        <input 
+                          type="checkbox" 
+                          disabled={isMentor}
+                          className="rounded border-border bg-background disabled:opacity-50 disabled:cursor-not-allowed"
+                          checked={selectedUsers.includes(u.id)}
+                          onChange={(e) => {
+                            if (isMentor) return;
+                            if (e.target.checked) setSelectedUsers([...selectedUsers, u.id]);
+                            else setSelectedUsers(selectedUsers.filter(id => id !== u.id));
+                          }}
+                        />
+                        <span className="text-sm flex items-center justify-between w-full pr-2">
+                          <span>{u.name} <span className="text-muted-foreground text-xs">({u.email})</span></span>
+                          {isMentor && (
+                            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                              Mentor
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
                   {filteredModalUsers?.length === 0 && (
                     <div className="text-sm text-muted-foreground p-2 text-center">No stakeholders found.</div>
                   )}
@@ -541,7 +564,14 @@ export default function EventStakeholdersPage() {
                 className="w-full bg-background border border-border text-foreground text-sm rounded-lg p-2.5"
               >
                 <option value="">Choose...</option>
-                {filteredModalUsers?.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+                {filteredModalUsers?.map((u: any) => {
+                  const isJudge = u.judgeAssignments && u.judgeAssignments.length > 0;
+                  return (
+                    <option key={u.id} value={u.id} disabled={isJudge}>
+                      {u.name} ({u.email}){isJudge ? " — (Judge - Cannot be Mentor)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
