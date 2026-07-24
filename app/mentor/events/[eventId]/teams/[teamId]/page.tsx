@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ExternalLink, FileText, Send, Clock, User, 
   MessageSquare, MessageCircle, Loader2, Users, Calendar, Target,
-  CheckCircle2, X, Minus, Edit2, Trash2
+  CheckCircle2, X, Minus, Edit2, Trash2, Trophy, Sparkles, AlertCircle, ChevronDown, Layers
 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { 
   getMentorTeam, 
   getMentorTeamSubmissions,
+  getMentorTeams,
 } from "@/lib/api/mentor.api";
 import { axiosClient } from "@/lib/axios";
 import { MentorPageHeader } from "@/app/mentor/_components/mentor-page-header";
@@ -108,6 +109,13 @@ export default function MentorTeamDashboard() {
       socket.off("feedback_updated");
     };
   }, [socket, teamId, queryClient]);
+
+  const router = useRouter();
+  const teamsQuery = useQuery({
+    queryKey: ["mentorTeams", params.eventId],
+    queryFn: () => getMentorTeams(params.eventId as string),
+  });
+  const allMentorTeams = teamsQuery.data || [];
 
   const teamQuery = useQuery({
     queryKey: ["mentorTeam", teamId],
@@ -208,9 +216,28 @@ export default function MentorTeamDashboard() {
         }
         subtitle="Manage team, review submissions, and provide real-time feedback."
         actions={
-          <Button asChild variant="outline" className="rounded-xl">
-            <Link href={`/mentor/events/${params.eventId}/teams`}>Back to Teams</Link>
-          </Button>
+          <div className="flex items-center gap-3">
+            {allMentorTeams.length > 1 && (
+              <div className="flex items-center gap-2 bg-background/80 border border-border px-3.5 py-2 rounded-xl shadow-sm">
+                <Users className="h-4 w-4 text-orange-500 shrink-0" />
+                <span className="text-xs font-semibold text-muted-foreground shrink-0">Select Team:</span>
+                <select
+                  value={teamId}
+                  onChange={(e) => router.push(`/mentor/events/${params.eventId}/teams/${e.target.value}`)}
+                  className="bg-transparent text-sm font-bold text-foreground focus:outline-none cursor-pointer"
+                >
+                  {allMentorTeams.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-popover text-popover-foreground">
+                      {t.name} ({t.track?.name || "No track"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link href={`/mentor/events/${params.eventId}/teams`}>Back to Teams</Link>
+            </Button>
+          </div>
         }
       />
 
@@ -218,36 +245,84 @@ export default function MentorTeamDashboard() {
         {/* LEFT COLUMN: CONTEXT & IDENTITY */}
         <aside className="space-y-6 sticky top-6">
           
-          {/* Event Context Card */}
+          {/* Round Progression & Advancement Roadmap */}
           <GlassCard glow className="rounded-[24px] bg-gradient-to-br from-card to-background border-orange-500/20 p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-32 bg-orange-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 group-hover:bg-orange-500/10 transition-colors duration-500 pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4">
-                <Target className="h-5 w-5 text-orange-500" />
-                <span className="text-sm font-semibold uppercase tracking-wider text-orange-500">
-                  Event Context
-                </span>
-              </div>
-              
-              <h3 className="text-xl font-bold">{team.event?.name || "Event unavailable"}</h3>
-              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                Evaluate this team based on the event requirements.
-              </p>
+            <div className="flex items-center gap-2 mb-4">
+              <Layers className="h-5 w-5 text-orange-500" />
+              <h2 className="text-lg font-bold">Round Progression & Status</h2>
+            </div>
 
-              {activeSubmission?.round && (
-                <div className="mt-5 space-y-3">
-                  <div className="flex items-start gap-3 bg-background/50 p-3 rounded-xl border border-border">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold">Active Round: {activeSubmission.round.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Deadline: {activeSubmission.round.submissionDeadline 
-                          ? new Date(activeSubmission.round.submissionDeadline).toLocaleString()
-                          : "Not set"}
-                      </p>
+            <div className="space-y-3">
+              {team.teamRounds && team.teamRounds.length > 0 ? (
+                team.teamRounds.map((tr, index) => {
+                  const isAdvanced = tr.status === "advanced";
+                  const isCompeting = tr.status === "competing";
+                  const isEliminated = tr.status === "eliminated";
+                  return (
+                    <div
+                      key={tr.id || tr.roundId || index}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        isAdvanced
+                          ? "border-green-500/40 bg-gradient-to-r from-green-500/10 to-transparent shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]"
+                          : isCompeting
+                          ? "border-orange-500/40 bg-orange-500/5"
+                          : isEliminated
+                          ? "border-red-500/30 bg-red-500/5"
+                          : "border-border bg-muted/20"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-foreground">
+                          {tr.round?.name || `Round ${index + 1}`}
+                        </span>
+                        {isAdvanced && (
+                          <Badge variant="success" className="gap-1 shadow-sm font-bold text-[11px]">
+                            👑 Advanced
+                          </Badge>
+                        )}
+                        {isCompeting && (
+                          <Badge variant="warning" className="gap-1 font-bold text-[11px]">
+                            ⚔️ Competing
+                          </Badge>
+                        )}
+                        {isEliminated && (
+                          <Badge variant="destructive" className="gap-1 font-bold text-[11px]">
+                            🔴 Eliminated
+                          </Badge>
+                        )}
+                        {!isAdvanced && !isCompeting && !isEliminated && (
+                          <Badge variant="outline" className="text-[11px]">{tr.status || "Pending"}</Badge>
+                        )}
+                      </div>
+
+                      {tr.score != null && (
+                        <p className="text-xs text-muted-foreground font-medium mb-2">
+                          Score: <span className="font-bold text-foreground">{Number(tr.score).toFixed(2)}</span> / 10
+                        </p>
+                      )}
+
+                      {tr.round?.problemFileUrl ? (
+                        <div className="pt-2 border-t border-border/40">
+                          <a
+                            href={tr.round.problemFileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 font-semibold underline underline-offset-4"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> 📌 Download Topic File
+                          </a>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground italic pt-1">
+                          No topic attachment for this round
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="p-3 text-xs text-muted-foreground text-center">
+                  No round status recorded for this team.
                 </div>
               )}
             </div>

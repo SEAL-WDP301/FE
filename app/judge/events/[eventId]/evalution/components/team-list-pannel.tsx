@@ -179,7 +179,7 @@ export function TeamListPanel({
                         <span className={cn(
                           "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                           statusLabel === "Pending" ? "bg-amber-500/10 text-amber-500" :
-                          statusLabel === "Evaluated" || statusLabel === "Completed" || statusLabel === "Done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                          statusLabel === "Completed" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                           "bg-blue-500/10 text-blue-500"
                         )}>
                           {statusLabel}

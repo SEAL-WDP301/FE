@@ -44,7 +44,7 @@ export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterC
         const role = user?.role?.toLowerCase();
         if (role === "student") return "/student/profile";
         if (role === "judge") return "/judge/profile";
-        if (role === "mentor" || role === "stakeholder") return "/mentor/profile";
+        if (role === "stakeholder") return "/stakeholder/profile";
         if (role === "admin" || role === "organizer") return "/organizer/profile";
         return "/home";
     };

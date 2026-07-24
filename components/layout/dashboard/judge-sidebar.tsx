@@ -55,11 +55,6 @@ const getMenus = (eventId: string) => {
             icon: CalendarClock,
         },
         {
-            label: "Notifications",
-            href: `${base}/notifications`,
-            icon: Bell,
-        },
-        {
             label: "Profile",
             href: "/judge/profile",
             icon: User,

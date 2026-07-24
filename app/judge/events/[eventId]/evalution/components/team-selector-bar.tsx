@@ -93,7 +93,7 @@ export function TeamSelectorBar({
                     <span className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                       selectedTeam.scoringStatus === "pending" ? "bg-amber-500/10 text-amber-500" :
-                      selectedTeam.scoringStatus === "evaluated" || selectedTeam.scoringStatus === "completed" || selectedTeam.scoringStatus === "done" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                      selectedTeam.scoringStatus === "completed" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
                       "bg-blue-500/10 text-blue-500"
                     )}>
                       {mapScoringStatusLabel(selectedTeam.scoringStatus)}
@@ -115,7 +115,7 @@ export function TeamSelectorBar({
                 const submissionId = team.submissionId ?? team.id;
                 const statusLabel = mapScoringStatusLabel(team.scoringStatus);
                 const isPending = team.scoringStatus === "pending";
-                const isEvaluated = team.scoringStatus === "evaluated";
+                const isEvaluated = team.scoringStatus === "completed";
 
                 return (
                   <SelectItem key={submissionId} value={String(submissionId)}>

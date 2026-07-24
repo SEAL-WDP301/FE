@@ -13,7 +13,9 @@ interface Props {
   rubrics: JudgeRubric[];
   scores: Record<number, number>;
   scoringStatus?: JudgeScoringStatus;
+  weightedScore?: number | null;
   isSaving?: boolean;
+  onSaveDraft?: () => void;
   onSubmit?: () => void;
   disabled?: boolean;
 }

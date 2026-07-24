@@ -71,6 +71,7 @@ export interface JudgeSubmissionDetail {
     roundNumber: number;
     status: string;
     submissionDeadline?: string | null;
+    problemFileUrl?: string | null;
   };
   event: { id: number; name: string; season: string; year: number };
   rubrics: JudgeRubric[];
@@ -170,7 +171,11 @@ export function formatSubmissionLabel(submission: {
   id: number;
   submissionId?: number;
   anonymousIndex?: number;
+  teamName?: string;
+  name?: string;
 }) {
+  if (submission.teamName) return submission.teamName;
+  if (submission.name) return submission.name;
   const value = submission.anonymousIndex ?? submission.submissionId ?? submission.id;
-  return `Submission #${String(value).padStart(3, "0")}`;
+  return `Team #${String(value).padStart(3, "0")}`;
 }

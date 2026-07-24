@@ -55,7 +55,7 @@ export function CriteriaScoring({
               </div>
 
               <div className="text-right shrink-0">
-                <div className="text-4xl font-bold text-orange-500">
+                <div className={`text-4xl font-bold ${disabled ? "text-muted-foreground opacity-60" : "text-orange-500"}`}>
                   {score.toFixed(1)}
                 </div>
                 <span className="text-xs text-muted-foreground">
