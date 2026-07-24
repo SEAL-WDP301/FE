@@ -13,6 +13,15 @@ export interface MentorTeamMember {
   };
 }
 
+export interface MentorTeamRound {
+  id?: number;
+  teamId?: number;
+  roundId?: number;
+  status?: string; // "competing" | "advanced" | "eliminated" | "pending"
+  score?: number | null;
+  round?: MentorRound;
+}
+
 export interface MentorTeam {
   id: number;
   name: string;
@@ -22,6 +31,7 @@ export interface MentorTeam {
   track?: { id?: number; name?: string; maxMembersPerTeam?: number };
   leader?: { id?: number; name?: string | null; email?: string | null };
   members?: MentorTeamMember[];
+  teamRounds?: MentorTeamRound[];
 }
 
 export interface MentorAssignment {
@@ -64,6 +74,7 @@ export interface MentorRound {
   roundNumber?: number;
   status?: string;
   submissionDeadline?: string | null;
+  problemFileUrl?: string | null;
 }
 
 export interface MentorFeedback {

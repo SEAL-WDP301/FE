@@ -103,6 +103,7 @@ export interface OrganizerRound extends OrganizerRoundInput {
   id: number;
   status?: "not_started" | "open" | "closed" | "results_published" | string;
   startDate?: string;
+  problemFileUrl?: string | null;
   track?: OrganizerTrack | null;
   _count?: {
     submissions?: number;
@@ -442,6 +443,18 @@ export async function publishRoundResults(
   const res = await axiosClient.post(
     `/organizer/events/${eventId}/rounds/${roundId}/publish-results`,
     payload,
+  );
+  return unwrapData<unknown>(res);
+}
+
+export async function updateRoundProblemFile(
+  eventId: string | number,
+  roundId: string | number,
+  problemFileUrl: string | null,
+) {
+  const res = await axiosClient.patch(
+    `/organizer/events/${eventId}/rounds/${roundId}/problem-file`,
+    { problemFileUrl },
   );
   return unwrapData<unknown>(res);
 }

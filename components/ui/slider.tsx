@@ -42,7 +42,7 @@ function Slider({
             >
                 <SliderPrimitive.Range
                     data-slot="slider-range"
-                    className="absolute h-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.6)]"
+                    className="absolute h-full bg-orange-500 shadow-[0_0_12px_rgba(243,112,33,0.6)] data-[disabled]:bg-zinc-600 data-[disabled]:shadow-none"
                 />
             </SliderPrimitive.Track>
 
@@ -62,8 +62,11 @@ function Slider({
             focus-visible:ring-4
             focus-visible:ring-primary/30
 
-            disabled:pointer-events-none
-            disabled:opacity-50
+            data-[disabled]:border-zinc-500
+            data-[disabled]:bg-zinc-500
+            data-[disabled]:shadow-none
+            data-[disabled]:pointer-events-none
+            data-[disabled]:opacity-50
           "
                 />
             ))}

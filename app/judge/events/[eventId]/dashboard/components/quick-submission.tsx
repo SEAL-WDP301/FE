@@ -14,7 +14,7 @@ export function QuickSubmission() {
 
   const focus =
     pendingSubmissions[0] ??
-    submissions.find((item) => item.assignedRepoUrl) ??
+    submissions.find((item) => item.githubUrl) ??
     submissions[0];
 
   if (isLoading) {
@@ -36,7 +36,7 @@ export function QuickSubmission() {
     );
   }
 
-  const githubUrl = focus.githubUrl ?? focus.assignedRepoUrl;
+  const githubUrl = focus.githubUrl;
   const shortcuts = [
     githubUrl
       ? {

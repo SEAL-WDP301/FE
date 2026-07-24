@@ -165,7 +165,7 @@ function ProfileManagerContent({
       if (data) setUser(data);
       return data;
     },
-    initialData: storeUser ? ({ ...storeUser, avatarUrl: storeUser.avatarUrl ?? storeUser.avatar_url } as any) : undefined,
+    refetchOnMount: "always",
   });
 
   const resolvedMode = useMemo(() => {
@@ -310,37 +310,38 @@ function ProfileManagerContent({
   const roleLabel = user.role || (resolvedMode === "student" ? "student" : "stakeholder");
 
   return (
-    <div className="relative isolate overflow-hidden rounded-[28px] bg-background dark:bg-[#08060a] px-4 py-10 text-foreground dark:text-[#f5f2ec] sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(255,154,60,0.25),transparent_70%)] blur-[70px]" />
-      <div className="pointer-events-none absolute -bottom-24 -left-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,90,26,0.16),transparent_70%)] blur-[70px]" />
-
-      <div className="relative mx-auto max-w-[1180px]">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ff9a3c]">
-          Profile
-        </p>
-        <h1 className="mt-3 text-[clamp(2rem,4vw,3.5rem)] font-extrabold tracking-normal">
-          {title}
-        </h1>
-        <p className="mt-3 max-w-[60ch] text-[15.5px] leading-7 text-muted-foreground dark:text-[#a39c8f]">
-          {subtitle}
-        </p>
-
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <div className="h-1.5 w-full max-w-[280px] overflow-hidden rounded-full bg-card dark:bg-[#14100c]">
-            <div
-              className="h-full rounded-full bg-[linear-gradient(90deg,#ff9a3c,#ff6a1a)] shadow-[0_0_12px_rgba(255,122,26,0.35)] transition-all duration-700"
-              style={{ width: `${completion.percent}%` }}
-            />
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:bg-[#14100c] dark:border-[rgba(255,154,60,0.16)]">
+      <div className="relative mx-auto">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-5 dark:border-white/10">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-orange-500">
+              Profile
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground dark:text-[#f5f2ec]">
+              {title}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground dark:text-[#a39c8f]">
+              {subtitle}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground dark:text-[#6f685c]">
-            <b className="text-foreground dark:text-[#f5f2ec]">{completion.done}/{completion.total}</b> fields complete
-          </p>
+
+          <div className="flex items-center gap-3 bg-muted/40 p-2.5 rounded-xl border border-border/50 shrink-0 dark:bg-black/30 dark:border-white/5">
+            <div className="h-2 w-32 overflow-hidden rounded-full bg-muted dark:bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-700"
+                style={{ width: `${completion.percent}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <b className="text-foreground dark:text-[#f5f2ec]">{completion.done}/{completion.total}</b> completed
+            </p>
+          </div>
         </div>
 
-        <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-10">
-          <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2 bg-card dark:bg-[#14100c] border border-border dark:border-[rgba(255,154,60,0.16)]">
-            <TabsTrigger value="info" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">Profile Info</TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-[linear-gradient(145deg,#ff9a3c,#ff6a1a)] data-[state=active]:text-zinc-950 text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold transition-all">History & Awards</TabsTrigger>
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-6">
+          <TabsList className="mb-6 grid w-full max-w-[360px] grid-cols-2 bg-muted/60 dark:bg-[#1e1814] border border-border dark:border-[rgba(255,154,60,0.16)] p-1 rounded-xl">
+            <TabsTrigger value="info" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold rounded-lg transition-all">Profile Info</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-muted-foreground dark:text-zinc-300 data-[state=active]:font-bold rounded-lg transition-all">History & Awards</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info">

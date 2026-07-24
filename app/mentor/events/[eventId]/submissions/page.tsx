@@ -69,7 +69,7 @@ export default function SubmissionsReviewPage() {
 
               <Button asChild variant="orange" className="mt-5 w-full">
                 <Link
-                  href={`/mentor/events/${params.eventId}/teams/${submission.teamId}/submissions/${submission.id}`}
+                  href={`/mentor/events/${params.eventId}/teams/${submission.teamId}`}
                 >
                   View submission
                   <ExternalLink className="h-4 w-4" />

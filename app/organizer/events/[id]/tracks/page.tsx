@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
-import { Edit2, Loader2, Plus, Save, Trash2, PlayCircle } from "lucide-react";
+import { Edit2, Loader2, Plus, Save, Trash2, PlayCircle, ExternalLink, Upload } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { axiosClient } from "@/lib/axios";
 import {
   getOrganizerEvent,
   updateOrganizerEvent,
+  updateRoundProblemFile,
   type OrganizerEvent,
   type OrganizerEventPayload,
   type OrganizerRound,
@@ -221,6 +222,42 @@ export default function EventRoundsPage() {
       });
     },
   });
+
+  const [uploadingRoundId, setUploadingRoundId] = useState<number | null>(null);
+
+  const handleProblemFileUpload = async (roundId: number, file: File) => {
+    try {
+      setUploadingRoundId(roundId);
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await axiosClient.post("/storage/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const fileUrl = uploadRes.data?.data?.fileUrl;
+      if (!fileUrl) throw new Error("Upload failed: No file URL returned");
+
+      await updateRoundProblemFile(eventId, roundId, fileUrl);
+      enqueueSnackbar("Problem statement file uploaded successfully!", { variant: "success" });
+      eventQuery.refetch();
+    } catch (err: any) {
+      enqueueSnackbar(getApiMessage(err, "Failed to upload problem file"), { variant: "error" });
+    } finally {
+      setUploadingRoundId(null);
+    }
+  };
+
+  const handleRemoveProblemFile = async (roundId: number) => {
+    try {
+      setUploadingRoundId(roundId);
+      await updateRoundProblemFile(eventId, roundId, null);
+      enqueueSnackbar("Problem statement file removed.", { variant: "info" });
+      eventQuery.refetch();
+    } catch (err: any) {
+      enqueueSnackbar(getApiMessage(err, "Failed to remove problem file"), { variant: "error" });
+    } finally {
+      setUploadingRoundId(null);
+    }
+  };
 
   const openCreateRound = () => {
     const nextRoundNumber =
@@ -513,6 +550,7 @@ export default function EventRoundsPage() {
                   <th className="px-5 py-4 font-semibold">Track</th>
                   <th className="px-5 py-4 font-semibold">Deadline</th>
                   <th className="px-5 py-4 font-semibold">Submission</th>
+                  <th className="px-5 py-4 font-semibold">Problem File</th>
                   <th className="px-5 py-4 font-semibold">Status</th>
                   <th className="px-5 py-4 text-right font-semibold">Actions</th>
                 </tr>
@@ -520,6 +558,7 @@ export default function EventRoundsPage() {
               <tbody>
                 {rounds.map((round) => {
                   const track = tracks.find((item) => item.id === round.trackId);
+                  const isRoundNotStarted = (round.status || "not_started") === "not_started";
                   return (
                     <tr 
                       key={round.id} 
@@ -551,6 +590,62 @@ export default function EventRoundsPage() {
                         <div className="mt-1 text-muted-foreground">
                           Max {round.maxFileSizeMb ?? 20} MB
                         </div>
+                      </td>
+                      <td className="px-5 py-4 text-xs" onClick={(e) => e.stopPropagation()}>
+                        {round.problemFileUrl ? (
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" asChild className="h-8 gap-1.5 text-xs">
+                              <a href={round.problemFileUrl} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3.5 w-3.5 text-orange-500" /> Topic File
+                              </a>
+                            </Button>
+                            {isRoundNotStarted ? (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title="Remove Problem File"
+                                disabled={uploadingRoundId === round.id}
+                                onClick={() => handleRemoveProblemFile(round.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                              </Button>
+                            ) : (
+                              <span
+                                title="Locked: Problem file can only be modified when round status is Not Started"
+                                className="text-[10px] text-muted-foreground italic border border-border px-1.5 py-0.5 rounded cursor-help"
+                              >
+                                Locked
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          isRoundNotStarted ? (
+                            <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-medium hover:bg-muted transition-colors">
+                              {uploadingRoundId === round.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-500" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5 text-orange-500" />
+                              )}
+                              <span>Upload Topic</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                disabled={uploadingRoundId === round.id}
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleProblemFileUpload(round.id, f);
+                                }}
+                              />
+                            </label>
+                          ) : (
+                            <span
+                              title="Locked: Problem file can only be modified when round status is Not Started"
+                              className="text-xs text-muted-foreground italic cursor-help"
+                            >
+                              No File (Locked)
+                            </span>
+                          )
+                        )}
                       </td>
                       <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <select

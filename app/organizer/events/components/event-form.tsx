@@ -826,9 +826,12 @@ export default function EventForm({ initialData }: EventFormProps) {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
+  const DEFAULT_EVENT_DESCRIPTION =
+    "Building a Retrieval-Augmented Generation (RAG) AI automation involves connecting a Large Language Model (LLM) to your private data sources (like PDFs or databases). When a user asks a question, the system retrieves relevant information and passes it to the AI, allowing it to generate accurate, context-aware responses without hallucinating";
+
   const defaultValues: Partial<EventFormValues> = {
     name: initialData?.name || "",
-    description: initialData?.description || "",
+    description: initialData?.description || DEFAULT_EVENT_DESCRIPTION,
     imageUrl: initialData?.imageUrl || initialData?.image_url || "",
     season: initialData?.season || "Spring",
     year: initialData?.year || new Date().getFullYear(),

@@ -85,15 +85,15 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
       return;
     }
 
-    if (!isLoading && !isFetching && user) {
+    if (!isLoading && user) {
       const role = user.role?.toLowerCase();
       if (!role || !allowedRoles.includes(role as AppRole)) {
         router.replace(getRoleHomePath(role));
       }
     }
-  }, [allowedRoles, hasToken, isError, isFetching, isLoading, pathname, router, user]);
+  }, [allowedRoles, hasToken, isError, isLoading, pathname, router, user]);
 
-  if (!mounted || !hasToken || isLoading || isFetching || isError) {
+  if (!mounted || !hasToken || (isLoading && !user) || isError) {
     return <RoleGuardFallback />;
   }
 

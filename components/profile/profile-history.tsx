@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/axios";
-import { Loader2, Trophy, Medal, MapPin, Users, Calendar, Award, Star } from "lucide-react";
+import { Loader2, Trophy, Medal, MapPin, Users, Calendar, Award, Star, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -36,59 +36,77 @@ export function ProfileHistory({ userId }: { userId?: number }) {
 
   const { hackerHistory = [], judgeHistory = [], mentorHistory = [] } = data;
 
-  const totalAwards = hackerHistory.filter((t: any) => t.award).length;
+  const awardedTeams = hackerHistory.filter((t: any) => t.award);
 
   return (
     <div className="space-y-8">
       {/* Achievements Showcase */}
-      {totalAwards > 0 && (
-        <div className="rounded-[22px] border border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 to-orange-500/5 p-6 shadow-[0_0_30px_rgba(234,179,8,0.05)]">
-          <div className="flex items-center gap-3 mb-6">
-            <Trophy className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-xl font-bold text-yellow-500">Trophy Showcase</h2>
+      {awardedTeams.length > 0 && (
+        <div className="rounded-[22px] border border-amber-500/30 bg-amber-500/5 dark:border-yellow-500/20 dark:bg-gradient-to-br dark:from-yellow-500/10 dark:to-orange-500/5 p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <Trophy className="w-6 h-6 text-amber-500 dark:text-yellow-500" />
+              <h2 className="text-xl font-bold text-amber-600 dark:text-yellow-500">Trophy Showcase</h2>
+            </div>
+            {awardedTeams.length > 4 && (
+              <div className="flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-yellow-400 bg-amber-500/15 dark:bg-yellow-500/10 px-2.5 py-1 rounded-full border border-amber-500/30 dark:border-yellow-500/30 animate-pulse">
+                <span>Cuộn xem tiếp ({awardedTeams.length})</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {hackerHistory
-              .filter((t: any) => t.award)
-              .map((team: any) => {
-                const awardName = team.award?.name?.toLowerCase() || "";
-                const isFirst = awardName.includes("1st") || awardName.includes("first") || awardName.includes("champion");
-                const isSecond = awardName.includes("2nd") || awardName.includes("second") || awardName.includes("runner-up");
-                const isThird = awardName.includes("3rd") || awardName.includes("third");
-                const isFourth = awardName.includes("best") || awardName.includes("outstanding");
 
-                let Icon = Award;
-                let colorClass = "text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]";
+          <div
+            className={
+              awardedTeams.length > 4
+                ? "flex gap-4 overflow-x-auto pb-2 scrollbar-thin snap-x scroll-smooth"
+                : "grid grid-cols-2 md:grid-cols-4 gap-4"
+            }
+          >
+            {awardedTeams.map((team: any) => {
+              const awardName = team.award?.name?.toLowerCase() || "";
+              const isFirst = awardName.includes("1st") || awardName.includes("first") || awardName.includes("champion");
+              const isSecond = awardName.includes("2nd") || awardName.includes("second") || awardName.includes("runner-up");
+              const isThird = awardName.includes("3rd") || awardName.includes("third");
+              const isFourth = awardName.includes("best") || awardName.includes("outstanding");
 
-                if (isFirst) {
-                  Icon = Trophy;
-                  colorClass = "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]";
-                } else if (isSecond) {
-                  Icon = Medal;
-                  colorClass = "text-slate-300 drop-shadow-[0_0_10px_rgba(203,213,225,0.8)]";
-                } else if (isThird) {
-                  Icon = Medal;
-                  colorClass = "text-orange-600 drop-shadow-[0_0_10px_rgba(234,88,12,0.8)]";
-                } else if (isFourth) {
-                  Icon = Star;
-                  colorClass = "text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]";
-                }
+              let Icon = Award;
+              let colorClass = "text-blue-500 dark:text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]";
 
-                return (
-                  <div key={team.id} className="flex flex-col items-center justify-center p-4 rounded-xl border border-yellow-500/20 bg-black/40 text-center transition-transform hover:scale-105">
-                    <Icon className={`w-10 h-10 mb-3 ${colorClass}`} />
-                    <span className={`text-xs font-bold uppercase mb-1 ${isFirst ? 'text-yellow-500' : isSecond ? 'text-slate-300' : isThird ? 'text-orange-500' : isFourth ? 'text-purple-400' : 'text-blue-400'}`}>
-                      {team.award?.name || "Award"}
-                    </span>
-                    <span className="text-sm font-semibold text-[#f5f2ec] line-clamp-1" title={team.event?.name}>
-                      {team.event?.name}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground mt-1">
-                      Team {team.name}
-                    </span>
-                  </div>
-                );
-              })}
+              if (isFirst) {
+                Icon = Trophy;
+                colorClass = "text-amber-500 dark:text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]";
+              } else if (isSecond) {
+                Icon = Medal;
+                colorClass = "text-slate-500 dark:text-slate-300 drop-shadow-[0_0_10px_rgba(203,213,225,0.8)]";
+              } else if (isThird) {
+                Icon = Medal;
+                colorClass = "text-orange-600 drop-shadow-[0_0_10px_rgba(234,88,12,0.8)]";
+              } else if (isFourth) {
+                Icon = Star;
+                colorClass = "text-purple-500 dark:text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]";
+              }
+
+              return (
+                <div
+                  key={team.id}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border border-amber-500/20 dark:border-yellow-500/20 bg-card dark:bg-black/40 text-center transition-transform hover:scale-105 shadow-sm ${
+                    awardedTeams.length > 4 ? "w-[220px] flex-shrink-0 snap-start" : ""
+                  }`}
+                >
+                  <Icon className={`w-10 h-10 mb-3 ${colorClass}`} />
+                  <span className={`text-xs font-bold uppercase mb-1 ${isFirst ? 'text-amber-600 dark:text-yellow-500' : isSecond ? 'text-slate-600 dark:text-slate-300' : isThird ? 'text-orange-600 dark:text-orange-500' : isFourth ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                    {team.award?.name || "Award"}
+                  </span>
+                  <span className="text-sm font-semibold text-foreground dark:text-[#f5f2ec] line-clamp-1" title={team.event?.name}>
+                    {team.event?.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground mt-1">
+                    Team {team.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -96,7 +114,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
       {/* Hacker History */}
       <div>
         <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 dark:text-[#f5f2ec]">
-          <Users className="w-5 h-5 text-orange-400" /> Participated Hackathons
+          <Users className="w-5 h-5 text-orange-500 dark:text-orange-400" /> Participated Hackathons
         </h3>
         {hackerHistory.length === 0 ? (
           <p className="text-sm text-muted-foreground dark:text-[#a39c8f]">No participations yet.</p>
@@ -110,31 +128,31 @@ export function ProfileHistory({ userId }: { userId?: number }) {
               const isFourth = awardName.includes("best") || awardName.includes("outstanding");
 
               let BadgeIcon = Award;
-              let badgeStyle = "border-blue-500/30 bg-blue-500/10 text-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.1)]";
+              let badgeStyle = "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.1)]";
 
               if (isFirst) {
                 BadgeIcon = Trophy;
-                badgeStyle = "border-yellow-500/30 bg-yellow-500/10 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]";
+                badgeStyle = "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]";
               } else if (isSecond) {
                 BadgeIcon = Medal;
-                badgeStyle = "border-slate-300/30 bg-slate-300/10 text-slate-300 shadow-[0_0_10px_rgba(203,213,225,0.1)]";
+                badgeStyle = "border-slate-400/30 bg-slate-500/10 text-slate-700 dark:text-slate-300 shadow-[0_0_10px_rgba(203,213,225,0.1)]";
               } else if (isThird) {
                 BadgeIcon = Medal;
-                badgeStyle = "border-orange-500/30 bg-orange-500/10 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.1)]";
+                badgeStyle = "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.1)]";
               } else if (isFourth) {
                 BadgeIcon = Star;
-                badgeStyle = "border-purple-400/30 bg-purple-400/10 text-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.1)]";
+                badgeStyle = "border-purple-400/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.1)]";
               }
 
               return (
                 <Link key={team.id} href={`/home/events/${team.event?.id}`} className="block">
-                  <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-[16px] border border-[rgba(255,154,60,0.16)] bg-[#14100c] hover:border-[rgba(255,154,60,0.3)] hover:bg-[#1a1510] transition-all group">
+                  <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-[16px] border border-border dark:border-[rgba(255,154,60,0.16)] bg-card dark:bg-[#14100c] hover:border-amber-500/40 dark:hover:border-[rgba(255,154,60,0.3)] hover:bg-accent/40 dark:hover:bg-[#1a1510] transition-all group shadow-sm">
                     {/* Event Image or Fallback */}
-                    <div className="w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden bg-[#1e1814] flex-shrink-0 relative">
+                    <div className="w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden bg-muted dark:bg-[#1e1814] flex-shrink-0 relative">
                       {team.event?.image_url || team.event?.imageUrl ? (
                         <img src={team.event?.image_url || team.event?.imageUrl} alt={team.event?.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center border border-[rgba(255,154,60,0.1)] opacity-50">
+                        <div className="w-full h-full flex flex-col items-center justify-center border border-border dark:border-[rgba(255,154,60,0.1)] opacity-50">
                           <Trophy className="w-8 h-8 text-orange-500 mb-2 opacity-50" />
                           <span className="text-xs font-bold text-orange-500/50 uppercase tracking-widest">{team.event?.season} {team.event?.year}</span>
                         </div>
@@ -151,7 +169,7 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                     <div className="flex flex-col justify-between flex-1">
                       <div>
                         <div className="flex justify-between items-start mb-2 gap-4">
-                          <h4 className="font-bold text-[#f5f2ec] text-xl group-hover:text-orange-400 transition-colors line-clamp-1">{team.event?.name}</h4>
+                          <h4 className="font-bold text-foreground text-xl group-hover:text-orange-500 dark:text-[#f5f2ec] dark:group-hover:text-orange-400 transition-colors line-clamp-1">{team.event?.name}</h4>
                           {team.award && (
                             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold shrink-0 ${badgeStyle}`}>
                               <BadgeIcon className="w-3.5 h-3.5" /> {team.award?.name || "Award"}
@@ -160,29 +178,29 @@ export function ProfileHistory({ userId }: { userId?: number }) {
                         </div>
 
                         {team.event?.description && (
-                          <p className="text-sm text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
+                          <p className="text-sm text-muted-foreground dark:text-[#a39c8f] line-clamp-2 mb-4 leading-relaxed">
                             {team.event.description}
                           </p>
                         )}
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-                          <p className="text-sm font-semibold text-orange-500 flex items-center gap-1.5 bg-orange-500/10 px-2.5 py-1 rounded-md border border-orange-500/20">
+                          <p className="text-sm font-semibold text-orange-600 dark:text-orange-500 flex items-center gap-1.5 bg-orange-500/10 px-2.5 py-1 rounded-md border border-orange-500/20">
                             Team: {team.name}
                           </p>
                           {team.track?.name && (
-                            <p className="text-sm text-[#a39c8f] flex items-center gap-1.5 border border-white/5 bg-white/5 px-2.5 py-1 rounded-md">
+                            <p className="text-sm text-muted-foreground dark:text-[#a39c8f] flex items-center gap-1.5 border border-border bg-muted/40 dark:border-white/5 dark:bg-white/5 px-2.5 py-1 rounded-md">
                               Track: {team.track.name}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center text-[12px] text-[#6f685c] gap-4 pt-4 border-t border-[rgba(255,154,60,0.1)] mt-auto">
+                      <div className="flex items-center text-[12px] text-muted-foreground dark:text-[#6f685c] gap-4 pt-4 border-t border-border dark:border-[rgba(255,154,60,0.1)] mt-auto">
                         <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Joined {format(new Date(team.createdAt), "MMM yyyy")}</span>
                         {team.leaderId === userId ? (
-                          <span className="flex items-center gap-1.5 text-emerald-500"><Users className="w-3.5 h-3.5" /> Team Leader</span>
+                          <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-500 font-semibold"><Users className="w-3.5 h-3.5" /> Team Leader</span>
                         ) : (
-                          <span className="flex items-center gap-1.5 text-blue-400"><Users className="w-3.5 h-3.5" /> Member</span>
+                          <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold"><Users className="w-3.5 h-3.5" /> Member</span>
                         )}
                       </div>
                     </div>

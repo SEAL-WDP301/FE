@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   XCircle,
   Trophy,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -175,6 +177,34 @@ export default function WorkspaceOverviewPage() {
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-8 animate-in fade-in duration-500">
+      {/* Award Winner Celebration Banner when event is closed */}
+      {(workspaceData?.eventStatus === "closed" || workspaceData?.event?.status === "closed") && (workspaceData?.team?.award || workspaceData?.team?.awardId) && (
+        <GlassCard className="p-6 rounded-[24px] bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-orange-500/20 border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center shrink-0">
+                <Trophy className="h-9 w-9 text-yellow-500 animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-4 w-4 text-yellow-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-400">Official Award Winner</span>
+                </div>
+                <h2 className="text-2xl font-extrabold text-foreground">
+                  🎉 Congratulations! Your team won {workspaceData.team.award?.name || "an Official Award"}!
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {workspaceData.team.award?.description || "Outstanding performance in this competition!"}
+                </p>
+              </div>
+            </div>
+            <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-black font-extrabold text-sm px-4 py-2 rounded-xl shrink-0">
+              🏆 {workspaceData.team.award?.name || "Award Winner"}
+            </Badge>
+          </div>
+        </GlassCard>
+      )}
+
       {/* Header */}
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
@@ -381,6 +411,30 @@ export default function WorkspaceOverviewPage() {
           )}
         </GlassCard>
       </section>
+
+      {/* Problem Statement File Card if available */}
+      {displayRound?.problemFileUrl && (
+        <GlassCard className="p-6 rounded-[24px] border-orange-500/30 bg-orange-500/5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-orange-500/20 flex items-center justify-center shrink-0">
+              <FileText className="h-6 w-6 text-orange-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                📌 {displayRound.name} Problem Statement & Guidelines
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Download the official competition prompt & topic attachment for this round.
+              </p>
+            </div>
+          </div>
+          <Button variant="orange" size="sm" asChild className="rounded-xl gap-2 shrink-0 shadow-sm">
+            <a href={displayRound.problemFileUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" /> Download Topic File
+            </a>
+          </Button>
+        </GlassCard>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">

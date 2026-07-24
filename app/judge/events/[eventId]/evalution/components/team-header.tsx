@@ -22,16 +22,18 @@ export function TeamHeader({ detail, roundName }: TeamHeaderProps) {
   }
 
   const team = detail.team;
-  const submissionLabel = formatSubmissionLabel({
+  const submissionLabel = team?.name || formatSubmissionLabel({
     id: detail.id,
-    anonymousIndex: team.anonymousIndex,
+    anonymousIndex: team?.anonymousIndex,
+    teamName: team?.name,
   });
+  const teamBadge = `T${team?.anonymousIndex ?? detail.id}`;
 
   return (
     <GlassCard className="p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500 text-xl font-bold text-black">
-          #{String(team.anonymousIndex ?? detail.id).padStart(3, "0")}
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500 text-xl font-bold text-black shrink-0">
+          {teamBadge}
         </div>
 
         <div className="flex-1">
@@ -56,7 +58,19 @@ export function TeamHeader({ detail, roundName }: TeamHeaderProps) {
           </div>
         </div>
 
-        <Badge variant="success">{roundName || detail.round.name}</Badge>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <Badge variant="success">{roundName || detail.round.name}</Badge>
+          {detail.round?.problemFileUrl && (
+            <a
+              href={detail.round.problemFileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600 font-semibold underline underline-offset-4 mt-1"
+            >
+              📌 Topic File
+            </a>
+          )}
+        </div>
       </div>
     </GlassCard>
   );

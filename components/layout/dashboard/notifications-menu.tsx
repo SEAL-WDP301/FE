@@ -38,28 +38,42 @@ export function NotificationsMenu() {
   const queryClient = useQueryClient();
   const judgeEventMatch = pathname.match(/^\/judge\/events\/([^/]+)/);
   const mentorEventMatch = pathname.match(/^\/mentor\/events\/([^/]+)/);
-  const notificationsHref = judgeEventMatch
-    ? `/judge/events/${judgeEventMatch[1]}/notifications`
-    : pathname.startsWith('/judge')
-      ? '/judge/notifications'
+  const notificationsHref = pathname.startsWith('/judge')
+    ? '/judge/notifications'
     : mentorEventMatch
       ? `/mentor/events/${mentorEventMatch[1]}/notifications`
       : pathname.startsWith('/mentor')
         ? '/mentor/notifications'
         : '/home/notifications';
+
   const { data, isLoading } = useInfiniteQuery({
     queryKey: ['userNotifications'],
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const res = await axiosClient.get(`/notifications?page=${pageParam}&limit=25`);
-      return res.data as NotificationPage;
+      const responseData = res.data;
+      if (responseData && responseData.meta) {
+        return responseData as NotificationPage;
+      }
+      if (Array.isArray(responseData)) {
+        return {
+          data: responseData,
+          meta: { page: 1, limit: responseData.length, total: responseData.length, totalPages: 1 },
+        };
+      }
+      return {
+        data: responseData?.data || [],
+        meta: responseData?.meta || { page: 1, limit: 25, total: 0, totalPages: 1 },
+      };
     },
     getNextPageParam: (lastPage) => {
-      if (lastPage.meta.page < lastPage.meta.totalPages) {
-        return lastPage.meta.page + 1;
+      if (lastPage?.meta?.page != null && lastPage?.meta?.totalPages != null) {
+        if (lastPage.meta.page < lastPage.meta.totalPages) {
+          return lastPage.meta.page + 1;
+        }
       }
       return undefined;
-    }
+    },
   });
 
   const handleNotificationClick = async (notif: UserNotification) => {
@@ -74,8 +88,11 @@ export function NotificationsMenu() {
     router.push(`${notificationsHref}?id=${notif.id}`);
   };
 
-  const notifications = data?.pages.flatMap((page) => page.data) || [];
-  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+  const notifications = (
+    data?.pages.flatMap((page) => (Array.isArray(page?.data) ? page.data : [])) || []
+  ).filter((n): n is UserNotification => Boolean(n && typeof n === "object" && "id" in n));
+
+  const unreadCount = notifications.filter((notification) => !notification?.isRead).length;
 
   return (
     <DropdownMenu>
