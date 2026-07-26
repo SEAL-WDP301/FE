@@ -9,13 +9,24 @@
 [![Socket.IO](https://img.shields.io/badge/Socket.IO_Client-v4-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An ultra-modern, high-performance **Frontend Application** for **SEAL** (Software Engineering & AI-driven Hackathon Management Platform). Built on Next.js 16 App Router, React 19, TailwindCSS, TanStack Query v5, Zustand, and Socket.IO, this application offers role-segmented workspaces, real-time event synchronization, glassmorphism design tokens, and zero-latency optimistic UI updates.
+An ultra-modern, high-performance **Frontend Application** for **SEAL** (Software Engineering & AI-driven Hackathon Management Platform). Built on Next.js 16 App Router, React 19, TailwindCSS, TanStack Query v5, Zustand, Socket.IO, and Server-Sent Events (SSE), this application delivers role-segmented workspaces, real-time data streaming, dark-mode glassmorphism aesthetics, and zero-latency optimistic UI updates.
 
 ---
 
-## 📐 Architecture & System Flow
+## 📌 Project Overview & Value Proposition
 
-The Frontend application adopts a **Feature-Driven Component Architecture** with complete separation of concerns between Server Components (RSC for static/initial data fetching) and Client Components (interactive dynamic views).
+Organizing and participating in academic software engineering hackathons demands a clear, responsive, and intuitive interface for all stakeholders. **SEAL** provides custom role-tailored web interfaces designed specifically for 4 distinct user roles:
+
+1. 👑 **Organizers (`/organizer`):** Access comprehensive event administration dashboards, manage competition tracks, configure evaluation rubrics, monitor round progress, execute bulk email notifications, and edit round submission deadlines inline with real-time countdown updates.
+2. 🚀 **Students (`/student`):** Register for events, manage team rosters, link GitHub submission repositories, view live countdown timers, and track multi-round evaluation status.
+3. ⚖️ **Judges (`/judge`):** Access streamlined scoring rubrics, evaluate team submissions independently, submit final score matrices, and monitor live competition leaderboards.
+4. 🛡️ **Mentors (`/mentor`):** Oversee assigned hackathon teams, provide structured technical guidance, and manage advisory feedback sessions.
+
+---
+
+## 📐 System Architecture & Flow
+
+The Frontend application adopts a **Feature-Driven Component Architecture** with clear separation of concerns between Server Components (RSC for static/initial data fetching) and Client Components (interactive dynamic views).
 
 ```mermaid
 graph TD
@@ -28,16 +39,18 @@ graph TD
         Router -->|/mentor/*| MentorSpace[Mentor Advisory & Team Feedback]
     end
 
-    subgraph "State & Data Fetching Layer"
+    subgraph "State & Real-time Layer"
         OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> ZustandStore[Zustand Global Auth & UI Stores]
         OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> QueryClient[TanStack Query v5 Server State Cache]
-        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> SocketClient[Socket.IO Real-time Connection]
+        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> SocketClient[Socket.IO Real-time Hook: useAdminSocket]
+        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> SSEClient[SseProvider: @microsoft/fetch-event-source]
     end
 
     subgraph "External Backend & Cloud Services"
         QueryClient -->|REST API + Axios Interceptors| BE[NestJS Backend API]
         SocketClient -->|WebSocket Channel: user-userId| BE
-        OrganizerSpace -->|Direct Upload| S3[AWS S3 Storage via Presigned URLs]
+        SSEClient -->|Persistent HTTP Stream| BE
+        OrganizerSpace -->|Direct S3 Upload| S3[AWS S3 Storage via Presigned URLs]
     end
 ```
 
@@ -45,28 +58,29 @@ graph TD
 
 ## ⚡ Core Technical Features & Engineering Highlights
 
-### 1. Advanced State Management & In-Place Cache Mutation
-* **Dual-Tier State Architecture:** Uses **Zustand** for lightweight client-side global state (auth tokens, current active role, persistent theme) and **TanStack Query v5** for server-side asynchronous query management.
-* **In-Place Query Cache Modification:** Implements `queryClient.setQueryData()` to update React Query cache in memory upon successful mutations (e.g. updating round submission deadline). Enables **0ms instant UI countdown timer recalculation** (`Time left`) without triggering full page reloads or layout flashes.
+### 1. Hybrid Real-Time Integration (WebSockets + SSE)
+* **Server-Sent Events Provider (`SseProvider`):** Utilizes `@microsoft/fetch-event-source` to maintain a persistent, auto-reconnecting HTTP stream for real-time system alerts, server keep-alive heartbeats, and background task updates with automatic JWT header injection.
+* **Socket.IO Real-Time Hook (`useAdminSocket`):** Manages dynamic WebSocket connections isolated into user-specific rooms (`user-${userId}`, `admin-event-${eventId}`, `admin-round-${roundId}`).
+* **Click-to-Dismiss Toast Notifications:** Listens to `notification.new` events and renders custom `notistack` toasts with `persist: true` (persists until user click) and concise title formatting, while automatically refetching unread notification counts.
 
-### 2. Silent Auth Refresh & Role-Based Route Protection (RBAC)
+### 2. State Management & In-Place Cache Mutation
+* **Dual-Tier State Architecture:** Uses **Zustand** for lightweight client-side global state (auth tokens, current user profile, theme state) and **TanStack Query v5** for server-side query management.
+* **In-Place Query Cache Manipulation:** Executes `queryClient.setQueryData()` to update React Query cache in memory upon successful mutations (e.g. updating round submission deadline). Enables **0ms instant UI countdown timer recalculation** (`Time left`) without triggering full page reloads.
+
+### 3. Silent Auth Refresh & Role-Based Route Protection (RBAC)
 * **Transparent Token Refresh Interceptor:** Axios instance interceptor traps `401 Unauthorized` responses, queues pending network requests, triggers silent token renewal via `HttpOnly Cookie`, and automatically retries queued requests invisibly to the user.
-* **Middleware Route Guards:** Next.js Middleware checks user JWT roles (`Role.ORGANIZER`, `Role.STUDENT`, `Role.JUDGE`, `Role.MENTOR`) before rendering layout segments, preventing unauthorized route access at the edge level.
-
-### 3. Real-Time Socket Synchronization & Toast Notifications
-* **Custom WebSocket Client (`useAdminSocket`):** Subscribes users dynamically to dedicated socket rooms (`user-${userId}`, `admin-event-${eventId}`, `admin-round-${roundId}`).
-* **Click-to-Dismiss Toast Notifications:** Listens to `notification.new` WebSocket events and renders custom `notistack` toasts with `persist: true` (persists until user dismissal) and clean concise title formatting, while simultaneously triggering `invalidateQueries()` to update the unread notification badge count.
+* **Middleware Route Guards:** Next.js Middleware verifies user JWT roles (`Role.ORGANIZER`, `Role.STUDENT`, `Role.JUDGE`, `Role.MENTOR`) before rendering layout segments, preventing unauthorized route access at the edge level.
 
 ### 4. Direct Cloud Uploads (AWS S3 Presigned URLs)
-* Handles large team submission artifacts by requesting 5-minute signed Presigned URLs from the NestJS Backend and issuing direct `PUT` uploads from client to AWS S3 buckets. Eliminates backend payload bottlenecks.
+* Uploads team project submission artifacts by requesting 5-minute signed Presigned URLs from the Backend and issuing direct `PUT` uploads from the browser to AWS S3 buckets. Eliminates backend payload bottlenecks.
 
-### 5. Premium Glassmorphism Aesthetics & Inclusive UI Controls
+### 5. Premium Aesthetics & Accessible UI Controls
 * **Design System Tokens:** Custom HSL color palettes, subtle borders (`border-border`), and backdrop-blur glassmorphism effects (`GlassCard`) create a dark-mode luxury aesthetic.
-* **Disabled State Safeguards & Accessible Tooltips:** Actions restricted by round status (e.g. Bulk Reminder or Deadline Editing when round status is not `open`) are visually disabled (`disabled:opacity-40`) and provide informative native hover tooltips.
+* **Disabled State Safeguards & Tooltips:** Actions restricted by round status (e.g. Bulk Reminder or Deadline Editing when round status is not `open`) are visually disabled (`disabled:opacity-40`) and provide informative native hover tooltips in English.
 
 ---
 
-## 🛠️ Technology Stack & Dependencies
+## 🛠️ Technology Stack
 
 | Category | Technology | Usage / Description |
 | :--- | :--- | :--- |
@@ -74,7 +88,7 @@ graph TD
 | **UI Library** | React 19 | UI component model & hooks |
 | **State Management** | TanStack Query v5 + Zustand | Server state caching & lightweight client state |
 | **Styling** | TailwindCSS + Radix UI | Utility-first CSS & accessible unstyled primitives |
-| **Real-time** | Socket.IO Client | Real-time WebSocket event connection |
+| **Real-time** | Socket.IO Client + SSE | WebSocket connections & Server-Sent Events |
 | **Icons & Effects** | Lucide React + Framer Motion | Modern iconography & micro-animations |
 | **Notifications** | Notistack | Stackable toast notification engine |
 
@@ -98,7 +112,10 @@ FE/
 │   └── ui/                     # GlassCard, Button, Dialog, Tabs, Inputs
 ├── hooks/                      # Custom React Hooks (useAdminSocket, useSocket)
 ├── lib/                        # Axios instance, Auth Stores, Utility helpers
-├── public/                     # Static assets & brand logos
+├── public/                     # Static Brand Assets & Images
+│   ├── brand/                  # Logo emblems & brand identity files
+│   └── images/                 # System architecture diagrams & static images
+├── services/                   # Modular API service helpers
 ├── package.json
 └── README.md
 ```
