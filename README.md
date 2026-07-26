@@ -1,62 +1,141 @@
-# SEAL – Software Engineering Hackathon Management System (Frontend)
+# 🎨 SEAL – Hackathon Management Platform (Frontend Client)
 
-Hệ thống Frontend quản lý giải chạy học thuật thường niên **SEAL Hackathon**. Được xây dựng theo tiêu chuẩn kiến trúc hiện đại, tập trung vào trải nghiệm người dùng (UX) cao cấp, thiết kế linh hoạt và khả năng tương tác thời gian thực.
+[![Next.js](https://img.shields.io/badge/Next.js-16.x_App_Router-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query/v5)
+[![Zustand](https://img.shields.io/badge/Zustand-v4-443E38?logo=react&logoColor=white)](https://zustand-demo.pmnd.rs/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO_Client-v4-010101?logo=socket.io&logoColor=white)](https://socket.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## ⚡ Tech Stack & Architecture
-
-Frontend được thiết kế theo mô hình **Component-Driven Architecture**, tối ưu hóa SEO và hiệu năng với Server Components của Next.js:
-
-*   **Core Framework:** Next.js 15 (App Router) với React 19 và TypeScript. Khai thác sức mạnh của Server/Client Components để tối ưu Initial Load Time.
-*   **State Management & Data Fetching:** 
-    *   **TanStack Query (React Query v5):** Quản lý Server State, caching, optimistic updates và background fetching.
-    *   **Zustand:** Quản lý Global Client State gọn nhẹ (ví dụ: Auth state, UI toggles).
-*   **Styling & UI Components:**
-    *   **Tailwind CSS:** Utility-first CSS framework cho styling cực nhanh.
-    *   **shadcn/ui & Radix UI:** Hệ thống UI Components Unstyled/Accessible, có thể tùy biến sâu.
-    *   **Framer Motion:** Tạo các hiệu ứng chuyển động mượt mà (Micro-animations, Page Transitions, Drag-and-drop).
-*   **Form & Validation:** React Hook Form kết hợp với Zod Schema Validation đảm bảo dữ liệu toàn vẹn từ phía Client.
-*   **Real-time Communication:** `socket.io-client` tích hợp lắng nghe sự kiện thời gian thực (Chat nhóm, Thông báo đẩy).
-*   **API Layer:** Axios được cấu hình với Custom Interceptors tự động đính kèm Token và xử lý Refresh Token logic một cách trong suốt (Transparent).
+An ultra-modern, high-performance **Frontend Application** for **SEAL** (Software Engineering & AI-driven Hackathon Management Platform). Built on Next.js 16 App Router, React 19, TailwindCSS, TanStack Query v5, Zustand, and Socket.IO, this application offers role-segmented workspaces, real-time event synchronization, glassmorphism design tokens, and zero-latency optimistic UI updates.
 
 ---
 
-## 🧠 Các Kỹ thuật Xử lý Chuyên sâu (Advanced Techniques)
+## 📐 Architecture & System Flow
 
-### 1. Kiến trúc Bảo mật & Ủy quyền (Auth & Authorization)
-*   **Silent Token Refresh:** Triển khai Axios Interceptor lắng nghe mã lỗi `401 Unauthorized`. Hệ thống tự động đẩy request vào queue, gọi API cấp lại Access Token mới bằng `HttpOnly Cookie`, sau đó tự động retry (thực hiện lại) các request bị lỗi mà người dùng không hề hay biết.
-*   **Role-Based Access Control (RBAC):** Áp dụng Higher-Order Components (HOC) và Guard Layouts trong Next.js App Router. Các Route được chia theo thư mục `(student)`, `(mentor)`, `(judge)`, `(organizer)` với middleware kiểm tra quyền hạn nghiêm ngặt ở mức độ render.
+The Frontend application adopts a **Feature-Driven Component Architecture** with complete separation of concerns between Server Components (RSC for static/initial data fetching) and Client Components (interactive dynamic views).
 
-### 2. Tối ưu hóa UI/UX & Dynamic Aesthetics
-*   **Glassmorphism & Dynamic UI:** Xây dựng các thẻ (Cards) và Panel dưới dạng kính mờ (Backdrop-blur) mang lại cảm giác thiết kế cao cấp, hiện đại (Premium design).
-*   **Micro-interactions:** Sử dụng Framer Motion `AnimatePresence` và `layout` properties để xử lý các animation phức tạp như: Mở rộng hàng của bảng (Expandable Rows), chuyển đổi mượt mà giữa các Tab, hay kéo thả danh sách (Sortable list).
-*   **Theme Management:** Hệ thống hỗ trợ Dark/Light mode natively thông qua `next-themes` và sử dụng CSS Variables (Design Tokens) để đảm bảo độ tương phản màu sắc.
+```mermaid
+graph TD
+    User[User / Web Browser] --> Router[Next.js 16 App Router Middleware]
+    
+    subgraph "Role-Based Route Segments"
+        Router -->|/organizer/*| OrganizerSpace[Organizer Workspace & Admin Panels]
+        Router -->|/student/*| StudentSpace[Student Event Workspace & Team Hub]
+        Router -->|/judge/*| JudgeSpace[Judge Evaluation Portal & Rubrics]
+        Router -->|/mentor/*| MentorSpace[Mentor Advisory & Team Feedback]
+    end
 
-### 3. Tương tác Thời gian thực (Real-time Sync)
-*   **WebSocket Integration:** Kết nối Socket.IO được khởi tạo dưới dạng Singleton instance qua Custom Hook. Dữ liệu tin nhắn nhóm (Team Chat) và thông báo hệ thống (Notification Center) được đồng bộ ngay lập tức mà không cần reload trang.
-*   **Optimistic UI Updates:** Khi user thực hiện hành động (VD: gửi tin nhắn, đánh dấu đã đọc thông báo), giao diện lập tức phản hồi cập nhật trạng thái trong khi Mutation của React Query đang chạy ngầm lên server.
+    subgraph "State & Data Fetching Layer"
+        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> ZustandStore[Zustand Global Auth & UI Stores]
+        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> QueryClient[TanStack Query v5 Server State Cache]
+        OrganizerSpace & StudentSpace & JudgeSpace & MentorSpace --> SocketClient[Socket.IO Real-time Connection]
+    end
 
-### 4. Tích hợp Quản lý File (Cloud Storage & Github)
-*   **S3 Presigned URLs:** Việc tải lên file dung lượng lớn (Project Files) được xử lý trực tiếp từ Client lên AWS S3. Frontend gọi BE xin cấp `Presigned URL`, sau đó dùng Axios `PUT` thẳng file lên S3, giảm tải hoàn toàn băng thông cho Backend.
-*   **GitHub OAuth & Repo Provisioning:** Tích hợp luồng xác thực GitHub để lấy định danh, tự động mapping username vào tổ chức (Organization) và hiển thị repository URL động ngay trong Workspace.
-
----
-
-## 🛠️ Hướng dẫn Cài đặt & Chạy dự án (Quick Start)
-
-### 1. Cấu hình Môi trường
-Copy file `.env.example` thành `.env.local` và điền URL của Backend:
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
-NEXT_PUBLIC_SOCKET_URL=http://localhost:3000
+    subgraph "External Backend & Cloud Services"
+        QueryClient -->|REST API + Axios Interceptors| BE[NestJS Backend API]
+        SocketClient -->|WebSocket Channel: user-userId| BE
+        OrganizerSpace -->|Direct Upload| S3[AWS S3 Storage via Presigned URLs]
+    end
 ```
 
-### 2. Khởi chạy Ứng dụng
-Chạy các lệnh sau để cài đặt và bật môi trường phát triển:
+---
+
+## ⚡ Core Technical Features & Engineering Highlights
+
+### 1. Advanced State Management & In-Place Cache Mutation
+* **Dual-Tier State Architecture:** Uses **Zustand** for lightweight client-side global state (auth tokens, current active role, persistent theme) and **TanStack Query v5** for server-side asynchronous query management.
+* **In-Place Query Cache Modification:** Implements `queryClient.setQueryData()` to update React Query cache in memory upon successful mutations (e.g. updating round submission deadline). Enables **0ms instant UI countdown timer recalculation** (`Time left`) without triggering full page reloads or layout flashes.
+
+### 2. Silent Auth Refresh & Role-Based Route Protection (RBAC)
+* **Transparent Token Refresh Interceptor:** Axios instance interceptor traps `401 Unauthorized` responses, queues pending network requests, triggers silent token renewal via `HttpOnly Cookie`, and automatically retries queued requests invisibly to the user.
+* **Middleware Route Guards:** Next.js Middleware checks user JWT roles (`Role.ORGANIZER`, `Role.STUDENT`, `Role.JUDGE`, `Role.MENTOR`) before rendering layout segments, preventing unauthorized route access at the edge level.
+
+### 3. Real-Time Socket Synchronization & Toast Notifications
+* **Custom WebSocket Client (`useAdminSocket`):** Subscribes users dynamically to dedicated socket rooms (`user-${userId}`, `admin-event-${eventId}`, `admin-round-${roundId}`).
+* **Click-to-Dismiss Toast Notifications:** Listens to `notification.new` WebSocket events and renders custom `notistack` toasts with `persist: true` (persists until user dismissal) and clean concise title formatting, while simultaneously triggering `invalidateQueries()` to update the unread notification badge count.
+
+### 4. Direct Cloud Uploads (AWS S3 Presigned URLs)
+* Handles large team submission artifacts by requesting 5-minute signed Presigned URLs from the NestJS Backend and issuing direct `PUT` uploads from client to AWS S3 buckets. Eliminates backend payload bottlenecks.
+
+### 5. Premium Glassmorphism Aesthetics & Inclusive UI Controls
+* **Design System Tokens:** Custom HSL color palettes, subtle borders (`border-border`), and backdrop-blur glassmorphism effects (`GlassCard`) create a dark-mode luxury aesthetic.
+* **Disabled State Safeguards & Accessible Tooltips:** Actions restricted by round status (e.g. Bulk Reminder or Deadline Editing when round status is not `open`) are visually disabled (`disabled:opacity-40`) and provide informative native hover tooltips.
+
+---
+
+## 🛠️ Technology Stack & Dependencies
+
+| Category | Technology | Usage / Description |
+| :--- | :--- | :--- |
+| **Framework** | Next.js 16 (App Router) | Server-side rendering, RSC & route management |
+| **UI Library** | React 19 | UI component model & hooks |
+| **State Management** | TanStack Query v5 + Zustand | Server state caching & lightweight client state |
+| **Styling** | TailwindCSS + Radix UI | Utility-first CSS & accessible unstyled primitives |
+| **Real-time** | Socket.IO Client | Real-time WebSocket event connection |
+| **Icons & Effects** | Lucide React + Framer Motion | Modern iconography & micro-animations |
+| **Notifications** | Notistack | Stackable toast notification engine |
+
+---
+
+## 📂 Repository Directory Structure
+
+```
+FE/
+├── app/                        # Next.js 16 App Router Pages & Layouts
+│   ├── (auth)/                 # Login, Register, Password Reset routes
+│   ├── admin/                  # System Admin Dashboard
+│   ├── judge/                  # Judge Evaluation Workspaces & Leaderboards
+│   ├── mentor/                 # Mentor Advisory & Team Feedback Hubs
+│   ├── organizer/              # Event Organizer Management Panels & Round Workspaces
+│   ├── student/                # Student Workspace & Team Submission Pages
+│   └── layout.tsx              # Root Layout with Theme & Query Providers
+├── components/                 # Reusable Component Library
+│   ├── layout/                 # Topbar, Header, NotificationsMenu, Sidebar
+│   ├── providers/              # React Query Provider, SseProvider, ThemeProvider
+│   └── ui/                     # GlassCard, Button, Dialog, Tabs, Inputs
+├── hooks/                      # Custom React Hooks (useAdminSocket, useSocket)
+├── lib/                        # Axios instance, Auth Stores, Utility helpers
+├── public/                     # Static assets & brand logos
+├── package.json
+└── README.md
+```
+
+---
+
+## 🚀 Quick Start & Installation
+
+### Prerequisites
+* Node.js v18+ or v20+
+* Running NestJS Backend API (default `http://localhost:3000/api`)
+
+### 1. Environment Setup
+Create a `.env.local` file in the root directory:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
+```
+
+### 2. Install Dependencies
 ```bash
 npm install
+```
+
+### 3. Run Development Server
+```bash
 npm run dev
 ```
 
-Mở trình duyệt tại [http://localhost:3001](http://localhost:3001) (hoặc port được cấp) để trải nghiệm giao diện Frontend.
+Open [http://localhost:3001](http://localhost:3001) in your browser to view the application.
+
+### 4. Build Production Bundle
+```bash
+npm run build
+npm run start
+```
+
+---
+
+## 📄 License
+This project is licensed under the [MIT License](LICENSE).
