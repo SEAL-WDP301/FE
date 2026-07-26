@@ -213,10 +213,21 @@ export default function EventSubmissionsPage() {
       );
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, newDeadlineStr) => {
       enqueueSnackbar(data.message || "Cập nhật deadline thành công!", { variant: "success" });
+      const isoDeadline = new Date(newDeadlineStr).toISOString();
+      queryClient.setQueryData(["organizerEvent", eventId], (oldData: any) => {
+        if (!oldData || !oldData.rounds) return oldData;
+        return {
+          ...oldData,
+          rounds: oldData.rounds.map((r: any) =>
+            r.id === Number(roundId) ? { ...r, submissionDeadline: isoDeadline } : r
+          ),
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
       queryClient.invalidateQueries({ queryKey: ["event", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["eventRounds", eventId] });
       setIsEditingDeadline(false);
     },
     onError: (error: any) => {
@@ -333,7 +344,7 @@ export default function EventSubmissionsPage() {
                 {(() => {
                   const isOpen = currentRound?.status === "open";
                   return (
-                    <div title={!isOpen ? "Chỉnh sửa deadline chỉ được phép khi vòng thi đang Mở (Open)." : ""}>
+                    <div title={!isOpen ? "Editing deadline is only allowed when round status is open." : ""}>
                       <Button
                         size="sm"
                         variant="outline"
@@ -453,7 +464,7 @@ export default function EventSubmissionsPage() {
                 currentRound?.isRepoFrozen === true;
 
               return (
-                <div title={isRoundInactive ? "Vòng thi đã đóng hoặc đã công bố kết quả. Không thể gửi nhắc nhở hàng loạt." : ""}>
+                <div title={isRoundInactive ? "Bulk reminder is disabled for closed or published rounds." : ""}>
                   <Button 
                     variant="orange" 
                     className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
