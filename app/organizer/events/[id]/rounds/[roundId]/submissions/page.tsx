@@ -29,6 +29,7 @@ export default function EventSubmissionsPage() {
   const [page, setPage] = useState(1);
   const [isBulkReminderOpen, setIsBulkReminderOpen] = useState(false);
   const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
+  const [isUnfreezeModalOpen, setIsUnfreezeModalOpen] = useState(false);
   const [selectedTeamForStatus, setSelectedTeamForStatus] = useState<number | null>(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedTeamFilterForLogs, setSelectedTeamFilterForLogs] = useState<string>("all");
@@ -86,6 +87,7 @@ export default function EventSubmissionsPage() {
       enqueueSnackbar(data.message || "Repositories frozen successfully", { variant: "success" });
       setIsFreezeModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
     },
     onError: (error: any) => {
       enqueueSnackbar(error.response?.data?.message || "Failed to freeze repositories", { variant: "error" });
@@ -99,7 +101,9 @@ export default function EventSubmissionsPage() {
     },
     onSuccess: (data) => {
       enqueueSnackbar(data.message || "Repositories unfrozen successfully", { variant: "success" });
+      setIsUnfreezeModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["organizerSubmissions", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["organizerEvent", eventId] });
     },
     onError: (error: any) => {
       enqueueSnackbar(error.response?.data?.message || "Failed to unfreeze repositories", { variant: "error" });
@@ -333,11 +337,11 @@ export default function EventSubmissionsPage() {
           
           <div className="flex items-center gap-3">
             {isGithubRound && (
-              submissions?.some((sub: any) => sub.team?.isFrozen) ? (
+              currentRound?.isRepoFrozen ? (
                 <Button 
                   variant="outline" 
                   className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
-                  onClick={() => unfreezeAllMutation.mutate()}
+                  onClick={() => setIsUnfreezeModalOpen(true)}
                   disabled={unfreezeAllMutation.isPending}
                 >
                   {unfreezeAllMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -355,14 +359,27 @@ export default function EventSubmissionsPage() {
                 </Button>
               )
             )}
-            <Button 
-              variant="orange" 
-              className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)]"
-              onClick={() => setIsBulkReminderOpen(true)}
-            >
-              <BellRing className="h-4 w-4" />
-              Bulk Reminder
-            </Button>
+            {(() => {
+              const isRoundInactive = 
+                currentRound?.status === "closed" || 
+                currentRound?.status === "published_results" || 
+                currentRound?.status === "published" ||
+                currentRound?.isRepoFrozen === true;
+
+              return (
+                <div title={isRoundInactive ? "Vòng thi đã đóng hoặc đã công bố kết quả. Không thể gửi nhắc nhở hàng loạt." : ""}>
+                  <Button 
+                    variant="orange" 
+                    className="gap-2 shadow-[0_0_15px_rgba(243,112,33,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setIsBulkReminderOpen(true)}
+                    disabled={isRoundInactive}
+                  >
+                    <BellRing className="h-4 w-4" />
+                    Bulk Reminder
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -399,7 +416,7 @@ export default function EventSubmissionsPage() {
                         <span className="font-semibold text-foreground">{sub.team?.name}</span>
                         {isGithubRound && (sub.team?.githubRepoUrl || sub.githubUrl) && (
                           <div className="pt-0.5">
-                            {sub.team?.isFrozen ? (
+                            {currentRound?.isRepoFrozen ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 border border-cyan-500/30 dark:text-cyan-400">
                                 <FaSnowflake className="h-2.5 w-2.5" /> Frozen (Read-Only)
                               </span>
@@ -753,6 +770,62 @@ export default function EventSubmissionsPage() {
                 <>
                   <FaSnowflake className="h-4 w-4" />
                   Confirm & Freeze All
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unfreeze Repositories Confirmation Modal */}
+      <Dialog open={isUnfreezeModalOpen} onOpenChange={setIsUnfreezeModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
+              Unfreeze All Team Repositories
+            </DialogTitle>
+            <DialogDescription>
+              This action will restore write (push) access for all student team members across this round/event.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl space-y-2 text-sm">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-foreground">What happens when unfrozen:</h4>
+                  <ul className="list-disc list-inside text-xs text-muted-foreground mt-1 space-y-1">
+                    <li>Collaborator permissions for all members are restored to <strong>Write Access (Push)</strong>.</li>
+                    <li>Students can push new commits and updates to GitHub.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-foreground text-center">
+              Are you sure you want to UNFREEZE all team repositories now?
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsUnfreezeModalOpen(false)} disabled={unfreezeAllMutation.isPending}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" 
+              onClick={() => unfreezeAllMutation.mutate()}
+              disabled={unfreezeAllMutation.isPending}
+            >
+              {unfreezeAllMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Unfreezing Repositories...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Confirm & Unfreeze All
                 </>
               )}
             </Button>

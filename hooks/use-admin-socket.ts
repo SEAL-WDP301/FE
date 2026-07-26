@@ -14,15 +14,13 @@ export function useAdminSocket({ eventId, roundId, teamId }: UseAdminSocketOptio
   const accessToken = useAuthStore((state) => state.accessToken);
 
   useEffect(() => {
-    // Only connect if user is logged in
-    if (!accessToken) return;
-
     // We get the base URL from env or fallback to localhost
-    const SOCKET_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "http://localhost:3000";
+    const rawUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+    const SOCKET_URL = rawUrl.replace(/\/api\/?$/, "");
 
     const socketInstance = io(`${SOCKET_URL}/admin-realtime`, {
-      transports: ["websocket"],
-      reconnectionAttempts: 5,
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 10,
     });
 
     socketInstance.on("connect", () => {
@@ -51,7 +49,7 @@ export function useAdminSocket({ eventId, roundId, teamId }: UseAdminSocketOptio
     return () => {
       socketInstance.disconnect();
     };
-  }, [accessToken, eventId, roundId, teamId]);
+  }, [eventId, roundId, teamId]);
 
   return { socket, isConnected };
 }

@@ -13,7 +13,10 @@ import { axiosClient } from "@/lib/axios";
 import { useAuthStore } from "@/lib/stores/auth.store";
 import { queryKeys } from "@/lib/query-keys";
 
+import { useAdminCronNotifications } from "@/hooks/use-admin-cron-notifications";
+
 export function Topbar({ customCenterContent, showDesktopLogo }: { customCenterContent?: React.ReactNode, showDesktopLogo?: boolean }) {
+    useAdminCronNotifications();
     const storeUser = useAuthStore((state) => state.user);
     const setUser = useAuthStore((state) => state.setUser);
 
