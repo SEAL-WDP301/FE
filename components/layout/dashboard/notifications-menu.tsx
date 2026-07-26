@@ -49,13 +49,11 @@ export function NotificationsMenu() {
     if (!socket) return;
 
     const handleNewNotification = (data: any) => {
-      const plainContent = (data.content || '').replace(/<[^>]*>?/gm, '');
-      const titleText = data.title || "Thông báo mới";
-      const messageText = `${titleText}: ${plainContent}`;
+      const titleText = data.title || "New Notification";
 
-      enqueueSnackbar(messageText, { 
+      enqueueSnackbar(titleText, { 
         variant: "info",
-        autoHideDuration: 6000,
+        persist: true,
       });
       queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
     };
