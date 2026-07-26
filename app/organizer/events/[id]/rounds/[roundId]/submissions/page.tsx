@@ -6,7 +6,7 @@ import { axiosClient } from "@/lib/axios";
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2, Clock, Users } from "lucide-react";
+import { Download, Loader2, ExternalLink, Send, BellRing, ChevronLeft, ChevronRight, CheckCircle2, Clock, Users, Pencil, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useAdminSocket } from "@/hooks/use-admin-socket";
 // removed duplicate React imports
@@ -14,6 +14,18 @@ import { enqueueSnackbar } from "notistack";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaGithub, FaSnowflake } from "react-icons/fa";
+
+function formatForDatetimeLocal(dateInput?: string | Date | null) {
+  if (!dateInput) return "";
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 export default function EventSubmissionsPage() {
   const params = useParams();
@@ -190,6 +202,31 @@ export default function EventSubmissionsPage() {
     },
   });
 
+  const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [editDeadlineValue, setEditDeadlineValue] = useState("");
+
+  const updateDeadlineMutation = useMutation({
+    mutationFn: async (newDeadline: string) => {
+      const res = await axiosClient.patch(
+        `/organizer/events/${eventId}/rounds/${roundId}/deadline`,
+        { submissionDeadline: new Date(newDeadline).toISOString() }
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message || "Cập nhật deadline thành công!", { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["eventRounds", eventId] });
+      setIsEditingDeadline(false);
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(
+        error.response?.data?.message || "Lỗi khi cập nhật deadline",
+        { variant: "error" }
+      );
+    },
+  });
+
   const filteredSubmissions = submissions?.filter((sub: any) => {
     if (submissionFilter === "submitted") return sub.isSubmittedStatus === true;
     if (submissionFilter === "unsubmitted") return sub.isSubmittedStatus === false;
@@ -256,15 +293,64 @@ export default function EventSubmissionsPage() {
           </div>
           <div className="text-muted-foreground mt-2 space-y-1">
             <p>Review team submissions across all active rounds.</p>
-            {currentRound?.submissionDeadline && (
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                Deadline: {new Date(currentRound.submissionDeadline).toLocaleString()}
-              </p>
-            )}
-            {!currentRound?.submissionDeadline && currentRound && (
-              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                Deadline: Not set
-              </p>
+            {isEditingDeadline ? (
+              <div className="flex flex-wrap items-center gap-2 mt-2 bg-muted/40 p-2 rounded-xl border border-border">
+                <input
+                  type="datetime-local"
+                  value={editDeadlineValue}
+                  onChange={(e) => setEditDeadlineValue(e.target.value)}
+                  className="bg-background border border-border text-foreground text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-blue-500"
+                />
+                <Button
+                  size="sm"
+                  variant="orange"
+                  className="h-8 px-3 text-xs gap-1 font-semibold"
+                  onClick={() => {
+                    if (!editDeadlineValue) return;
+                    updateDeadlineMutation.mutate(editDeadlineValue);
+                  }}
+                  disabled={updateDeadlineMutation.isPending}
+                >
+                  {updateDeadlineMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2 text-xs"
+                  onClick={() => setIsEditingDeadline(false)}
+                  disabled={updateDeadlineMutation.isPending}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
+                <span>
+                  Deadline: {currentRound?.submissionDeadline ? new Date(currentRound.submissionDeadline).toLocaleString() : "Not set"}
+                </span>
+                {(() => {
+                  const isOpen = currentRound?.status === "open";
+                  return (
+                    <div title={!isOpen ? "Chỉnh sửa deadline chỉ được phép khi vòng thi đang Mở (Open)." : ""}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-xs gap-1 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!isOpen}
+                        onClick={() => {
+                          setEditDeadlineValue(formatForDatetimeLocal(currentRound?.submissionDeadline));
+                          setIsEditingDeadline(true);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </Button>
+                    </div>
+                  );
+                })()}
+              </div>
             )}
           </div>
         </div>

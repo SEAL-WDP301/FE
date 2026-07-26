@@ -6,9 +6,10 @@ interface UseAdminSocketOptions {
   eventId?: number | string;
   roundId?: number | string;
   teamId?: number | string;
+  userId?: number | string | null;
 }
 
-export function useAdminSocket({ eventId, roundId, teamId }: UseAdminSocketOptions = {}) {
+export function useAdminSocket({ eventId, roundId, teamId, userId }: UseAdminSocketOptions = {}) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -36,6 +37,9 @@ export function useAdminSocket({ eventId, roundId, teamId }: UseAdminSocketOptio
       }
       if (teamId) {
         socketInstance.emit("joinTeam", { teamId: Number(teamId) });
+      }
+      if (userId) {
+        socketInstance.emit("joinUser", { userId: Number(userId) });
       }
     });
 

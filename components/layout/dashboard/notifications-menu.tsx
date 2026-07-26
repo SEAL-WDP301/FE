@@ -16,6 +16,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
+import { useAuthStore } from '@/lib/stores/auth.store';
+import { useAdminSocket } from '@/hooks/use-admin-socket';
+import { enqueueSnackbar } from 'notistack';
+import { useEffect } from 'react';
+
 interface UserNotification {
   id: number;
   title: string;
@@ -36,6 +41,32 @@ export function NotificationsMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
+
+  const { socket } = useAdminSocket({ userId: user?.id });
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (data: any) => {
+      const plainContent = (data.content || '').replace(/<[^>]*>?/gm, '');
+      const titleText = data.title || "Thông báo mới";
+      const messageText = `${titleText}: ${plainContent}`;
+
+      enqueueSnackbar(messageText, { 
+        variant: "info",
+        autoHideDuration: 6000,
+      });
+      queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
+    };
+
+    socket.on("notification.new", handleNewNotification);
+
+    return () => {
+      socket.off("notification.new", handleNewNotification);
+    };
+  }, [socket, queryClient]);
+
   const judgeEventMatch = pathname.match(/^\/judge\/events\/([^/]+)/);
   const mentorEventMatch = pathname.match(/^\/mentor\/events\/([^/]+)/);
   const notificationsHref = pathname.startsWith('/judge')
