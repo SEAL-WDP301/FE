@@ -305,37 +305,54 @@ export default function EventSubmissionsPage() {
           <div className="text-muted-foreground mt-2 space-y-1">
             <p>Review team submissions across all active rounds.</p>
             {isEditingDeadline ? (
-              <div className="flex flex-wrap items-center gap-2 mt-2 bg-muted/40 p-2 rounded-xl border border-border">
-                <input
-                  type="datetime-local"
-                  value={editDeadlineValue}
-                  onChange={(e) => setEditDeadlineValue(e.target.value)}
-                  className="bg-background border border-border text-foreground text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-blue-500"
-                />
-                <Button
-                  size="sm"
-                  variant="orange"
-                  className="h-8 px-3 text-xs gap-1 font-semibold"
-                  onClick={() => {
-                    if (!editDeadlineValue) return;
-                    updateDeadlineMutation.mutate(editDeadlineValue);
-                  }}
-                  disabled={updateDeadlineMutation.isPending}
-                >
-                  {updateDeadlineMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                  Save
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 px-2 text-xs"
-                  onClick={() => setIsEditingDeadline(false)}
-                  disabled={updateDeadlineMutation.isPending}
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </Button>
-              </div>
+              (() => {
+                const isPastDeadline = editDeadlineValue ? new Date(editDeadlineValue).getTime() <= Date.now() : false;
+                return (
+                  <div className="flex flex-col gap-1 mt-2">
+                    <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2 rounded-xl border border-border">
+                      <input
+                        type="datetime-local"
+                        value={editDeadlineValue}
+                        min={formatForDatetimeLocal(new Date())}
+                        onChange={(e) => setEditDeadlineValue(e.target.value)}
+                        className="bg-background border border-border text-foreground text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <Button
+                        size="sm"
+                        variant="orange"
+                        className="h-8 px-3 text-xs gap-1 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => {
+                          if (!editDeadlineValue) return;
+                          if (isPastDeadline) {
+                            enqueueSnackbar("Deadline must be set in the future.", { variant: "warning" });
+                            return;
+                          }
+                          updateDeadlineMutation.mutate(editDeadlineValue);
+                        }}
+                        disabled={updateDeadlineMutation.isPending || isPastDeadline || !editDeadlineValue}
+                      >
+                        {updateDeadlineMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-xs"
+                        onClick={() => setIsEditingDeadline(false)}
+                        disabled={updateDeadlineMutation.isPending}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Cancel
+                      </Button>
+                    </div>
+                    {isPastDeadline && (
+                      <p className="text-xs text-red-500 font-medium animate-pulse ml-1">
+                        ⚠️ Deadline must be set in the future.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()
             ) : (
               <div className="flex items-center gap-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
                 <span>

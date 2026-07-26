@@ -17,7 +17,7 @@ An ultra-modern, high-performance **Frontend Application** for **SEAL** (Softwar
 
 Organizing and participating in academic software engineering hackathons demands a clear, responsive, and intuitive interface for all stakeholders. **SEAL** provides custom role-tailored web interfaces designed specifically for 4 distinct user roles:
 
-1. 👑 **Organizers (`/organizer`):** Access comprehensive event administration dashboards, manage competition tracks, configure evaluation rubrics, monitor round progress, execute bulk email notifications, and edit round submission deadlines inline with real-time countdown updates.
+1. 👑 **Organizers (`/organizer`):** Access comprehensive event administration dashboards, manage competition tracks, configure evaluation rubrics, monitor round progress, execute bulk email notifications, and edit round submission deadlines inline with real-time countdown updates and past-date safeguards.
 2. 🚀 **Students (`/student`):** Register for events, manage team rosters, link GitHub submission repositories, view live countdown timers, and track multi-round evaluation status.
 3. ⚖️ **Judges (`/judge`):** Access streamlined scoring rubrics, evaluate team submissions independently, submit final score matrices, and monitor live competition leaderboards.
 4. 🛡️ **Mentors (`/mentor`):** Oversee assigned hackathon teams, provide structured technical guidance, and manage advisory feedback sessions.
@@ -63,9 +63,10 @@ graph TD
 * **Socket.IO Real-Time Hook (`useAdminSocket`):** Manages dynamic WebSocket connections isolated into user-specific rooms (`user-${userId}`, `admin-event-${eventId}`, `admin-round-${roundId}`).
 * **Click-to-Dismiss Toast Notifications:** Listens to `notification.new` events and renders custom `notistack` toasts with `persist: true` (persists until user click) and concise title formatting, while automatically refetching unread notification counts.
 
-### 2. State Management & In-Place Cache Mutation
+### 2. State Management, In-Place Cache Mutation & Date Validation
 * **Dual-Tier State Architecture:** Uses **Zustand** for lightweight client-side global state (auth tokens, current user profile, theme state) and **TanStack Query v5** for server-side query management.
 * **In-Place Query Cache Manipulation:** Executes `queryClient.setQueryData()` to update React Query cache in memory upon successful mutations (e.g. updating round submission deadline). Enables **0ms instant UI countdown timer recalculation** (`Time left`) without triggering full page reloads.
+* **Deadline Past-Date Prevention Safeguard:** Inline deadline editor enforces HTML5 `min` attribute constraints matching `now` and validates inputs dynamically (`new Date(value) <= Date.now()`). Disables the Save action and displays dynamic warning alerts (`⚠️ Deadline must be set in the future.`) if a past timestamp is selected.
 
 ### 3. Silent Auth Refresh & Role-Based Route Protection (RBAC)
 * **Transparent Token Refresh Interceptor:** Axios instance interceptor traps `401 Unauthorized` responses, queues pending network requests, triggers silent token renewal via `HttpOnly Cookie`, and automatically retries queued requests invisibly to the user.
