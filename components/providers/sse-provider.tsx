@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/auth.store";
 import { axiosClient } from "@/lib/axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 class FatalError extends Error {}
 
